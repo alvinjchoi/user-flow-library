@@ -21,7 +21,7 @@ import { UploadDialog } from "@/components/screens/upload-dialog";
 import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { initializeStorage } from "@/lib/storage";
+import { initializeStorage, uploadScreenshot } from "@/lib/storage";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -127,29 +127,53 @@ export default function ProjectPage() {
     setAddScreenDialogOpen(true);
   }
 
-  async function handleAddScreen(title: string, parentId?: string) {
+  async function handleAddScreen(title: string, parentId?: string, screenshotFile?: File) {
     if (!addScreenFlowId) return;
 
     try {
-      // Create the new screen (it will be added at the end automatically)
+      // Create the screen first
       const newScreen = await createScreen(addScreenFlowId, title, parentId);
+      
+      // If there's a screenshot file, upload it
+      if (screenshotFile) {
+        try {
+          const screenshotUrl = await uploadScreenshot(screenshotFile, newScreen.id);
+          if (screenshotUrl) {
+            // Update the screen with the screenshot URL
+            await updateScreen(newScreen.id, { screenshot_url: screenshotUrl });
+            
+            // Update local state with screenshot URL
+            const updatedScreen = { ...newScreen, screenshot_url: screenshotUrl };
+            const updatedScreensByFlow = new Map(screensByFlow);
+            const flowScreens = updatedScreensByFlow.get(addScreenFlowId) || [];
+            updatedScreensByFlow.set(addScreenFlowId, [...flowScreens, updatedScreen]);
+            setScreensByFlow(updatedScreensByFlow);
+            setAllScreens(prev => [...prev, updatedScreen]);
+          }
+        } catch (uploadError) {
+          console.error("Error uploading screenshot:", uploadError);
+          // Still add the screen without screenshot
+          const updatedScreensByFlow = new Map(screensByFlow);
+          const flowScreens = updatedScreensByFlow.get(addScreenFlowId) || [];
+          updatedScreensByFlow.set(addScreenFlowId, [...flowScreens, newScreen]);
+          setScreensByFlow(updatedScreensByFlow);
+          setAllScreens(prev => [...prev, newScreen]);
+        }
+      } else {
+        // No screenshot, just add the screen
+        const updatedScreensByFlow = new Map(screensByFlow);
+        const flowScreens = updatedScreensByFlow.get(addScreenFlowId) || [];
+        updatedScreensByFlow.set(addScreenFlowId, [...flowScreens, newScreen]);
+        setScreensByFlow(updatedScreensByFlow);
+        setAllScreens(prev => [...prev, newScreen]);
+      }
 
-      // Optimistic update - add to local state immediately
-      const flowScreens = screensByFlow.get(addScreenFlowId) || [];
-      const updatedFlowScreens = [...flowScreens, newScreen];
-
-      const updatedScreensByFlow = new Map(screensByFlow);
-      updatedScreensByFlow.set(addScreenFlowId, updatedFlowScreens);
-
-      const updatedAllScreens = [...allScreens, newScreen];
-
-      setScreensByFlow(updatedScreensByFlow);
-      setAllScreens(updatedAllScreens);
-
-      // Reload to get the updated screen count on flows
-      await loadProjectData();
+      // Close dialog
+      setAddScreenDialogOpen(false);
+      setAddScreenFlowId(null);
+      setAddScreenParentId(undefined);
     } catch (error) {
-      console.error("Error creating screen:", error);
+      console.error("Error adding screen:", error);
       alert("Failed to create screen");
     }
   }
