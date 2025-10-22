@@ -1,166 +1,147 @@
-# UI Pattern Library
+# User Flow Organizer
 
-A minimal, static patterns library inspired by mobbin.com for discovering and exploring UI/UX design patterns.
-
-## Features
-
-- 📱 **Responsive Design** - 1 column mobile, 3 columns desktop
-- 🔍 **Full-text Search** - Search across titles, descriptions, and tags
-- 🏷️ **Advanced Filtering** - Category dropdown + multi-tag checkbox filters
-- 📄 **Pagination** - 24 patterns per page
-- 🖼️ **Pattern Details** - Image carousel, metadata panel, related patterns
-- ⚡ **Static Export** - Fully static site, deployable anywhere
-- ♿ **Accessible** - Keyboard navigation, semantic HTML, ARIA labels
-- 🎨 **Admin Panel** - Dev-only upload page at `/admin/upload`
+A Mobbin-style tool for organizing and managing user flows for your projects with hierarchical screen organization.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS v4
-- **Language**: TypeScript
-- **UI Components**: shadcn/ui
-- **Data**: Static JSON file
+- **Next.js 15** - App Router
+- **Supabase** - PostgreSQL database + Storage
+- **TypeScript** - Type safety
+- **Tailwind CSS v4** - Styling
+- **shadcn/ui** - UI components
 
-## Getting Started
+## Data Structure
 
-### Installation
+**Projects** → **Flows** → **Screens** (hierarchical tree)
 
-\`\`\`bash
-npm install
-\`\`\`
+```
+Discord App (Project)
+├── Onboarding (Flow)
+│   ├── Welcome
+│   ├── Phone Entry
+│   └── Verification
+└── Messages (Flow)
+    ├── Inbox
+    └── New Message
+        ├── Search Friend
+        └── Create Group
+```
 
-### Development
+## Setup
 
-\`\`\`bash
-npm run dev
-\`\`\`
+### 1. Install Dependencies
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+```bash
+pnpm install
+```
 
-### Build
+### 2. Configure Supabase
 
-\`\`\`bash
-npm run build
-\`\`\`
+Environment variables are already set in `.env.local`:
 
-This creates an optimized production build with static export in the `out` directory.
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://jrhnlbilfozzrdphcvxp.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-### Deploy to v0.dev
+### 3. Create Database Tables
 
-1. Click the "Publish" button in the v0 interface
-2. Or push to GitHub and connect to Vercel
-3. Or download the ZIP and deploy manually
+Run `sql/CREATE_FLOW_TABLES.sql` in your Supabase SQL Editor:
 
-The app is configured for static export (`output: 'export'` in `next.config.mjs`), making it compatible with any static hosting service.
+https://supabase.com/dashboard/project/jrhnlbilfozzrdphcvxp/sql/new
+
+This creates:
+
+- `projects` - Your apps/products
+- `flows` - User flows within projects
+- `screens` - Individual screens with tree structure
+- Auto-updating triggers for counts and paths
+
+### 4. Create Storage Bucket
+
+Run `sql/CREATE_STORAGE_BUCKET.sql` in your Supabase SQL Editor:
+
+This sets up:
+- `screenshots` bucket for storing uploaded images
+- Public access policies for uploads/downloads
+
+### 5. Start Development
+
+```bash
+pnpm run dev
+```
+
+Open http://localhost:3000
+
+## Features
+
+- [x] Projects dashboard
+- [x] Hierarchical flow tree (Mobbin-style sidebar)
+- [x] Screenshot upload with Supabase Storage
+- [ ] Drag-and-drop screen ordering
+- [ ] Search across projects
+- [ ] Export flows
+- [ ] Public sharing links
 
 ## Project Structure
 
-\`\`\`
-├── app/
-│   ├── page.tsx                 # Home page with grid
-│   ├── pattern/[id]/page.tsx    # Pattern detail page
-│   ├── admin/upload/page.tsx    # Admin upload page
-│   ├── layout.tsx               # Root layout
-│   └── globals.css              # Global styles
-├── components/
-│   ├── header.tsx               # Site header
-│   ├── patterns-grid.tsx        # Pattern grid with filtering
-│   ├── pattern-card.tsx         # Individual pattern card
-│   ├── pattern-detail.tsx       # Pattern detail view
-│   ├── search-and-filters.tsx   # Search and filter controls
-│   ├── pagination.tsx           # Pagination component
-│   └── ui/                      # shadcn/ui components
-├── data/
-│   └── patterns.json            # Pattern data
-└── next.config.mjs              # Next.js config
-\`\`\`
+```
+app/
+├── page.tsx                    # Projects dashboard
+├── projects/
+│   └── [id]/
+│       ├── page.tsx            # Project detail
+│       └── flows/[flowId]/
+│           └── page.tsx        # Flow with screen tree
 
-## Data Schema
+components/
+├── projects/                   # Project components
+├── flows/                      # Flow tree & cards
+└── screens/                    # Screen gallery & upload
 
-Each pattern in `data/patterns.json` follows this schema:
+lib/
+├── projects.ts                 # Project CRUD
+├── flows.ts                    # Flow CRUD
+└── screens.ts                  # Screen CRUD (tree operations)
+```
 
-\`\`\`json
-{
-  "id": "unique-pattern-id",
-  "title": "Pattern Title",
-  "tags": ["tag1", "tag2", "tag3"],
-  "category": "Category Name",
-  "screenshots": [
-    "/path/to/screenshot1.jpg",
-    "/path/to/screenshot2.jpg"
-  ],
-  "description": "Detailed description of the pattern",
-  "createdAt": "2025-01-15T10:30:00Z"
-}
-\`\`\`
+## Database Schema
 
-### Required Fields
+### Projects
 
-- `id` (string): Unique identifier
-- `title` (string): Pattern title
-- `tags` (string[]): Array of tags
-- `category` (string): Category name
-- `screenshots` (string[]): Array of image URLs
-- `description` (string): Pattern description
-- `createdAt` (string): ISO 8601 date string
+```sql
+id, name, description, color, created_at, updated_at
+```
 
-## Adding New Patterns
+### Flows
 
-### Option 1: Admin UI (Development)
+```sql
+id, project_id, name, description, order_index,
+screen_count, created_at, updated_at
+```
 
-1. Navigate to `/admin/upload`
-2. Paste your pattern JSON
-3. Click "Validate & Submit"
-4. Check the console for the validated pattern
+### Screens (Tree Structure)
 
-### Option 2: Direct Edit
+```sql
+id, flow_id, parent_id, title, screenshot_url, notes,
+order_index, level, path, tags, created_at, updated_at
+```
 
-1. Open `data/patterns.json`
-2. Add your pattern object to the array
-3. Ensure all required fields are present
-4. Save and rebuild
+## Development
 
-## Features in Detail
+```bash
+pnpm run dev      # Start dev server
+pnpm run build    # Build for production
+pnpm run lint     # Run linter
+```
 
-### Search
+## Deployment
 
-Client-side full-text search across:
-- Pattern titles
-- Descriptions
-- Tags
+Deploy to Vercel with environment variables:
 
-### Filters
-
-- **Category**: Dropdown to filter by category
-- **Tags**: Multi-select checkbox filter
-- **Combined Logic**: Search + filters use AND logic
-
-### Pattern Detail Page
-
-- Large image carousel with thumbnails
-- Metadata panel (tags, category, date)
-- Related patterns based on shared tags
-- Keyboard navigation support
-
-### Accessibility
-
-- Semantic HTML elements (`<main>`, `<header>`, `<nav>`)
-- ARIA labels on interactive elements
-- Keyboard focus management
-- Alt text on all images
-- Screen reader friendly
-
-## Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## License
 
 MIT
-
-## Credits
-
-Inspired by [mobbin.com](https://mobbin.com)
