@@ -47,7 +47,7 @@ export function AddScreenDialog({
     setLoading(true);
     try {
       await onAdd(title.trim(), parentId === "none" ? undefined : parentId);
-      
+
       // Reset form
       setTitle("");
       setParentId("none");
@@ -71,10 +71,11 @@ export function AddScreenDialog({
         <DialogHeader>
           <DialogTitle>Add Screen to {flowName}</DialogTitle>
           <DialogDescription>
-            Create a new screen and optionally choose which screen it stems from.
+            Create a new screen and optionally choose which screen it stems
+            from.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="title">Screen Title</Label>
@@ -96,7 +97,9 @@ export function AddScreenDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
-                  <span className="text-muted-foreground">No parent (root level)</span>
+                  <span className="text-muted-foreground">
+                    No parent (root level)
+                  </span>
                 </SelectItem>
                 {availableScreens.map((screen) => (
                   <SelectItem key={screen.id} value={screen.id}>
@@ -128,4 +131,3 @@ export function AddScreenDialog({
     </Dialog>
   );
 }
-
