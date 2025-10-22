@@ -10,7 +10,7 @@ interface ScreenGalleryProps {
   screens: Screen[];
   onSelectScreen?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
-  onAddScreen?: () => void;
+  onAddScreen?: (parentId?: string) => void;
   selectedScreenId?: string;
 }
 
@@ -56,25 +56,25 @@ function ScreenCard({
       onClick={() => onSelectScreen?.(screen)}
     >
       <div className="aspect-[9/16] relative bg-muted">
-                        {screen.screenshot_url ? (
-                          <>
-                            <Image
-                              src={screen.screenshot_url}
-                              alt={screen.title}
-                              fill
-                              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                              className="object-cover"
-                            />
-                            {/* Description overlay on hover */}
-                            {screen.notes && (
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-4">
-                                <p className="text-white text-sm leading-relaxed">
-                                  {screen.notes}
-                                </p>
-                              </div>
-                            )}
-                          </>
-                        ) : (
+        {screen.screenshot_url ? (
+          <>
+            <Image
+              src={screen.screenshot_url}
+              alt={screen.title}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+              className="object-cover"
+            />
+            {/* Description overlay on hover */}
+            {screen.notes && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-4">
+                <p className="text-white text-sm leading-relaxed">
+                  {screen.notes}
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <button
               onClick={(e) => {
@@ -88,22 +88,22 @@ function ScreenCard({
             </button>
           </div>
         )}
-                        {/* Upload button overlay - only show if has screenshot but no description */}
-                        {screen.screenshot_url && !screen.notes && (
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onUploadScreenshot?.(screen.id);
-                              }}
-                            >
-                              <Upload className="h-3 w-3 mr-1" />
-                              Upload
-                            </Button>
-                          </div>
-                        )}
+        {/* Upload button overlay - only show if has screenshot but no description */}
+        {screen.screenshot_url && !screen.notes && (
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUploadScreenshot?.(screen.id);
+              }}
+            >
+              <Upload className="h-3 w-3 mr-1" />
+              Upload
+            </Button>
+          </div>
+        )}
       </div>
       <div className="p-3 border-t">
         <p className="text-sm font-medium truncate">{screen.title}</p>
@@ -198,6 +198,20 @@ export function ScreenGallery({
                           onUploadScreenshot={onUploadScreenshot}
                         />
                       ))}
+
+                      {/* Add child screen card */}
+                      <Card
+                        className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddScreen?.(parent.id);
+                        }}
+                      >
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <Plus className="h-8 w-8" />
+                          <span className="text-sm">Add screen</span>
+                        </div>
+                      </Card>
                     </div>
                   </div>
                 </div>

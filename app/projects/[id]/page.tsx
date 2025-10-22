@@ -153,32 +153,36 @@ export default function ProjectPage() {
     setUploadDialogOpen(true);
   }
 
-  async function handleUploadComplete(url: string, title?: string, description?: string) {
+  async function handleUploadComplete(
+    url: string,
+    title?: string,
+    description?: string
+  ) {
     if (!uploadingScreenId) return;
 
     // Optimistic update - update local state immediately without reload
     const updatedScreensByFlow = new Map(screensByFlow);
     const updatedAllScreens = allScreens.map((s) =>
-      s.id === uploadingScreenId 
-        ? { 
-            ...s, 
+      s.id === uploadingScreenId
+        ? {
+            ...s,
             screenshot_url: url,
             ...(title && { title }),
-            ...(description && { notes: description })
-          } 
+            ...(description && { notes: description }),
+          }
         : s
     );
 
     // Update each flow's screens
     for (const [flowId, screens] of screensByFlow.entries()) {
       const updatedScreens = screens.map((s) =>
-        s.id === uploadingScreenId 
-          ? { 
-              ...s, 
+        s.id === uploadingScreenId
+          ? {
+              ...s,
               screenshot_url: url,
               ...(title && { title }),
-              ...(description && { notes: description })
-            } 
+              ...(description && { notes: description }),
+            }
           : s
       );
       updatedScreensByFlow.set(flowId, updatedScreens);
@@ -186,7 +190,7 @@ export default function ProjectPage() {
 
     setScreensByFlow(updatedScreensByFlow);
     setAllScreens(updatedAllScreens);
-    
+
     // Close the dialog
     setUploadDialogOpen(false);
     setUploadingScreenId(null);
@@ -225,13 +229,13 @@ export default function ProjectPage() {
     try {
       // Optimistic update - update local state immediately
       const updatedScreensByFlow = new Map(screensByFlow);
-      
+
       // Update order_index for the reordered screens
       const reorderedWithIndex = screens.map((screen, index) => ({
         ...screen,
         order_index: index,
       }));
-      
+
       updatedScreensByFlow.set(flowId, reorderedWithIndex);
 
       // Update allScreens as well
@@ -466,8 +470,8 @@ export default function ProjectPage() {
                 screens={displayedScreens}
                 onSelectScreen={setSelectedScreen}
                 onUploadScreenshot={handleUploadScreenshot}
-                onAddScreen={() =>
-                  selectedFlow && openAddScreenDialog(selectedFlow.id)
+                onAddScreen={(parentId) =>
+                  selectedFlow && openAddScreenDialog(selectedFlow.id, parentId)
                 }
                 selectedScreenId={selectedScreen?.id}
               />
