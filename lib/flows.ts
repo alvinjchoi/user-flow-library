@@ -153,22 +153,9 @@ export async function reorderScreens(
   }
 }
 
-// Delete screen
-export async function deleteScreen(screenId: string): Promise<void> {
-  const { error } = await supabase
-    .from("screens")
-    .delete()
-    .eq("id", screenId);
-
-  if (error) throw error;
-}
-
 // Delete flow
 export async function deleteFlow(flowId: string): Promise<void> {
-  const { error } = await supabase
-    .from("flows")
-    .delete()
-    .eq("id", flowId);
+  const { error } = await supabase.from("flows").delete().eq("id", flowId);
 
   if (error) throw error;
 }
