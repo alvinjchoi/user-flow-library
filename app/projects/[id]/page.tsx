@@ -13,6 +13,7 @@ import {
   reorderScreens,
   deleteScreen,
   deleteFlow,
+  reorderFlows,
 } from "@/lib/flows";
 import type { Project, Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
@@ -382,6 +383,26 @@ export default function ProjectPage() {
     }
   }
 
+  async function handleReorderFlows(reorderedFlows: Flow[]) {
+    try {
+      // Optimistic update - update local state immediately
+      setFlows(reorderedFlows);
+
+      // Update database in background
+      await reorderFlows(
+        reorderedFlows.map((flow) => ({
+          id: flow.id,
+          order_index: flow.order_index,
+        }))
+      );
+    } catch (error) {
+      console.error("Error reordering flows:", error);
+      alert("Failed to reorder flows");
+      // Revert on error
+      await loadProjectData();
+    }
+  }
+
   // Get the parent screen title for the selected flow
   const getFlowDisplayName = (flow: Flow): string => {
     if (!flow.parent_screen_id) {
@@ -480,6 +501,7 @@ export default function ProjectPage() {
             onDeleteScreen={handleDeleteScreen}
             onDeleteFlow={handleDeleteFlow}
             onReorderScreens={handleReorderScreens}
+            onReorderFlows={handleReorderFlows}
             selectedScreenId={selectedScreen?.id}
             selectedFlowId={selectedFlow?.id}
           />

@@ -174,6 +174,23 @@ export async function reorderScreens(
   }
 }
 
+// Reorder flows
+export async function reorderFlows(
+  flows: { id: string; order_index: number }[]
+): Promise<void> {
+  // Update all flows in a transaction-like batch
+  const updates = flows.map(({ id, order_index }) =>
+    supabase.from("flows").update({ order_index }).eq("id", id)
+  );
+
+  const results = await Promise.all(updates);
+  const errors = results.filter((r) => r.error);
+
+  if (errors.length > 0) {
+    throw new Error(`Failed to reorder flows: ${errors[0].error?.message}`);
+  }
+}
+
 // Delete flow
 export async function deleteFlow(flowId: string): Promise<void> {
   const { error } = await supabase.from("flows").delete().eq("id", flowId);

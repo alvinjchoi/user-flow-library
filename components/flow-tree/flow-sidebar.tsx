@@ -51,6 +51,7 @@ interface FlowSidebarProps {
   onDeleteScreen?: (screenId: string) => void;
   onDeleteFlow?: (flowId: string) => void;
   onReorderScreens?: (flowId: string, screens: Screen[]) => void;
+  onReorderFlows?: (flows: Flow[]) => void;
   selectedScreenId?: string;
   selectedFlowId?: string;
 }
@@ -67,6 +68,7 @@ export function FlowSidebar({
   onDeleteScreen,
   onDeleteFlow,
   onReorderScreens,
+  onReorderFlows,
   selectedScreenId,
   selectedFlowId,
 }: FlowSidebarProps) {
@@ -75,6 +77,8 @@ export function FlowSidebar({
   );
   const [draggedScreen, setDraggedScreen] = useState<Screen | null>(null);
   const [dragTargetScreen, setDragTargetScreen] = useState<Screen | null>(null);
+  const [draggedFlow, setDraggedFlow] = useState<Flow | null>(null);
+  const [dragTargetFlow, setDragTargetFlow] = useState<Flow | null>(null);
 
   const toggleFlow = (flowId: string) => {
     const newExpanded = new Set(expandedFlows);
@@ -128,6 +132,65 @@ export function FlowSidebar({
     setDragTargetScreen(null);
   };
 
+  // Flow drag handlers
+  const handleFlowDragStart = (flow: Flow) => {
+    setDraggedFlow(flow);
+  };
+
+  const handleFlowDragOver = (e: React.DragEvent, flow: Flow) => {
+    e.preventDefault();
+    if (draggedFlow && draggedFlow.id !== flow.id) {
+      setDragTargetFlow(flow);
+    }
+  };
+
+  const handleFlowDragLeave = () => {
+    setDragTargetFlow(null);
+  };
+
+  const handleFlowDrop = (e: React.DragEvent, targetFlow: Flow) => {
+    e.preventDefault();
+    
+    if (!draggedFlow || !onReorderFlows) {
+      setDraggedFlow(null);
+      setDragTargetFlow(null);
+      return;
+    }
+
+    if (draggedFlow.id === targetFlow.id) {
+      setDraggedFlow(null);
+      setDragTargetFlow(null);
+      return;
+    }
+
+    // Reorder the flows array
+    const reordered = [...flows];
+    const draggedIndex = reordered.findIndex(f => f.id === draggedFlow.id);
+    const targetIndex = reordered.findIndex(f => f.id === targetFlow.id);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedFlow(null);
+      setDragTargetFlow(null);
+      return;
+    }
+
+    // Remove dragged flow and insert at target position
+    const [removed] = reordered.splice(draggedIndex, 1);
+    reordered.splice(targetIndex, 0, removed);
+
+    // Update order_index for all flows
+    const flowsWithNewOrder = reordered.map((flow, index) => ({
+      ...flow,
+      order_index: index
+    }));
+
+    // Call the reorder callback
+    onReorderFlows(flowsWithNewOrder);
+
+    setDraggedFlow(null);
+    setDragTargetFlow(null);
+  };
+
   return (
     <div className="w-full border-r bg-background h-full overflow-y-auto">
       {/* Header */}
@@ -179,6 +242,11 @@ export function FlowSidebar({
               <div key={flow.id} className="mb-2">
                 {/* Flow Header */}
                 <div
+                  draggable
+                  onDragStart={() => handleFlowDragStart(flow)}
+                  onDragOver={(e) => handleFlowDragOver(e, flow)}
+                  onDragLeave={handleFlowDragLeave}
+                  onDrop={(e) => handleFlowDrop(e, flow)}
                   onClick={() => {
                     toggleFlow(flow.id);
                     onSelectFlow?.(flow);
@@ -187,6 +255,10 @@ export function FlowSidebar({
                     selectedFlowId === flow.id
                       ? "bg-primary/10 ring-1 ring-primary/20 font-medium"
                       : ""
+                  } ${
+                    draggedFlow?.id === flow.id ? "opacity-50" : ""
+                  } ${
+                    dragTargetFlow?.id === flow.id ? "bg-primary/20 border-t-2 border-primary" : ""
                   }`}
                 >
                   <ChevronDown
