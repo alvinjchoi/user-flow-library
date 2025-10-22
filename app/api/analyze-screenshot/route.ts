@@ -17,11 +17,19 @@ if (process.env.OPENAI_API_KEY) {
   }
 }
 
-// Create Supabase client for server-side queries
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create Supabase client for server-side queries (conditional)
+let supabase: any = null;
+
+if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  try {
+    supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+  } catch (error) {
+    console.warn("Supabase not available:", error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +58,7 @@ export async function POST(request: NextRequest) {
     // 🔥 NEW: Query Supabase for complete knowledge base context
     let contextPrompt = "";
 
-    if (projectId) {
+    if (projectId && supabase) {
       try {
         // Get project details
         const { data: project } = await supabase
