@@ -1,16 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, Upload, CornerDownRight } from "lucide-react";
+import { Plus, Upload, CornerDownRight, Edit2, Trash2 } from "lucide-react";
 import type { Screen } from "@/lib/database.types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EditScreenDialog } from "./edit-screen-dialog";
+import { useState } from "react";
 
 interface ScreenGalleryProps {
   screens: Screen[];
   onSelectScreen?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
   onAddScreen?: (parentId?: string) => void;
+  onEdit?: (screen: Screen) => void;
+  onDelete?: (screenId: string) => void;
   selectedScreenId?: string;
 }
 
@@ -40,12 +44,18 @@ function ScreenCard({
   isSelected,
   onSelectScreen,
   onUploadScreenshot,
+  onEdit,
+  onDelete,
 }: {
   screen: Screen;
   isSelected: boolean;
   onSelectScreen?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
+  onEdit?: (screen: Screen) => void;
+  onDelete?: (screenId: string) => void;
 }) {
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   return (
     <Card
       className={`
@@ -134,6 +144,8 @@ export function ScreenGallery({
   onSelectScreen,
   onUploadScreenshot,
   onAddScreen,
+  onEdit,
+  onDelete,
   selectedScreenId,
 }: ScreenGalleryProps) {
   const { parents, childrenByParent } = groupScreensByParent(screens);
@@ -165,6 +177,8 @@ export function ScreenGallery({
                 isSelected={selectedScreenId === screen.id}
                 onSelectScreen={onSelectScreen}
                 onUploadScreenshot={onUploadScreenshot}
+                onEdit={onEdit}
+                onDelete={onDelete}
               />
             ))}
 
