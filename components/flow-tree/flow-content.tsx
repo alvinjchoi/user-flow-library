@@ -109,7 +109,7 @@ export function FlowContent({
               <div key={screen.id}>
                 <TreeNode
                   screen={screen}
-                  level={screen.level}
+                  level={0}
                   onAddChild={(parentId) => onAddScreen(flow.id, parentId)}
                   onSelect={onSelectScreen}
                   onUpdateTitle={onUpdateScreenTitle}
