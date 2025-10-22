@@ -88,7 +88,7 @@ export function FlowHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+            className="h-6 w-6 opacity-100 transition-opacity hover:bg-muted"
             onClick={(e) => e.stopPropagation()}
           >
             <MoreHorizontal className="h-3 w-3" />

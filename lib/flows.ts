@@ -27,7 +27,7 @@ export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
         updated_at: new Date().toISOString(),
       },
       {
-        id: "mock-flow-2", 
+        id: "mock-flow-2",
         project_id: projectId,
         name: "Viewing project details",
         description: "User viewing detailed project information",
@@ -35,7 +35,7 @@ export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
         screen_count: 0, // This should show empty skeleton
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      }
+      },
     ];
   }
 }
@@ -54,7 +54,7 @@ export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
   } catch (error) {
     // If screens table doesn't exist, return mock data for testing
     console.warn("Screens table not found, using mock data:", error);
-    
+
     if (flowId === "mock-flow-1") {
       // Return one screen for "Browsing projects"
       return [
@@ -72,13 +72,13 @@ export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
           tags: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        }
+        },
       ];
     } else if (flowId === "mock-flow-2") {
       // Return empty array for "Viewing project details" to test skeleton
       return [];
     }
-    
+
     return [];
   }
 }
