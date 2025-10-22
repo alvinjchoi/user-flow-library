@@ -26,6 +26,12 @@ async function checkAndMigrateData() {
   if (migrationChecked) return;
   migrationChecked = true;
 
+  // Skip if Supabase is not available
+  if (!supabase) {
+    console.log("📋 Supabase not available, using mock data");
+    return;
+  }
+
   try {
     const { count, error } = await supabase
       .from("patterns")
@@ -86,6 +92,11 @@ export async function getPatterns(params?: {
   try {
     // Try to migrate data on first load
     await checkAndMigrateData();
+
+    // Skip Supabase if not available
+    if (!supabase) {
+      throw new Error("Supabase not available");
+    }
 
     let query = supabase.from("patterns").select("*", { count: "exact" });
 
@@ -174,6 +185,11 @@ export async function getPatterns(params?: {
 // Get a single pattern by ID
 export async function getPatternById(id: string): Promise<Pattern | null> {
   try {
+    // Skip Supabase if not available
+    if (!supabase) {
+      throw new Error("Supabase not available");
+    }
+
     const { data, error } = await supabase
       .from("patterns")
       .select("*")

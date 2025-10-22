@@ -1,10 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Conditional Supabase client creation to prevent build errors
+let supabase: any = null;
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  try {
+    supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+  } catch (error) {
+    console.warn("Supabase not available:", error);
+  }
+}
+
+export { supabase };
 
 export type Pattern = {
   id: string
