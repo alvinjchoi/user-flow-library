@@ -80,7 +80,7 @@ export async function createScreen(
   flowId: string,
   title: string,
   parentId?: string,
-  orderIndex?: number
+  description?: string
 ): Promise<Screen> {
   // If no order index provided, get the max order_index for this flow
   let finalOrderIndex = orderIndex;
@@ -106,6 +106,10 @@ export async function createScreen(
       title,
       parent_id: parentId || null,
       order_index: finalOrderIndex,
+      level: parentId ? parentLevel + 1 : 0,
+      path: parentId ? `${parentPath}/${parentId}` : null,
+      tags: [],
+      notes: description || null,
     })
     .select()
     .single();
