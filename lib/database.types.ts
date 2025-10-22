@@ -73,6 +73,7 @@ export interface Database {
           flow_id: string;
           parent_id: string | null;
           title: string;
+          display_name: string | null;
           screenshot_url: string | null;
           notes: string | null;
           order_index: number;
@@ -87,6 +88,7 @@ export interface Database {
           flow_id: string;
           parent_id?: string | null;
           title: string;
+          display_name?: string | null;
           screenshot_url?: string | null;
           notes?: string | null;
           order_index?: number;
@@ -101,6 +103,7 @@ export interface Database {
           flow_id?: string;
           parent_id?: string | null;
           title?: string;
+          display_name?: string | null;
           screenshot_url?: string | null;
           notes?: string | null;
           order_index?: number;
