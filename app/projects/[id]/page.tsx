@@ -127,37 +127,53 @@ export default function ProjectPage() {
     setAddScreenDialogOpen(true);
   }
 
-  async function handleAddScreen(title: string, parentId?: string, screenshotFile?: File) {
+  async function handleAddScreen(
+    title: string,
+    parentId?: string,
+    screenshotFile?: File
+  ) {
     if (!addScreenFlowId) return;
 
     try {
       // Create the screen first
       const newScreen = await createScreen(addScreenFlowId, title, parentId);
-      
+
       // If there's a screenshot file, upload it
       if (screenshotFile) {
         try {
-          const screenshotUrl = await uploadScreenshot(screenshotFile, newScreen.id);
+          const screenshotUrl = await uploadScreenshot(
+            screenshotFile,
+            newScreen.id
+          );
           if (screenshotUrl) {
             // Update the screen with the screenshot URL
             await updateScreen(newScreen.id, { screenshot_url: screenshotUrl });
-            
+
             // Update local state with screenshot URL
-            const updatedScreen = { ...newScreen, screenshot_url: screenshotUrl };
+            const updatedScreen = {
+              ...newScreen,
+              screenshot_url: screenshotUrl,
+            };
             const updatedScreensByFlow = new Map(screensByFlow);
             const flowScreens = updatedScreensByFlow.get(addScreenFlowId) || [];
-            updatedScreensByFlow.set(addScreenFlowId, [...flowScreens, updatedScreen]);
+            updatedScreensByFlow.set(addScreenFlowId, [
+              ...flowScreens,
+              updatedScreen,
+            ]);
             setScreensByFlow(updatedScreensByFlow);
-            setAllScreens(prev => [...prev, updatedScreen]);
+            setAllScreens((prev) => [...prev, updatedScreen]);
           }
         } catch (uploadError) {
           console.error("Error uploading screenshot:", uploadError);
           // Still add the screen without screenshot
           const updatedScreensByFlow = new Map(screensByFlow);
           const flowScreens = updatedScreensByFlow.get(addScreenFlowId) || [];
-          updatedScreensByFlow.set(addScreenFlowId, [...flowScreens, newScreen]);
+          updatedScreensByFlow.set(addScreenFlowId, [
+            ...flowScreens,
+            newScreen,
+          ]);
           setScreensByFlow(updatedScreensByFlow);
-          setAllScreens(prev => [...prev, newScreen]);
+          setAllScreens((prev) => [...prev, newScreen]);
         }
       } else {
         // No screenshot, just add the screen
@@ -165,7 +181,7 @@ export default function ProjectPage() {
         const flowScreens = updatedScreensByFlow.get(addScreenFlowId) || [];
         updatedScreensByFlow.set(addScreenFlowId, [...flowScreens, newScreen]);
         setScreensByFlow(updatedScreensByFlow);
-        setAllScreens(prev => [...prev, newScreen]);
+        setAllScreens((prev) => [...prev, newScreen]);
       }
 
       // Close dialog
