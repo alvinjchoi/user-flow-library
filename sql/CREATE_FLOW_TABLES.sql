@@ -189,26 +189,7 @@ FOR EACH ROW EXECUTE FUNCTION generate_screen_path();
 -- =====================================================
 -- Sample Data (Optional - for testing)
 -- =====================================================
-
--- Insert a sample project
-INSERT INTO projects (id, name, description, color) 
-VALUES 
-  ('00000000-0000-0000-0000-000000000001', 'Discord Mobile App', 'Discord mobile app user flows', '#5865F2')
-ON CONFLICT (id) DO NOTHING;
-
--- Insert sample flow
-INSERT INTO flows (id, project_id, name, description, order_index)
-VALUES 
-  ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Onboarding', 'User onboarding flow', 1)
-ON CONFLICT (id) DO NOTHING;
-
--- Insert sample screens
-INSERT INTO screens (flow_id, title, screenshot_url, order_index, parent_id)
-VALUES 
-  ('00000000-0000-0000-0000-000000000002', 'Welcome Screen', '/placeholder.svg', 1, NULL),
-  ('00000000-0000-0000-0000-000000000002', 'Phone Entry', '/placeholder.svg', 2, NULL),
-  ('00000000-0000-0000-0000-000000000002', 'Verification', '/placeholder.svg', 3, NULL)
-ON CONFLICT DO NOTHING;
+-- No sample data included - start with empty tables
 
 -- =====================================================
 -- Verify Setup

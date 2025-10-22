@@ -16,8 +16,6 @@ FROM screens s
 JOIN flows f ON s.flow_id = f.id
 JOIN projects p ON f.project_id = p.id
 WHERE s.id IN (
-  'f08da1b8-b9c0-48cb-b86f-b300e36b1d0c',
-  '6c8e2e54-2998-40be-bffa-71df5b0f0231',
   '5c0dbb44-795e-4c74-9479-471156d15f03',
   'f4b7ab59-4f88-479e-9796-e75d7c246209',
   '14c40888-a916-4847-87e8-8e9fda3e351b',
@@ -29,16 +27,7 @@ ORDER BY p.name, f.name;
 -- Apply Updates
 -- =====================================================
 
--- Discord Mobile App - Onboarding Flow
-UPDATE screens 
-SET display_name = 'Entering phone number'
-WHERE id = 'f08da1b8-b9c0-48cb-b86f-b300e36b1d0c';
--- Was: "Phone Entry" → Now: "Entering phone number"
-
-UPDATE screens 
-SET display_name = 'Verifying phone number'
-WHERE id = '6c8e2e54-2998-40be-bffa-71df5b0f0231';
--- Was: "Verification" → Now: "Verifying phone number"
+-- Discord Mobile App data removed - no longer needed
 
 -- Moiio - Home Flow (Community Feed screens - BOTH should be same)
 UPDATE screens 
@@ -76,8 +65,6 @@ FROM screens s
 JOIN flows f ON s.flow_id = f.id
 JOIN projects p ON f.project_id = p.id
 WHERE s.id IN (
-  'f08da1b8-b9c0-48cb-b86f-b300e36b1d0c',
-  '6c8e2e54-2998-40be-bffa-71df5b0f0231',
   '5c0dbb44-795e-4c74-9479-471156d15f03',
   'f4b7ab59-4f88-479e-9796-e75d7c246209',
   '14c40888-a916-4847-87e8-8e9fda3e351b',
