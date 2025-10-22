@@ -27,9 +27,14 @@ export function UserNav() {
           afterSignOutUrl="/"
           appearance={{
             elements: {
-              avatarBox: "h-8 w-8",
+              avatarBox: "h-10 w-10 border-2 border-border hover:border-primary transition-colors",
+              userButtonPopoverCard: "bg-background border border-border shadow-lg",
+              userButtonPopoverActionButton: "hover:bg-muted",
+              userButtonPopoverActionButtonText: "text-foreground",
+              userButtonPopoverFooter: "hidden", // Hide "Manage account" link since we have custom profile page
             },
           }}
+          userProfileUrl="/user-profile"
         />
       </SignedIn>
     </div>
