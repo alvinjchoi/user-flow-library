@@ -135,8 +135,10 @@ export function FlowSidebar({
                     toggleFlow(flow.id);
                     onSelectFlow?.(flow);
                   }}
-                  className={`w-full flex items-center gap-2 p-2 hover:bg-muted rounded-md group cursor-pointer ${
-                    selectedFlowId === flow.id ? "bg-accent" : ""
+                  className={`w-full flex items-center gap-2 p-2 hover:bg-muted rounded-md group cursor-pointer transition-colors ${
+                    selectedFlowId === flow.id 
+                      ? "bg-primary/10 ring-1 ring-primary/20 font-medium" 
+                      : ""
                   }`}
                 >
                   <ChevronDown
@@ -144,39 +146,45 @@ export function FlowSidebar({
                       isExpanded ? "" : "-rotate-90"
                     }`}
                   />
-                  <span className="text-sm font-medium text-primary flex-1 text-left truncate">
+                  <span className={`text-sm font-medium flex-1 text-left truncate ${
+                    selectedFlowId === flow.id ? "text-primary font-semibold" : "text-primary"
+                  }`}>
                     {flow.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {flow.screen_count}
                   </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddScreen?.(flow.id);
-                        }}
-                        title="Add screen"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete flow "${flow.name}" and all its screens?`)) {
-                            onDeleteFlow?.(flow.id);
-                          }
-                        }}
-                        title="Delete flow"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddScreen?.(flow.id);
+                    }}
+                    title="Add screen"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (
+                        confirm(
+                          `Delete flow "${flow.name}" and all its screens?`
+                        )
+                      ) {
+                        onDeleteFlow?.(flow.id);
+                      }
+                    }}
+                    title="Delete flow"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
 
                 {/* Screen Tree */}
                 {isExpanded && (
@@ -186,24 +194,24 @@ export function FlowSidebar({
                         No screens yet
                       </div>
                     ) : (
-                        tree.map((screen) => (
-                          <TreeNode
-                            key={screen.id}
-                            screen={screen}
-                            onAddChild={(parentId) =>
-                              onAddScreen?.(flow.id, parentId)
-                            }
-                            onSelect={onSelectScreen}
-                            onUpdateTitle={onUpdateScreenTitle}
-                            onAddFlowFromScreen={onAddFlowFromScreen}
-                            onDelete={onDeleteScreen}
-                            onDragStart={handleDragStart}
-                            onDragOver={handleDragOver}
-                            onDrop={handleDrop}
-                            selectedId={selectedScreenId}
-                            isDragging={draggedScreen?.id === screen.id}
-                          />
-                        ))
+                      tree.map((screen) => (
+                        <TreeNode
+                          key={screen.id}
+                          screen={screen}
+                          onAddChild={(parentId) =>
+                            onAddScreen?.(flow.id, parentId)
+                          }
+                          onSelect={onSelectScreen}
+                          onUpdateTitle={onUpdateScreenTitle}
+                          onAddFlowFromScreen={onAddFlowFromScreen}
+                          onDelete={onDeleteScreen}
+                          onDragStart={handleDragStart}
+                          onDragOver={handleDragOver}
+                          onDrop={handleDrop}
+                          selectedId={selectedScreenId}
+                          isDragging={draggedScreen?.id === screen.id}
+                        />
+                      ))
                     )}
                   </div>
                 )}
