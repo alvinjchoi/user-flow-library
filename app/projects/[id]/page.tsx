@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Save, Copy, MoreHorizontal, Plus, ArrowLeft } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getProject } from "@/lib/projects";
 import {
   getFlowsByProject,
@@ -20,7 +20,7 @@ import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
 import { ScreenGalleryByFlow } from "@/components/screens/screen-gallery-by-flow";
 import { EditScreenDialog } from "@/components/screens/edit-screen-dialog";
 import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
-import { Button } from "@/components/ui/button";
+import { Header } from "@/components/header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { initializeStorage, uploadScreenshot } from "@/lib/storage";
 
@@ -398,47 +398,8 @@ export default function ProjectPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="border-b bg-background sticky top-0 z-20">
-        <div className="flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/")}
-              className="h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div
-              className="w-8 h-8 rounded-lg"
-              style={{ backgroundColor: project.color }}
-            />
-            <div>
-              <h1 className="font-semibold">{project.name}</h1>
-              {project.description && (
-                <p className="text-xs text-muted-foreground">
-                  {project.description}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="default">
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline">
-              <Copy className="h-4 w-4 mr-2" />
-              Copy
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Header with project avatar */}
+      <Header project={project} />
 
       {/* Main content with sidebar */}
       <div className="flex flex-1 overflow-hidden">
