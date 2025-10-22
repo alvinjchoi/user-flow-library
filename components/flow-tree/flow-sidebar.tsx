@@ -243,9 +243,7 @@ export function FlowSidebar({
                   onAddScreen={() => onAddScreen?.(flow.id)}
                   onDelete={() => {
                     if (
-                      confirm(
-                        `Delete flow "${flow.name}" and all its screens?`
-                      )
+                      confirm(`Delete flow "${flow.name}" and all its screens?`)
                     ) {
                       onDeleteFlow?.(flow.id);
                     }

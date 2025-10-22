@@ -40,6 +40,7 @@ function groupScreensByDisplayName(screens: Screen[]): Screen[] {
 interface BranchedFlowItemProps {
   flow: Flow;
   screens: Screen[];
+  level: number; // Add level prop for consistent indentation
   isExpanded: boolean;
   isSelected: boolean;
   onToggle: () => void;
@@ -59,6 +60,7 @@ interface BranchedFlowItemProps {
 export function BranchedFlowItem({
   flow,
   screens,
+  level,
   isExpanded,
   isSelected,
   onToggle,
@@ -85,16 +87,17 @@ export function BranchedFlowItem({
           onToggle();
           onSelect();
         }}
-        className={`flex h-8 items-center gap-2 px-2 text-xs font-medium cursor-pointer transition-all duration-150 hover:bg-muted/30 group ${
+        className={`group flex items-center gap-2 py-1.5 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150 ${
           isSelected
-            ? "bg-primary/10 text-primary font-semibold"
-            : "text-muted-foreground"
+            ? "bg-primary/10 text-primary font-medium"
+            : "text-foreground"
         }`}
+        style={{ paddingLeft: `${level * 12 + 12}px` }}
         role="button"
         tabIndex={0}
       >
         <ChevronDown
-          className={`h-3 w-3 transition-transform flex-shrink-0 ${
+          className={`h-4 w-4 transition-transform flex-shrink-0 ${
             isExpanded ? "" : "-rotate-90"
           }`}
         />
