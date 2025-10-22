@@ -49,11 +49,16 @@ export async function POST(request: NextRequest) {
 
 Return your response in this exact JSON format:
 {
-  "title": "Action or Task Name",
+  "title": "Technical Screen Name",
+  "displayName": "Action or Task Name",
   "description": "Brief description of what happens on this screen."
 }
 
-NAMING RULES (follow strictly):
+IMPORTANT: Generate BOTH names:
+- "title": Technical name for developers/files (e.g., "Search Screen", "Profile Screen")
+- "displayName": Action-oriented name for user flows (e.g., "Searching Reddit", "User profile")
+
+NAMING RULES for displayName (follow strictly):
 1. Use action/task-oriented names, NOT "Screen" suffixes
    ✅ GOOD: "Searching Reddit", "Sorting posts", "Blocking a user", "Sending a chat"
    ❌ BAD: "Search Screen", "Sort Screen", "Block Screen", "Chat Screen"
@@ -134,6 +139,7 @@ NAMING RULES (follow strictly):
 
     return NextResponse.json({
       title: parsed.title || "Untitled Screen",
+      displayName: parsed.displayName || parsed.title || "Untitled Screen",
       description: parsed.description || "No description available",
     });
   } catch (error) {

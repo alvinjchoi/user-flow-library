@@ -23,7 +23,7 @@ interface UploadDialogProps {
   allScreens: Screen[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUploadComplete?: (url: string, title?: string, description?: string) => void;
+  onUploadComplete?: (url: string, title?: string, displayName?: string, description?: string) => void;
 }
 
 export function UploadDialog({
@@ -39,6 +39,7 @@ export function UploadDialog({
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiTitle, setAiTitle] = useState("");
+  const [aiDisplayName, setAiDisplayName] = useState("");
   const [aiDescription, setAiDescription] = useState("");
   const [useAI, setUseAI] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +110,7 @@ export function UploadDialog({
       }
 
       let finalTitle = aiTitle;
+      let finalDisplayName = aiDisplayName;
       let finalDescription = aiDescription;
 
       // 2. Analyze with AI if enabled and not already analyzed
@@ -117,8 +119,10 @@ export function UploadDialog({
         try {
           const analysis = await analyzeScreenshot(url);
           finalTitle = analysis.title;
+          finalDisplayName = analysis.displayName || analysis.title;
           finalDescription = analysis.description;
           setAiTitle(analysis.title);
+          setAiDisplayName(analysis.displayName || analysis.title);
           setAiDescription(analysis.description);
         } catch (aiError) {
           console.error("AI analysis failed:", aiError);
@@ -136,7 +140,7 @@ export function UploadDialog({
       });
 
       // Notify parent
-      onUploadComplete?.(url, finalTitle, finalDescription);
+      onUploadComplete?.(url, finalTitle, finalDisplayName, finalDescription);
 
       // Close dialog
       onOpenChange(false);
@@ -145,6 +149,7 @@ export function UploadDialog({
       setFile(null);
       setPreview(null);
       setAiTitle("");
+      setAiDisplayName("");
       setAiDescription("");
     } catch (err) {
       console.error("Upload error:", err);
@@ -227,6 +232,7 @@ export function UploadDialog({
                   setFile(null);
                   setPreview(null);
                   setAiTitle("");
+                  setAiDisplayName("");
                   setAiDescription("");
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
@@ -243,20 +249,33 @@ export function UploadDialog({
               <div className="space-y-2">
                 <Label htmlFor="title" className="flex items-center gap-2">
                   <Sparkles className="h-3 w-3 text-purple-500" />
-                  AI Suggested Title
+                  Technical Name (for developers)
                 </Label>
                 <Input
                   id="title"
                   value={aiTitle}
                   onChange={(e) => setAiTitle(e.target.value)}
-                  placeholder="Screen title"
+                  placeholder="e.g., Search Screen"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="displayName" className="flex items-center gap-2">
+                  <Sparkles className="h-3 w-3 text-purple-500" />
+                  Display Name (for sidebar)
+                </Label>
+                <Input
+                  id="displayName"
+                  value={aiDisplayName}
+                  onChange={(e) => setAiDisplayName(e.target.value)}
+                  placeholder="e.g., Searching Reddit"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="description" className="flex items-center gap-2">
                   <Sparkles className="h-3 w-3 text-purple-500" />
-                  AI Suggested Description
+                  Description
                 </Label>
                 <Textarea
                   id="description"
