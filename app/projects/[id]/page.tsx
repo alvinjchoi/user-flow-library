@@ -118,6 +118,7 @@ export default function ProjectPage() {
 
   function openAddScreenDialog(flowId: string, parentId?: string) {
     setAddScreenFlowId(flowId);
+    setAddScreenParentId(parentId);
     setAddScreenDialogOpen(true);
   }
 
