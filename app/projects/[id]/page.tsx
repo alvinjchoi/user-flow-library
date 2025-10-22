@@ -106,7 +106,12 @@ export default function ProjectPage() {
 
   async function handleAddFlowFromScreen(screenId: string) {
     const screen = allScreens.find((s) => s.id === screenId);
-    if (!screen) return;
+    if (!screen) {
+      console.error("Screen not found:", screenId);
+      return;
+    }
+
+    console.log("Creating flow from screen:", screen);
 
     const flowName = prompt(
       `Create a new flow branching from "${screen.title}".\n\nFlow name:`
@@ -114,7 +119,9 @@ export default function ProjectPage() {
     if (!flowName) return;
 
     try {
-      await createFlow(project.id, flowName, undefined, screenId);
+      console.log("Creating flow with parent screen ID:", screenId);
+      const newFlow = await createFlow(project.id, flowName, undefined, screenId);
+      console.log("Created flow:", newFlow);
       await loadProjectData();
     } catch (error) {
       console.error("Error creating flow from screen:", error);

@@ -60,6 +60,8 @@ export async function createFlow(
   description?: string,
   parentScreenId?: string
 ): Promise<Flow> {
+  console.log("Creating flow with params:", { projectId, name, description, parentScreenId });
+  
   const { data, error } = await supabase
     .from("flows")
     .insert({
@@ -71,7 +73,12 @@ export async function createFlow(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("Error creating flow:", error);
+    throw error;
+  }
+  
+  console.log("Successfully created flow:", data);
   return data;
 }
 
