@@ -127,19 +127,19 @@ export default function ProjectPage() {
     try {
       // Create the new screen (it will be added at the end automatically)
       const newScreen = await createScreen(addScreenFlowId, title, parentId);
-      
+
       // Optimistic update - add to local state immediately
       const flowScreens = screensByFlow.get(addScreenFlowId) || [];
       const updatedFlowScreens = [...flowScreens, newScreen];
-      
+
       const updatedScreensByFlow = new Map(screensByFlow);
       updatedScreensByFlow.set(addScreenFlowId, updatedFlowScreens);
-      
+
       const updatedAllScreens = [...allScreens, newScreen];
-      
+
       setScreensByFlow(updatedScreensByFlow);
       setAllScreens(updatedAllScreens);
-      
+
       // Reload to get the updated screen count on flows
       await loadProjectData();
     } catch (error) {
@@ -373,7 +373,7 @@ export default function ProjectPage() {
               </TabsList>
             </div>
 
-            <TabsContent value="screens" className="flex-1 overflow-y-auto m-0">
+            <TabsContent value="screens" className="flex-1 overflow-auto m-0">
               {selectedFlow && (
                 <div className="border-b bg-background px-6 py-4">
                   <h2 className="text-xl font-semibold">
@@ -436,9 +436,7 @@ export default function ProjectPage() {
           onOpenChange={setAddScreenDialogOpen}
           onAdd={handleAddScreen}
           availableScreens={screensByFlow.get(addScreenFlowId) || []}
-          flowName={
-            flows.find((f) => f.id === addScreenFlowId)?.name || "Flow"
-          }
+          flowName={flows.find((f) => f.id === addScreenFlowId)?.name || "Flow"}
         />
       )}
     </div>
