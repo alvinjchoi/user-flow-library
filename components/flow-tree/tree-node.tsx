@@ -223,31 +223,37 @@ export function TreeNode({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  setIsEditing(true);
-                  setMenuOpen(false);
-                }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                    setMenuOpen(false);
+                  }}
+                >
                   <Edit2 className="h-4 w-4 mr-2" />
                   Edit screen name
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onAddFlowFromScreen?.(screen.id);
-                  setMenuOpen(false);
-                }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddFlowFromScreen?.(screen.id);
+                    setMenuOpen(false);
+                  }}
+                >
                   <GitBranch className="h-4 w-4 mr-2" />
                   Create flow from this screen
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onAddChild?.(screen.id);
-                  setMenuOpen(false);
-                }}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddChild?.(screen.id);
+                    setMenuOpen(false);
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add child screen
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
                     if (

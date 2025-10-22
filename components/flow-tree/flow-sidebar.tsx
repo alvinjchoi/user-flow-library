@@ -229,6 +229,7 @@ export function FlowSidebar({
             const isSelected = selectedFlowId === flow.id;
             const isDragged = draggedFlow?.id === flow.id;
             const isDragTarget = dragTargetFlow?.id === flow.id;
+            const hasScreenshots = screens.some(screen => screen.screenshot_url);
 
             return (
               <div key={flow.id}>
@@ -238,6 +239,7 @@ export function FlowSidebar({
                   isSelected={isSelected}
                   isDragged={isDragged}
                   isDragTarget={isDragTarget}
+                  hasScreenshots={hasScreenshots}
                   onToggle={() => toggleFlow(flow.id)}
                   onSelect={() => onSelectFlow?.(flow)}
                   onAddScreen={() => onAddScreen?.(flow.id)}
