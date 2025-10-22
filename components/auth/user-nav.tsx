@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 export function UserNav() {
   return (
     <div className="flex items-center gap-2">
+      {/* Debug: Always show something */}
+      <div className="text-xs text-muted-foreground">Auth:</div>
+      
       <SignedOut>
         <SignInButton mode="modal">
           <Button variant="ghost" size="sm">
@@ -27,11 +30,13 @@ export function UserNav() {
           afterSignOutUrl="/"
           appearance={{
             elements: {
-              avatarBox: "h-10 w-10 border-2 border-border hover:border-primary transition-colors",
-              userButtonPopoverCard: "bg-background border border-border shadow-lg",
+              avatarBox:
+                "h-10 w-10 border-2 border-border hover:border-primary transition-colors",
+              userButtonPopoverCard:
+                "bg-background border border-border shadow-lg",
               userButtonPopoverActionButton: "hover:bg-muted",
               userButtonPopoverActionButtonText: "text-foreground",
-              userButtonPopoverFooter: "hidden", // Hide "Manage account" link since we have custom profile page
+              userButtonPopoverFooter: "hidden",
             },
           }}
           userProfileUrl="/user-profile"
