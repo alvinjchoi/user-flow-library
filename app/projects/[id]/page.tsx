@@ -348,9 +348,9 @@ export default function ProjectPage() {
         />
 
         {/* Main area with tabs */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs defaultValue="screens" className="flex-1 flex flex-col">
-            <div className="border-b px-6">
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs defaultValue="screens" className="flex-1 flex flex-col min-h-0">
+            <div className="border-b px-6 flex-shrink-0">
               <TabsList className="h-12 bg-transparent">
                 <TabsTrigger
                   value="screens"
@@ -373,9 +373,9 @@ export default function ProjectPage() {
               </TabsList>
             </div>
 
-            <TabsContent value="screens" className="flex-1 overflow-auto m-0">
+            <TabsContent value="screens" className="flex-1 overflow-y-auto m-0 min-h-0">
               {selectedFlow && (
-                <div className="border-b bg-background px-6 py-4">
+                <div className="border-b bg-background px-6 py-4 flex-shrink-0">
                   <h2 className="text-xl font-semibold">
                     {getFlowDisplayName(selectedFlow)}
                   </h2>
@@ -398,7 +398,7 @@ export default function ProjectPage() {
 
             <TabsContent
               value="ui-elements"
-              className="flex-1 overflow-y-auto m-0"
+              className="flex-1 overflow-y-auto m-0 min-h-0"
             >
               <div className="flex items-center justify-center h-full">
                 <p className="text-muted-foreground">
@@ -407,7 +407,7 @@ export default function ProjectPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="flows" className="flex-1 overflow-y-auto m-0">
+            <TabsContent value="flows" className="flex-1 overflow-y-auto m-0 min-h-0">
               <div className="flex items-center justify-center h-full">
                 <p className="text-muted-foreground">Flows view coming soon</p>
               </div>
