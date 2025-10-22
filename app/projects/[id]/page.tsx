@@ -120,26 +120,69 @@ export default function ProjectPage() {
 
   async function handleUpdateScreenTitle(screenId: string, newTitle: string) {
     try {
+      // Optimistic update - update local state immediately
+      const updatedScreensByFlow = new Map(screensByFlow);
+      const updatedAllScreens = allScreens.map((s) =>
+        s.id === screenId ? { ...s, title: newTitle } : s
+      );
+
+      // Update each flow's screens
+      for (const [flowId, screens] of screensByFlow.entries()) {
+        const updatedScreens = screens.map((s) =>
+          s.id === screenId ? { ...s, title: newTitle } : s
+        );
+        updatedScreensByFlow.set(flowId, updatedScreens);
+      }
+
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+
+      // Update in background
       await updateScreen(screenId, { title: newTitle });
-      await loadProjectData();
     } catch (error) {
       console.error("Error updating screen title:", error);
       alert("Failed to update screen title");
+      // Revert on error
+      await loadProjectData();
     }
   }
 
   async function handleReorderScreens(flowId: string, screens: Screen[]) {
     try {
-      // Update order_index for each screen
+      // Optimistic update - update local state immediately
+      const updatedScreensByFlow = new Map(screensByFlow);
+      
+      // Update order_index for the reordered screens
+      const reorderedWithIndex = screens.map((screen, index) => ({
+        ...screen,
+        order_index: index,
+      }));
+      
+      updatedScreensByFlow.set(flowId, reorderedWithIndex);
+
+      // Update allScreens as well
+      const updatedAllScreens = allScreens.map((screen) => {
+        if (screen.flow_id === flowId) {
+          const reordered = reorderedWithIndex.find((s) => s.id === screen.id);
+          return reordered || screen;
+        }
+        return screen;
+      });
+
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+
+      // Update in background
       const updates = screens.map((screen, index) => ({
         id: screen.id,
         order_index: index,
       }));
       await reorderScreens(updates);
-      await loadProjectData();
     } catch (error) {
       console.error("Error reordering screens:", error);
       alert("Failed to reorder screens");
+      // Revert on error
+      await loadProjectData();
     }
   }
 
