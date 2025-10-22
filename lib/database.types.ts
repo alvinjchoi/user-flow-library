@@ -15,6 +15,7 @@ export interface Database {
           name: string;
           description: string | null;
           color: string;
+          avatar_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -23,6 +24,7 @@ export interface Database {
           name: string;
           description?: string | null;
           color?: string;
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -31,6 +33,7 @@ export interface Database {
           name?: string;
           description?: string | null;
           color?: string;
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };

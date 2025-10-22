@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit2 } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { getProjects, createProject, deleteProject } from "@/lib/projects";
+import { getProjects, createProject, deleteProject, uploadProjectAvatar } from "@/lib/projects";
 import type { Project } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/header";
@@ -32,6 +32,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadProjects();
@@ -66,7 +67,7 @@ export default function HomePage() {
 
     try {
       await deleteProject(projectToDelete.id);
-      setProjects(projects.filter(p => p.id !== projectToDelete.id));
+      setProjects(projects.filter((p) => p.id !== projectToDelete.id));
       setDeleteDialogOpen(false);
       setProjectToDelete(null);
     } catch (error) {
@@ -79,6 +80,34 @@ export default function HomePage() {
     event.stopPropagation(); // Prevent card click
     setProjectToDelete(project);
     setDeleteDialogOpen(true);
+  }
+
+  const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(null);
+
+  async function handleAvatarUpload(project: Project, event: React.MouseEvent) {
+    event.stopPropagation(); // Prevent card click
+    setUploadingProjectId(project.id);
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !uploadingProjectId) return;
+
+    try {
+      await uploadProjectAvatar(uploadingProjectId, file);
+      // Reload projects to show updated avatar
+      await loadProjects();
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("Failed to upload avatar. Please try again.");
+    } finally {
+      setUploadingProjectId(null);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   }
 
   if (loading) {
@@ -170,10 +199,30 @@ export default function HomePage() {
 
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">
-                        <div
-                          className="w-10 h-10 rounded-lg flex-shrink-0"
-                          style={{ backgroundColor: project.color }}
-                        />
+                        {/* Avatar with hover pencil icon */}
+                        <div className="relative group">
+                          {project.avatar_url ? (
+                            <img
+                              src={project.avatar_url}
+                              alt={`${project.name} avatar`}
+                              className="w-10 h-10 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-10 h-10 rounded-lg flex-shrink-0"
+                              style={{ backgroundColor: project.color }}
+                            />
+                          )}
+                          {/* Pencil icon - appears on hover */}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="absolute -top-1 -right-1 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            onClick={(e) => handleAvatarUpload(project, e)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                         <CardTitle className="text-lg truncate">
                           {project.name}
                         </CardTitle>
@@ -204,7 +253,9 @@ export default function HomePage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{projectToDelete?.name}"? This will permanently delete the project and all associated flows and screens. This action cannot be undone.
+              Are you sure you want to delete "{projectToDelete?.name}"? This
+              will permanently delete the project and all associated flows and
+              screens. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -218,6 +269,15 @@ export default function HomePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Hidden file input for avatar upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
     </div>
   );
 }

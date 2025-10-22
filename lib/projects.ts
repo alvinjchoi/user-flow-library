@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type { Project } from "./database.types";
+import { uploadFile } from "./storage";
 
 // Get all projects
 export async function getProjects(): Promise<Project[]> {
@@ -77,7 +78,7 @@ export async function deleteProject(id: string): Promise<void> {
 
   // 2. Soft delete all screens in flows belonging to this project
   if (flows && flows.length > 0) {
-    const flowIds = flows.map(flow => flow.id);
+    const flowIds = flows.map((flow) => flow.id);
     const { error: screensError } = await supabase
       .from("screens")
       .update({ deleted_at: new Date().toISOString() })
@@ -104,4 +105,40 @@ export async function deleteProject(id: string): Promise<void> {
     .is("deleted_at", null); // Only update non-deleted projects
 
   if (projectError) throw projectError;
+}
+
+// Upload project avatar
+export async function uploadProjectAvatar(
+  projectId: string,
+  file: File
+): Promise<string> {
+  // Generate unique filename
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${projectId}-${Date.now()}.${fileExt}`;
+  
+  // Upload file to project-avatars bucket
+  const avatarUrl = await uploadFile('project-avatars', fileName, file);
+  
+  // Update project with avatar URL
+  const { error } = await supabase
+    .from("projects")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", projectId);
+  
+  if (error) throw error;
+  
+  return avatarUrl;
+}
+
+// Update project avatar URL
+export async function updateProjectAvatar(
+  projectId: string,
+  avatarUrl: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("projects")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", projectId);
+  
+  if (error) throw error;
 }
