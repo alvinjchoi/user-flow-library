@@ -19,20 +19,10 @@ export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
       {
         id: "mock-flow-1",
         project_id: projectId,
-        name: "Browsing projects",
-        description: "User browsing through available projects",
+        name: "Onboarding",
+        description: "User onboarding and browsing flow",
         order_index: 0,
-        screen_count: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "mock-flow-2",
-        project_id: projectId,
-        name: "Viewing project details",
-        description: "User viewing detailed project information",
-        order_index: 1,
-        screen_count: 0, // This should show empty skeleton
+        screen_count: 2, // Now has 2 screens: parent + child
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -56,7 +46,7 @@ export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
     console.warn("Screens table not found, using mock data:", error);
 
     if (flowId === "mock-flow-1") {
-      // Return one screen for "Browsing projects"
+      // Return hierarchical screens for "Browsing projects"
       return [
         {
           id: "mock-screen-1",
@@ -73,9 +63,24 @@ export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
+        {
+          id: "mock-screen-2",
+          flow_id: flowId,
+          parent_id: "mock-screen-1",
+          title: "Project Details Screen",
+          display_name: "Viewing project details",
+          screenshot_url: null, // No screenshot yet - should show empty skeleton
+          notes: null,
+          order_index: 1,
+          level: 1,
+          path: "Projects List Screen > Project Details Screen",
+          tags: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
       ];
     } else if (flowId === "mock-flow-2") {
-      // Return empty array for "Viewing project details" to test skeleton
+      // Empty flow for testing
       return [];
     }
 

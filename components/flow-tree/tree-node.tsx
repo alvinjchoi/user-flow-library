@@ -100,7 +100,7 @@ export function TreeNode({
   };
 
   return (
-    <div>
+    <div className="relative">
       <div
         draggable={!isEditing}
         onDragStart={(e) => {
@@ -125,7 +125,7 @@ export function TreeNode({
           onDrop?.(screen);
         }}
         className={`
-          group flex items-center gap-2 py-1.5 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150
+          group flex items-center gap-2 h-9 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150 relative
           ${
             isSelected
               ? "bg-primary/10 text-primary font-medium"
@@ -134,9 +134,26 @@ export function TreeNode({
           ${isDragOver ? "bg-primary/20 border-t-2 border-primary" : ""}
           ${isDragging ? "opacity-50" : ""}
         `}
-        style={{ paddingLeft: `${level * 12 + 12}px` }}
         onClick={() => !isEditing && onSelect?.(screen)}
       >
+        {/* Visual hierarchy lines */}
+        {level > 0 && (
+          <div className="absolute left-0 top-0 bottom-0 flex items-stretch" style={{ width: `${level * 48}px` }}>
+            {Array.from({ length: level }).map((_, i) => (
+              <div
+                key={i}
+                className="w-12 flex items-center border-l border-border"
+                style={{ marginLeft: i === 0 ? '12px' : '0' }}
+              >
+                {i === level - 1 && (
+                  <div className="w-full border-b border-border h-1/2"></div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-1 relative" style={{ marginLeft: `${level * 48}px` }}>
         {hasChildren ? (
           <button
             onClick={(e) => {
@@ -278,10 +295,11 @@ export function TreeNode({
             </DropdownMenu>
           </>
         )}
+        </div>
       </div>
 
       {hasChildren && isExpanded && (
-        <div className="border-l border-muted/30 ml-3">
+        <div>
           {screen.children!.map((child) => (
             <TreeNode
               key={child.id}
