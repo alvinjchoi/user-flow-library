@@ -531,16 +531,14 @@ export default function ProjectPage() {
           open={editScreenDialogOpen}
           onOpenChange={setEditScreenDialogOpen}
           screen={editingScreen}
-          availableScreens={
-            screensByFlow.get(editingScreen.flow_id) || []
-          }
+          availableScreens={screensByFlow.get(editingScreen.flow_id) || []}
           flowName={
             flows.find((f) => f.id === editingScreen.flow_id)?.name || "Flow"
           }
           onUpdate={async (updates) => {
             try {
               await updateScreen(editingScreen.id, updates);
-              await loadFlowsAndScreens();
+              await loadProjectData();
               setEditScreenDialogOpen(false);
               setEditingScreen(null);
             } catch (error) {
