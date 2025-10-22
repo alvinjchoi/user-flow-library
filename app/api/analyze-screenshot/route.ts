@@ -69,12 +69,19 @@ Guidelines:
       throw new Error('No response from OpenAI');
     }
 
-    // Parse the JSON response
-    const parsed = JSON.parse(response);
+    // Parse the JSON response - remove markdown code blocks if present
+    let cleanedResponse = response.trim();
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const parsed = JSON.parse(cleanedResponse);
 
     return NextResponse.json({
-      title: parsed.title,
-      description: parsed.description,
+      title: parsed.title || 'Untitled Screen',
+      description: parsed.description || 'No description available',
     });
   } catch (error) {
     console.error('Error analyzing screenshot:', error);
