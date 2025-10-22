@@ -68,18 +68,24 @@ export function AddScreenDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = async () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setError("Screen title cannot be empty.");
+      return;
+    }
 
     setLoading(true);
     try {
-      await onAdd(title.trim(), parentId === "none" ? undefined : parentId);
+      await onAdd(
+        title.trim(), 
+        parentId === "none" ? undefined : parentId,
+        file || undefined
+      );
 
-      // Reset form
-      setTitle("");
-      setParentId("none");
+      // Reset form (handled by useEffect on dialog close)
       onOpenChange(false);
-    } catch (error) {
-      console.error("Error adding screen:", error);
+    } catch (err) {
+      console.error("Error adding screen:", err);
+      setError(err instanceof Error ? err.message : "Failed to add screen");
     } finally {
       setLoading(false);
     }
@@ -103,21 +109,106 @@ export function AddScreenDialog({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {/* File Upload Section */}
+          <div className="grid gap-2">
+            <Label htmlFor="screenshot">Screenshot (Optional)</Label>
+            {!preview ? (
+              <div
+                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm font-medium mb-1">
+                  Click to upload screenshot
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  AI will suggest title and parent
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="aspect-[9/16] relative rounded-lg overflow-hidden bg-muted max-w-[200px] mx-auto">
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                  onClick={() => {
+                    setFile(null);
+                    setPreview(null);
+                    setAiTitle("");
+                    setAiDescription("");
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* AI Analysis Results */}
+          {analyzing && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Analyzing screenshot...
+            </div>
+          )}
+
+          {aiTitle && (
+            <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                  AI Suggestions
+                </span>
+              </div>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                <strong>Title:</strong> {aiTitle}
+              </p>
+              {aiDescription && (
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                  <strong>Description:</strong> {aiDescription}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Manual Input Fields */}
           <div className="grid gap-2">
             <Label htmlFor="title">Screen Title</Label>
             <Input
               id="title"
-              placeholder="e.g., Sign in with Google"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              placeholder="e.g., Welcome Screen"
+              disabled={loading}
             />
+            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
           </div>
-
+          
           <div className="grid gap-2">
             <Label htmlFor="parent">Stems from (Optional)</Label>
-            <Select value={parentId} onValueChange={setParentId}>
+            <Select
+              value={parentId}
+              onValueChange={setParentId}
+              disabled={loading}
+            >
               <SelectTrigger id="parent">
                 <SelectValue placeholder="No parent (root level)" />
               </SelectTrigger>
@@ -149,8 +240,15 @@ export function AddScreenDialog({
             Cancel
           </Button>
           <Button onClick={handleAdd} disabled={!title.trim() || loading}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Screen
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" /> Add Screen
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
