@@ -1,8 +1,15 @@
 "use client";
 
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2, MoreHorizontal } from "lucide-react";
 import type { Flow } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 interface FlowHeaderProps {
   flow: Flow;
@@ -35,6 +42,8 @@ export function FlowHeader({
   onDragLeave,
   onDrop,
 }: FlowHeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div
       draggable
@@ -65,32 +74,41 @@ export function FlowHeader({
       <span className="text-xs text-muted-foreground font-normal">
         {flow.screen_count}
       </span>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 hover:bg-muted"
-          onClick={(e) => {
+      
+      {/* Three-dot menu */}
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={(e) => {
             e.stopPropagation();
             onAddScreen();
-          }}
-          title="Add screen"
-        >
-          <Plus className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          title="Delete flow"
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
-      </div>
+            setMenuOpen(false);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add screen
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+              setMenuOpen(false);
+            }}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete flow
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

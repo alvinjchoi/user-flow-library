@@ -9,10 +9,28 @@ import {
   X,
   GitBranch,
   Trash2,
-} from "lucide-react";
+  MoreHorizontal,
+} } from "lucide-react";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Helper function to count all descendants recursively
+function countAllDescendants(screen: Screen & { children?: Screen[] }): number {
+  if (!screen.children || screen.children.length === 0) return 0;
+
+  let count = screen.children.length;
+  for (const child of screen.children) {
+    count += countAllDescendants(child);
+  }
+  return count;
+}
 
 interface TreeNodeProps {
   screen: Screen & { children?: Screen[]; groupedScreens?: Screen[] };
@@ -24,20 +42,9 @@ interface TreeNodeProps {
   onDelete?: (screenId: string) => void;
   onDragStart?: (screen: Screen) => void;
   onDragOver?: (screen: Screen) => void;
-  onDrop?: (targetScreen: Screen) => void;
+  onDrop?: (screen: Screen) => void;
   selectedId?: string;
   isDragging?: boolean;
-}
-
-// Helper function to count all descendants recursively
-function countAllDescendants(screen: Screen & { children?: Screen[] }): number {
-  if (!screen.children || screen.children.length === 0) return 0;
-
-  let count = screen.children.length;
-  for (const child of screen.children) {
-    count += countAllDescendants(child);
-  }
-  return count;
 }
 
 export function TreeNode({
@@ -58,6 +65,7 @@ export function TreeNode({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(screen.title);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasChildren = screen.children && screen.children.length > 0;
@@ -202,69 +210,66 @@ export function TreeNode({
               </span>
             )}
 
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-muted"
-                onClick={(e) => {
+            {/* Three-dot menu */}
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   setIsEditing(true);
-                }}
-                title="Edit screen name"
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-muted"
-                onClick={(e) => {
+                  setMenuOpen(false);
+                }}>
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit screen name
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   onAddFlowFromScreen?.(screen.id);
-                }}
-                title="Create flow from this screen"
-              >
-                <GitBranch className="h-3 w-3" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-muted"
-                onClick={(e) => {
+                  setMenuOpen(false);
+                }}>
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Create flow from this screen
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   onAddChild?.(screen.id);
-                }}
-                title="Add child screen"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (
-                    confirm(
-                      `Delete "${screen.title}"?${
-                        hasChildren
-                          ? " This will also delete all child screens."
-                          : ""
-                      }`
-                    )
-                  ) {
-                    onDelete?.(screen.id);
-                  }
-                }}
-                title="Delete screen"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
+                  setMenuOpen(false);
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add child screen
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (
+                      confirm(
+                        `Delete "${screen.title}"?${
+                          hasChildren
+                            ? " This will also delete all child screens."
+                            : ""
+                        }`
+                      )
+                    ) {
+                      onDelete?.(screen.id);
+                    }
+                    setMenuOpen(false);
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete screen
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
       </div>
