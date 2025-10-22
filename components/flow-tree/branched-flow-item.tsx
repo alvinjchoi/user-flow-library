@@ -109,13 +109,13 @@ export function BranchedFlowItem({
         {/* Visual hierarchy lines - same as TreeNode */}
         <div
           className="absolute left-0 top-0 bottom-0 flex items-stretch"
-          style={{ width: `${(level + 1) * 48}px` }}
+          style={{ width: `${(level + 1) * 24}px` }}
         >
           {Array.from({ length: level + 1 }).map((_, i) => (
             <div
               key={i}
-              className="w-12 flex items-center border-l border-border"
-              style={{ marginLeft: i === 0 ? "12px" : "0" }}
+              className="w-6 flex items-center border-l border-border"
+              style={{ marginLeft: i === 0 ? "8px" : "0" }}
             >
               {i === level && (
                 <div className="w-full border-b border-border h-1/2"></div>
@@ -126,7 +126,7 @@ export function BranchedFlowItem({
 
         <div
           className="flex items-center gap-2 flex-1 relative"
-          style={{ marginLeft: `${(level + 1) * 48}px` }}
+          style={{ marginLeft: `${(level + 1) * 24}px` }}
         >
           <ChevronDown
             className={`h-4 w-4 transition-transform flex-shrink-0 ${
