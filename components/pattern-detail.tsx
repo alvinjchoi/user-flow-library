@@ -1,26 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import patterns from "@/data/patterns.json"
-
-interface Pattern {
-  id: string
-  title: string
-  tags: string[]
-  category: string
-  screenshots: string[]
-  description: string
-  createdAt: string
-}
+import { getPatterns } from "@/lib/patterns"
+import type { Pattern } from "@/lib/supabase"
 
 export function PatternDetail({ pattern }: { pattern: Pattern }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [relatedPatterns, setRelatedPatterns] = useState<Pattern[]>([])
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % pattern.screenshots.length)
@@ -30,17 +22,32 @@ export function PatternDetail({ pattern }: { pattern: Pattern }) {
     setCurrentImageIndex((prev) => (prev === 0 ? pattern.screenshots.length - 1 : prev - 1))
   }
 
-  // Find related patterns by shared tags
-  const relatedPatterns = patterns
-    .filter((p) => p.id !== pattern.id)
-    .map((p) => ({
-      pattern: p,
-      sharedTags: p.tags.filter((tag) => pattern.tags.includes(tag)).length,
-    }))
-    .filter((item) => item.sharedTags > 0)
-    .sort((a, b) => b.sharedTags - a.sharedTags)
-    .slice(0, 3)
-    .map((item) => item.pattern)
+  // Fetch related patterns by shared tags
+  useEffect(() => {
+    async function fetchRelated() {
+      try {
+        // Get all patterns to find related ones
+        const { patterns: allPatterns } = await getPatterns({ limit: 50 })
+        
+        const related = allPatterns
+          .filter((p) => p.id !== pattern.id)
+          .map((p) => ({
+            pattern: p,
+            sharedTags: p.tags.filter((tag) => pattern.tags.includes(tag)).length,
+          }))
+          .filter((item) => item.sharedTags > 0)
+          .sort((a, b) => b.sharedTags - a.sharedTags)
+          .slice(0, 3)
+          .map((item) => item.pattern)
+        
+        setRelatedPatterns(related)
+      } catch (error) {
+        console.error("Error fetching related patterns:", error)
+      }
+    }
+    
+    fetchRelated()
+  }, [pattern.id, pattern.tags])
 
   const formattedDate = new Date(pattern.createdAt).toLocaleDateString("en-US", {
     year: "numeric",

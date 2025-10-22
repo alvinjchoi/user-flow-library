@@ -1,26 +1,39 @@
 "use client"
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Search, SlidersHorizontal, X } from "lucide-react"
-import patterns from "@/data/patterns.json"
+import { getCategories, getTags } from "@/lib/patterns"
 
 export function SearchAndFilters() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [categories, setCategories] = useState<string[]>(["all"])
+  const [allTags, setAllTags] = useState<string[]>([])
 
   const searchQuery = searchParams.get("search") || ""
   const categoryFilter = searchParams.get("category") || "all"
   const tagFilters = searchParams.get("tags")?.split(",").filter(Boolean) || []
 
-  // Extract unique categories and tags
-  const categories = ["all", ...Array.from(new Set(patterns.map((p) => p.category)))]
-  const allTags = Array.from(new Set(patterns.flatMap((p) => p.tags))).sort()
+  // Fetch categories and tags on mount
+  useEffect(() => {
+    async function fetchFilters() {
+      try {
+        const [cats, tags] = await Promise.all([getCategories(), getTags()])
+        setCategories(["all", ...cats])
+        setAllTags(tags)
+      } catch (error) {
+        console.error("Error fetching filters:", error)
+      }
+    }
+    fetchFilters()
+  }, [])
 
   const updateParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())

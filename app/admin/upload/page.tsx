@@ -6,32 +6,70 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { createPattern } from "@/lib/patterns"
 
 export default function AdminUploadPage() {
   const [jsonInput, setJsonInput] = useState("")
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setLoading(true)
+    setMessage(null)
+    
     try {
       const parsed = JSON.parse(jsonInput)
 
       // Validate required fields
-      const requiredFields = ["id", "title", "tags", "category", "screenshots", "description", "createdAt"]
+      const requiredFields = ["id", "title", "tags", "category", "screenshots", "description"]
       const missingFields = requiredFields.filter((field) => !(field in parsed))
 
       if (missingFields.length > 0) {
         throw new Error(`Missing required fields: ${missingFields.join(", ")}`)
       }
 
-      // In a real app, this would save to a database or file
-      console.log("Pattern to add:", parsed)
-      setMessage({ type: "success", text: "Pattern validated successfully! (Dev mode: check console)" })
+      // Validate field types
+      if (typeof parsed.id !== "string" || parsed.id.trim() === "") {
+        throw new Error("id must be a non-empty string")
+      }
+      if (typeof parsed.title !== "string" || parsed.title.trim() === "") {
+        throw new Error("title must be a non-empty string")
+      }
+      if (!Array.isArray(parsed.tags)) {
+        throw new Error("tags must be an array")
+      }
+      if (typeof parsed.category !== "string" || parsed.category.trim() === "") {
+        throw new Error("category must be a non-empty string")
+      }
+      if (!Array.isArray(parsed.screenshots)) {
+        throw new Error("screenshots must be an array")
+      }
+      if (typeof parsed.description !== "string" || parsed.description.trim() === "") {
+        throw new Error("description must be a non-empty string")
+      }
+
+      // Create the pattern in Supabase
+      await createPattern({
+        id: parsed.id,
+        title: parsed.title,
+        tags: parsed.tags,
+        category: parsed.category,
+        screenshots: parsed.screenshots,
+        description: parsed.description,
+      })
+
+      setMessage({ 
+        type: "success", 
+        text: "Pattern successfully added to Supabase! View it on the home page." 
+      })
       setJsonInput("")
     } catch (error) {
       setMessage({
         type: "error",
         text: error instanceof Error ? error.message : "Invalid JSON format",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -52,7 +90,7 @@ export default function AdminUploadPage() {
         <Card>
           <CardHeader>
             <CardTitle>Upload New Pattern</CardTitle>
-            <CardDescription>Dev-only page: Paste JSON for a new pattern below</CardDescription>
+            <CardDescription>Paste JSON for a new pattern to save it to Supabase</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -75,8 +113,14 @@ export default function AdminUploadPage() {
             )}
 
             <div className="flex gap-2">
-              <Button onClick={handleSubmit}>Validate & Submit</Button>
-              <Button variant="outline" onClick={() => setJsonInput(JSON.stringify(examplePattern, null, 2))}>
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? "Saving..." : "Save to Supabase"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setJsonInput(JSON.stringify(examplePattern, null, 2))}
+                disabled={loading}
+              >
                 Load Example
               </Button>
             </div>

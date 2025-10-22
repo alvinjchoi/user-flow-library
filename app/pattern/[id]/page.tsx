@@ -1,16 +1,22 @@
 import { notFound } from "next/navigation"
 import { PatternDetail } from "@/components/pattern-detail"
 import { Header } from "@/components/header"
-import patterns from "@/data/patterns.json"
+import { getPatternById, getPatterns } from "@/lib/patterns"
 
-export function generateStaticParams() {
-  return patterns.map((pattern) => ({
-    id: pattern.id,
-  }))
+export async function generateStaticParams() {
+  try {
+    const { patterns } = await getPatterns({ limit: 100 })
+    return patterns.map((pattern) => ({
+      id: pattern.id,
+    }))
+  } catch (error) {
+    console.error("Error generating static params:", error)
+    return []
+  }
 }
 
-export default function PatternPage({ params }: { params: { id: string } }) {
-  const pattern = patterns.find((p) => p.id === params.id)
+export default async function PatternPage({ params }: { params: { id: string } }) {
+  const pattern = await getPatternById(params.id)
 
   if (!pattern) {
     notFound()

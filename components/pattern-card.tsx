@@ -2,16 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-
-interface Pattern {
-  id: string
-  title: string
-  tags: string[]
-  category: string
-  screenshots: string[]
-  description: string
-  createdAt: string
-}
+import type { Pattern } from "@/lib/supabase"
 
 export function PatternCard({ pattern }: { pattern: Pattern }) {
   return (
