@@ -196,30 +196,33 @@ export function ScreenGallery({
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Parent screens in grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {/* Parent screens in horizontal scrollable row */}
+          <div className="flex gap-4 overflow-x-auto pb-4">
             {parents.map((screen) => (
-              <ScreenCard
-                key={screen.id}
-                screen={screen}
-                isSelected={selectedScreenId === screen.id}
-                onSelectScreen={onSelectScreen}
-                onUploadScreenshot={onUploadScreenshot}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
+              <div key={screen.id} className="flex-shrink-0 w-48">
+                <ScreenCard
+                  screen={screen}
+                  isSelected={selectedScreenId === screen.id}
+                  onSelectScreen={onSelectScreen}
+                  onUploadScreenshot={onUploadScreenshot}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              </div>
             ))}
 
             {/* Add screen card */}
-            <Card
-              className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center"
-              onClick={onAddScreen}
-            >
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Plus className="h-8 w-8" />
-                <span className="text-sm">Add screen</span>
-              </div>
-            </Card>
+            <div className="flex-shrink-0 w-48">
+              <Card
+                className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                onClick={onAddScreen}
+              >
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <Plus className="h-8 w-8" />
+                  <span className="text-sm">Add screen</span>
+                </div>
+              </Card>
+            </div>
           </div>
 
           {/* Child screens grouped by parent */}
@@ -242,30 +245,35 @@ export function ScreenGallery({
                 {/* Child screens */}
                 <div className="pl-8 md:pl-12">
                   <div className="border-l-2 border-primary/30 pl-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div className="flex gap-4 overflow-x-auto pb-4">
                       {children.map((child) => (
-                        <ScreenCard
-                          key={child.id}
-                          screen={child}
-                          isSelected={selectedScreenId === child.id}
-                          onSelectScreen={onSelectScreen}
-                          onUploadScreenshot={onUploadScreenshot}
-                        />
+                        <div key={child.id} className="flex-shrink-0 w-48">
+                          <ScreenCard
+                            screen={child}
+                            isSelected={selectedScreenId === child.id}
+                            onSelectScreen={onSelectScreen}
+                            onUploadScreenshot={onUploadScreenshot}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                          />
+                        </div>
                       ))}
 
                       {/* Add child screen card */}
-                      <Card
-                        className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddScreen?.(parent.id);
-                        }}
-                      >
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <Plus className="h-8 w-8" />
-                          <span className="text-sm">Add screen</span>
-                        </div>
-                      </Card>
+                      <div className="flex-shrink-0 w-48">
+                        <Card
+                          className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddScreen?.(parent.id);
+                          }}
+                        >
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                            <Plus className="h-6 w-6" />
+                            <span className="text-xs">Add child</span>
+                          </div>
+                        </Card>
+                      </div>
                     </div>
                   </div>
                 </div>

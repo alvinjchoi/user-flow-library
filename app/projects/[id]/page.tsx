@@ -197,7 +197,10 @@ export default function ProjectPage() {
       setAddScreenFlowId(null);
       setAddScreenParentId(undefined);
     } catch (error) {
-      console.error("Error adding screen:", error instanceof Error ? error.message : String(error));
+      console.error(
+        "Error adding screen:",
+        error instanceof Error ? error.message : String(error)
+      );
       alert("Failed to create screen");
     }
   }
