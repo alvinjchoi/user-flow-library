@@ -150,7 +150,7 @@ export function FlowSidebar({
 
   const handleFlowDrop = (e: React.DragEvent, targetFlow: Flow) => {
     e.preventDefault();
-    
+
     if (!draggedFlow || !onReorderFlows) {
       setDraggedFlow(null);
       setDragTargetFlow(null);
@@ -165,9 +165,9 @@ export function FlowSidebar({
 
     // Reorder the flows array
     const reordered = [...flows];
-    const draggedIndex = reordered.findIndex(f => f.id === draggedFlow.id);
-    const targetIndex = reordered.findIndex(f => f.id === targetFlow.id);
-    
+    const draggedIndex = reordered.findIndex((f) => f.id === draggedFlow.id);
+    const targetIndex = reordered.findIndex((f) => f.id === targetFlow.id);
+
     if (draggedIndex === -1 || targetIndex === -1) {
       setDraggedFlow(null);
       setDragTargetFlow(null);
@@ -181,7 +181,7 @@ export function FlowSidebar({
     // Update order_index for all flows
     const flowsWithNewOrder = reordered.map((flow, index) => ({
       ...flow,
-      order_index: index
+      order_index: index,
     }));
 
     // Call the reorder callback
@@ -255,10 +255,10 @@ export function FlowSidebar({
                     selectedFlowId === flow.id
                       ? "bg-primary/10 text-primary font-semibold"
                       : "text-foreground"
-                  } ${
-                    draggedFlow?.id === flow.id ? "opacity-50" : ""
-                  } ${
-                    dragTargetFlow?.id === flow.id ? "bg-primary/20 border-t-2 border-primary" : ""
+                  } ${draggedFlow?.id === flow.id ? "opacity-50" : ""} ${
+                    dragTargetFlow?.id === flow.id
+                      ? "bg-primary/20 border-t-2 border-primary"
+                      : ""
                   }`}
                   role="button"
                   tabIndex={0}
@@ -268,9 +268,7 @@ export function FlowSidebar({
                       isExpanded ? "" : "-rotate-90"
                     }`}
                   />
-                  <span className="flex-1 truncate text-left">
-                    {flow.name}
-                  </span>
+                  <span className="flex-1 truncate text-left">{flow.name}</span>
                   <span className="text-xs text-muted-foreground font-normal">
                     {flow.screen_count}
                   </span>

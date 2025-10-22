@@ -118,7 +118,11 @@ export function TreeNode({
         }}
         className={`
           group flex items-center gap-2 py-1.5 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150
-          ${isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground"}
+          ${
+            isSelected
+              ? "bg-primary/10 text-primary font-medium"
+              : "text-foreground"
+          }
           ${isDragOver ? "bg-primary/20 border-t-2 border-primary" : ""}
           ${isDragging ? "opacity-50" : ""}
         `}
