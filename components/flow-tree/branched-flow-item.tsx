@@ -133,49 +133,53 @@ export function BranchedFlowItem({
               isExpanded ? "" : "-rotate-90"
             }`}
           />
-          <span className="text-sm flex-1 truncate font-medium">{flow.name}</span>
-        <span className="text-xs text-muted-foreground font-normal">
-          {flow.screen_count}
-        </span>
+          <span className="text-sm flex-1 truncate font-medium">
+            {flow.name}
+          </span>
+          <span className="text-xs text-muted-foreground font-normal">
+            {flow.screen_count}
+          </span>
 
-        {/* Three-dot menu */}
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddScreen();
-                setMenuOpen(false);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add screen
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm(`Delete flow "${flow.name}" and all its screens?`)) {
-                  onDeleteFlow?.(flow.id);
-                }
-                setMenuOpen(false);
-              }}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete flow
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Three-dot menu */}
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddScreen();
+                  setMenuOpen(false);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add screen
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    confirm(`Delete flow "${flow.name}" and all its screens?`)
+                  ) {
+                    onDeleteFlow?.(flow.id);
+                  }
+                  setMenuOpen(false);
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete flow
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -191,7 +195,7 @@ export function BranchedFlowItem({
               <TreeNode
                 key={screen.id}
                 screen={screen}
-                level={0}
+                level={level + 1}
                 onAddChild={(parentId) => onAddScreen(parentId)}
                 onSelect={onSelectScreen}
                 onUpdateTitle={onUpdateScreenTitle}
