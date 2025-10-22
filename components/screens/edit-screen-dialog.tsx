@@ -214,6 +214,14 @@ export function EditScreenDialog({
           <div className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="screenshot">Screenshot</Label>
+              {/* Hidden file input - always rendered */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
               {screen.screenshot_url && !preview ? (
                 <div className="relative">
                   <div className="aspect-[9/16] relative rounded-lg overflow-hidden bg-muted max-w-[280px] mx-auto">
@@ -237,13 +245,6 @@ export function EditScreenDialog({
                   className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer min-h-[300px] flex flex-col items-center justify-center"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
                   <ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-lg font-medium mb-2">
                     Click to upload screenshot
