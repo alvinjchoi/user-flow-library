@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,20 +10,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { uploadScreenshot } from "@/lib/storage";
 import { updateScreen } from "@/lib/flows";
+import type { Screen } from "@/lib/database.types";
 
 interface UploadDialogProps {
   screenId: string;
   screenTitle: string;
+  allScreens: Screen[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUploadComplete?: (url: string) => void;
+  onUploadComplete?: (url: string, title?: string, description?: string) => void;
 }
 
 export function UploadDialog({
   screenId,
   screenTitle,
+  allScreens,
   open,
   onOpenChange,
   onUploadComplete,
@@ -31,6 +37,10 @@ export function UploadDialog({
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiTitle, setAiTitle] = useState("");
+  const [aiDescription, setAiDescription] = useState("");
+  const [useAI, setUseAI] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +71,29 @@ export function UploadDialog({
     reader.readAsDataURL(selectedFile);
   };
 
+  const analyzeScreenshot = async (imageUrl: string) => {
+    // Build context from existing screens
+    const context = allScreens
+      .filter(s => s.screenshot_url)
+      .map(s => ({
+        title: s.title,
+        description: s.notes
+      }));
+
+    const response = await fetch('/api/analyze-screenshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl, context }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to analyze screenshot');
+    }
+
+    return response.json();
+  };
+
   const handleUpload = async () => {
     if (!file) return;
 
@@ -68,18 +101,42 @@ export function UploadDialog({
     setError(null);
 
     try {
-      // Upload to Supabase Storage
+      // 1. Upload to Supabase Storage
       const url = await uploadScreenshot(file, screenId);
 
       if (!url) {
         throw new Error("Failed to upload file");
       }
 
-      // Update screen record with screenshot URL
-      await updateScreen(screenId, { screenshot_url: url });
+      let finalTitle = aiTitle;
+      let finalDescription = aiDescription;
+
+      // 2. Analyze with AI if enabled and not already analyzed
+      if (useAI && !aiTitle) {
+        setAnalyzing(true);
+        try {
+          const analysis = await analyzeScreenshot(url);
+          finalTitle = analysis.title;
+          finalDescription = analysis.description;
+          setAiTitle(analysis.title);
+          setAiDescription(analysis.description);
+        } catch (aiError) {
+          console.error("AI analysis failed:", aiError);
+          // Continue without AI suggestions - don't block upload
+        } finally {
+          setAnalyzing(false);
+        }
+      }
+
+      // 3. Update screen record with screenshot URL and AI data
+      await updateScreen(screenId, {
+        screenshot_url: url,
+        ...(finalTitle && { title: finalTitle }),
+        ...(finalDescription && { notes: finalDescription })
+      });
 
       // Notify parent
-      onUploadComplete?.(url);
+      onUploadComplete?.(url, finalTitle, finalDescription);
 
       // Close dialog
       onOpenChange(false);
@@ -87,6 +144,8 @@ export function UploadDialog({
       // Reset state
       setFile(null);
       setPreview(null);
+      setAiTitle("");
+      setAiDescription("");
     } catch (err) {
       console.error("Upload error:", err);
       setError(
@@ -94,6 +153,7 @@ export function UploadDialog({
       );
     } finally {
       setUploading(false);
+      setAnalyzing(false);
     }
   };
 
@@ -119,10 +179,12 @@ export function UploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Upload Screenshot</DialogTitle>
-          <DialogDescription>{screenTitle}</DialogDescription>
+          <DialogDescription>
+            {useAI ? "AI will auto-name and describe your screen" : screenTitle}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -164,6 +226,8 @@ export function UploadDialog({
                 onClick={() => {
                   setFile(null);
                   setPreview(null);
+                  setAiTitle("");
+                  setAiDescription("");
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }
@@ -174,11 +238,55 @@ export function UploadDialog({
             </div>
           )}
 
+          {aiTitle && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="title" className="flex items-center gap-2">
+                  <Sparkles className="h-3 w-3 text-purple-500" />
+                  AI Suggested Title
+                </Label>
+                <Input
+                  id="title"
+                  value={aiTitle}
+                  onChange={(e) => setAiTitle(e.target.value)}
+                  placeholder="Screen title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description" className="flex items-center gap-2">
+                  <Sparkles className="h-3 w-3 text-purple-500" />
+                  AI Suggested Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={aiDescription}
+                  onChange={(e) => setAiDescription(e.target.value)}
+                  placeholder="Screen description"
+                  rows={3}
+                />
+              </div>
+            </>
+          )}
+
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
               {error}
             </div>
           )}
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="useAI"
+              checked={useAI}
+              onChange={(e) => setUseAI(e.target.checked)}
+              className="rounded"
+            />
+            <Label htmlFor="useAI" className="text-sm cursor-pointer font-normal">
+              Use AI to auto-name
+            </Label>
+          </div>
 
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -186,11 +294,19 @@ export function UploadDialog({
             </Button>
             <Button
               onClick={handleUpload}
-              disabled={!file || uploading}
-              className="min-w-24"
+              disabled={!file || uploading || analyzing}
+              className="min-w-28"
             >
-              {uploading ? (
-                "Uploading..."
+              {analyzing ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                  Analyzing...
+                </>
+              ) : uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
               ) : (
                 <>
                   <Upload className="h-4 w-4 mr-2" />
@@ -204,4 +320,3 @@ export function UploadDialog({
     </Dialog>
   );
 }
-

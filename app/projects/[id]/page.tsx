@@ -153,26 +153,40 @@ export default function ProjectPage() {
     setUploadDialogOpen(true);
   }
 
-  async function handleUploadComplete(url: string) {
+  async function handleUploadComplete(url: string, title?: string, description?: string) {
     if (!uploadingScreenId) return;
 
     // Optimistic update - update local state immediately without reload
     const updatedScreensByFlow = new Map(screensByFlow);
     const updatedAllScreens = allScreens.map((s) =>
-      s.id === uploadingScreenId ? { ...s, screenshot_url: url } : s
+      s.id === uploadingScreenId 
+        ? { 
+            ...s, 
+            screenshot_url: url,
+            ...(title && { title }),
+            ...(description && { notes: description })
+          } 
+        : s
     );
 
     // Update each flow's screens
     for (const [flowId, screens] of screensByFlow.entries()) {
       const updatedScreens = screens.map((s) =>
-        s.id === uploadingScreenId ? { ...s, screenshot_url: url } : s
+        s.id === uploadingScreenId 
+          ? { 
+              ...s, 
+              screenshot_url: url,
+              ...(title && { title }),
+              ...(description && { notes: description })
+            } 
+          : s
       );
       updatedScreensByFlow.set(flowId, updatedScreens);
     }
 
     setScreensByFlow(updatedScreensByFlow);
     setAllScreens(updatedAllScreens);
-
+    
     // Close the dialog
     setUploadDialogOpen(false);
     setUploadingScreenId(null);
@@ -211,13 +225,13 @@ export default function ProjectPage() {
     try {
       // Optimistic update - update local state immediately
       const updatedScreensByFlow = new Map(screensByFlow);
-
+      
       // Update order_index for the reordered screens
       const reorderedWithIndex = screens.map((screen, index) => ({
         ...screen,
         order_index: index,
       }));
-
+      
       updatedScreensByFlow.set(flowId, reorderedWithIndex);
 
       // Update allScreens as well
@@ -241,6 +255,64 @@ export default function ProjectPage() {
     } catch (error) {
       console.error("Error reordering screens:", error);
       alert("Failed to reorder screens");
+      // Revert on error
+      await loadProjectData();
+    }
+  }
+
+  async function handleDeleteScreen(screenId: string) {
+    try {
+      // Optimistic update - remove from local state immediately
+      const updatedScreensByFlow = new Map(screensByFlow);
+      const updatedAllScreens = allScreens.filter((s) => s.id !== screenId);
+
+      // Update each flow's screens
+      for (const [flowId, screens] of screensByFlow.entries()) {
+        const updatedScreens = screens.filter((s) => s.id !== screenId);
+        updatedScreensByFlow.set(flowId, updatedScreens);
+      }
+
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+
+      // Clear selection if deleted screen was selected
+      if (selectedScreen?.id === screenId) {
+        setSelectedScreen(null);
+      }
+
+      // Delete from database in background
+      await deleteScreen(screenId);
+    } catch (error) {
+      console.error("Error deleting screen:", error);
+      alert("Failed to delete screen");
+      // Revert on error
+      await loadProjectData();
+    }
+  }
+
+  async function handleDeleteFlow(flowId: string) {
+    try {
+      // Optimistic update - remove flow and its screens from local state
+      const updatedFlows = flows.filter((f) => f.id !== flowId);
+      const updatedScreensByFlow = new Map(screensByFlow);
+      updatedScreensByFlow.delete(flowId);
+      const updatedAllScreens = allScreens.filter((s) => s.flow_id !== flowId);
+
+      setFlows(updatedFlows);
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+
+      // Clear selection if deleted flow was selected
+      if (selectedFlow?.id === flowId) {
+        setSelectedFlow(null);
+        setSelectedScreen(null);
+      }
+
+      // Delete from database in background
+      await deleteFlow(flowId);
+    } catch (error) {
+      console.error("Error deleting flow:", error);
+      alert("Failed to delete flow");
       // Revert on error
       await loadProjectData();
     }
@@ -342,6 +414,8 @@ export default function ProjectPage() {
           onSelectFlow={setSelectedFlow}
           onUpdateScreenTitle={handleUpdateScreenTitle}
           onAddFlowFromScreen={handleAddFlowFromScreen}
+          onDeleteScreen={handleDeleteScreen}
+          onDeleteFlow={handleDeleteFlow}
           onReorderScreens={handleReorderScreens}
           selectedScreenId={selectedScreen?.id}
           selectedFlowId={selectedFlow?.id}
@@ -373,7 +447,10 @@ export default function ProjectPage() {
               </TabsList>
             </div>
 
-            <TabsContent value="screens" className="flex-1 overflow-y-auto m-0 min-h-0">
+            <TabsContent
+              value="screens"
+              className="flex-1 overflow-y-auto m-0 min-h-0"
+            >
               {selectedFlow && (
                 <div className="border-b bg-background px-6 py-4 flex-shrink-0">
                   <h2 className="text-xl font-semibold">
@@ -407,7 +484,10 @@ export default function ProjectPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="flows" className="flex-1 overflow-y-auto m-0 min-h-0">
+            <TabsContent
+              value="flows"
+              className="flex-1 overflow-y-auto m-0 min-h-0"
+            >
               <div className="flex items-center justify-center h-full">
                 <p className="text-muted-foreground">Flows view coming soon</p>
               </div>
@@ -423,6 +503,7 @@ export default function ProjectPage() {
           screenTitle={
             allScreens.find((s) => s.id === uploadingScreenId)?.title || ""
           }
+          allScreens={allScreens}
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           onUploadComplete={handleUploadComplete}
