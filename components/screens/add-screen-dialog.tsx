@@ -25,7 +25,7 @@ import { Plus } from "lucide-react";
 interface AddScreenDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (title: string, parentId?: string) => void;
+  onAdd: (title: string, parentId?: string, screenshotFile?: File) => void;
   availableScreens: Screen[];
   flowName: string;
   defaultParentId?: string;
