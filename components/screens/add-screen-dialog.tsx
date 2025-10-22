@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Upload, X, Image as ImageIcon, Sparkles, Loader2, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Screen } from "@/lib/database.types";
-import { Plus } from "lucide-react";
+
+// Utility to analyze screenshot with AI
+async function analyzeScreenshot(imageUrl: string) {
+  const response = await fetch("/api/analyze-screenshot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageUrl }),
+  });
+  
+  if (!response.ok) {
+    throw new Error("AI analysis failed");
+  }
+  
+  return response.json();
+}
 
 interface AddScreenDialogProps {
   open: boolean;
@@ -42,6 +57,15 @@ export function AddScreenDialog({
   const [title, setTitle] = useState("");
   const [parentId, setParentId] = useState<string>(defaultParentId || "none");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // New state for file upload and AI analysis
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiTitle, setAiTitle] = useState("");
+  const [aiDescription, setAiDescription] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = async () => {
     if (!title.trim()) return;
