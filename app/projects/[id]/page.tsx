@@ -18,7 +18,7 @@ import {
 import type { Project, Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
 import { ScreenGalleryByFlow } from "@/components/screens/screen-gallery-by-flow";
-import { UploadDialog } from "@/components/screens/upload-dialog";
+import { EditScreenDialog } from "@/components/screens/edit-screen-dialog";
 import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -37,10 +37,8 @@ export default function ProjectPage() {
   const [allScreens, setAllScreens] = useState<Screen[]>([]);
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [uploadingScreenId, setUploadingScreenId] = useState<string | null>(
-    null
-  );
+  const [editScreenDialogOpen, setEditScreenDialogOpen] = useState(false);
+  const [editingScreen, setEditingScreen] = useState<Screen | null>(null);
   const [addScreenDialogOpen, setAddScreenDialogOpen] = useState(false);
   const [addScreenFlowId, setAddScreenFlowId] = useState<string | null>(null);
   const [addScreenParentId, setAddScreenParentId] = useState<
@@ -207,54 +205,11 @@ export default function ProjectPage() {
   }
 
   function handleUploadScreenshot(screenId: string) {
-    setUploadingScreenId(screenId);
-    setUploadDialogOpen(true);
-  }
-
-  async function handleUploadComplete(
-    url: string,
-    title?: string,
-    displayName?: string,
-    description?: string
-  ) {
-    if (!uploadingScreenId) return;
-
-    // Optimistic update - update local state immediately without reload
-    const updatedScreensByFlow = new Map(screensByFlow);
-    const updatedAllScreens = allScreens.map((s) =>
-      s.id === uploadingScreenId
-        ? {
-            ...s,
-            screenshot_url: url,
-            ...(title && { title }),
-            ...(displayName && { display_name: displayName }),
-            ...(description && { notes: description }),
-          }
-        : s
-    );
-
-    // Update each flow's screens
-    for (const [flowId, screens] of screensByFlow.entries()) {
-      const updatedScreens = screens.map((s) =>
-        s.id === uploadingScreenId
-          ? {
-              ...s,
-              screenshot_url: url,
-              ...(title && { title }),
-              ...(displayName && { display_name: displayName }),
-              ...(description && { notes: description }),
-            }
-          : s
-      );
-      updatedScreensByFlow.set(flowId, updatedScreens);
+    const screen = allScreens.find((s) => s.id === screenId);
+    if (screen) {
+      setEditingScreen(screen);
+      setEditScreenDialogOpen(true);
     }
-
-    setScreensByFlow(updatedScreensByFlow);
-    setAllScreens(updatedAllScreens);
-
-    // Close the dialog
-    setUploadDialogOpen(false);
-    setUploadingScreenId(null);
   }
 
   async function handleUpdateScreenTitle(screenId: string, newTitle: string) {
@@ -570,20 +525,29 @@ export default function ProjectPage() {
         </div>
       </div>
 
-      {/* Upload Dialog */}
-      {uploadingScreenId && (
-        <UploadDialog
-          screenId={uploadingScreenId}
-          screenTitle={
-            allScreens.find((s) => s.id === uploadingScreenId)?.title || ""
+      {/* Edit Screen Dialog */}
+      {editingScreen && (
+        <EditScreenDialog
+          open={editScreenDialogOpen}
+          onOpenChange={setEditScreenDialogOpen}
+          screen={editingScreen}
+          availableScreens={
+            screensByFlow.get(editingScreen.flow_id) || []
           }
-          projectId={project.id}
-          flowId={
-            allScreens.find((s) => s.id === uploadingScreenId)?.flow_id || ""
+          flowName={
+            flows.find((f) => f.id === editingScreen.flow_id)?.name || "Flow"
           }
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          onUploadComplete={handleUploadComplete}
+          onUpdate={async (updates) => {
+            try {
+              await updateScreen(editingScreen.id, updates);
+              await loadFlowsAndScreens();
+              setEditScreenDialogOpen(false);
+              setEditingScreen(null);
+            } catch (error) {
+              console.error("Failed to update screen:", error);
+              alert("Failed to update screen");
+            }
+          }}
         />
       )}
 
