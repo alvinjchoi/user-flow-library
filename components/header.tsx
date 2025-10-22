@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Search } from "lucide-react"
+import { UserNav } from "@/components/auth/user-nav"
 
 export function Header() {
   return (
@@ -18,6 +19,7 @@ export function Header() {
           <Link href="/admin/upload" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Admin
           </Link>
+          <UserNav />
         </nav>
       </div>
     </header>

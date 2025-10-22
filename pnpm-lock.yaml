@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@clerk/nextjs':
+        specifier: ^6.33.7
+        version: 6.33.7(next@15.5.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.60.0(react@19.2.0))
@@ -203,6 +206,41 @@ packages:
   '@babel/runtime@7.28.4':
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
+
+  '@clerk/backend@2.18.3':
+    resolution: {integrity: sha512-fWMq/Tb2hgfUXLKJN8jr6pbpA5XLUwC4BjWz7lB5Y+YhXhBrO7GtfpZIS91L/aDhNb17X6IaE6XvS6tDJBCUUw==}
+    engines: {node: '>=18.17.0'}
+
+  '@clerk/clerk-react@5.53.2':
+    resolution: {integrity: sha512-/ckRJC1dDS6hUVv+zzNX5VUCC49/UlbhKElN5LQqv172ntrx4Mw1TKBCJ3aO5Rct/RiJxhf1PfTUEohtY4QjUg==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+
+  '@clerk/nextjs@6.33.7':
+    resolution: {integrity: sha512-0lM00FmhzzM18K4cANiNh6RaMTyLuCbtqdeagtSbjKKve0xFsrJjFAqfJPi7FnXsU6pUAp0rAq6Z7Fp2zFz7Ow==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      next: ^13.5.7 || ^14.2.25 || ^15.2.3
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+
+  '@clerk/shared@3.28.2':
+    resolution: {integrity: sha512-BfBCPaoPoLCiU0b0MhQUfCjs+bWRRLkdHw0vBffSjtsFLxp1b5IL5D8nKgDPIKIIv7DmCCmO15tr+GqG3CGpYQ==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  '@clerk/types@4.95.0':
+    resolution: {integrity: sha512-K1kI3BjvufG1mZBZJ5Q8Yu9wV6AFpjjITml5vhvP95xibJWOi3eYvlRCTKXDNKBFGvQfrTJbwn67jSG2VdyLKw==}
+    engines: {node: '>=18.17.0'}
 
   '@date-fns/tz@1.2.0':
     resolution: {integrity: sha512-LBrd7MiJZ9McsOgxqWX7AaxrDjcFVjWH/tIKJd7pnR7McaslGYOP1QmmiBXdJH/H/yLCT+rcQ7FaPBUxRGUtrg==}
@@ -1283,6 +1321,9 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
+  '@stablelib/base64@1.0.1':
+    resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
+
   '@supabase/auth-js@2.76.1':
     resolution: {integrity: sha512-bxmcgPuyjTUBg7+jAohJ15TDh3ph4hXcv7QkRsQgnIpszurD5LYaJPzX638ETQ8zDL4fvHZRHfGrcmHV8C91jA==}
 
@@ -1507,6 +1548,10 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
+  cookie@1.0.2:
+    resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
+    engines: {node: '>=18'}
+
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
@@ -1563,6 +1608,10 @@ packages:
   decimal.js-light@2.5.1:
     resolution: {integrity: sha512-qIMFpTMZmny+MMIitAB6D7iVPEorVw6YQRWkvarTkT4tBeSLLiHzcwj6q0MmYSFCiVpiqPJTJEYIrpcPzVEIvg==}
 
+  dequal@2.0.3:
+    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
+    engines: {node: '>=6'}
+
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
@@ -1604,12 +1653,18 @@ packages:
     resolution: {integrity: sha512-6rxyATwPCkaFIL3JLqw8qXqMpIZ942pTX/tbQFkRsDGblS8tNGtlUauA/+mt6RUfqn/4MoEr+WDkYoIQbibWuQ==}
     engines: {node: '>=6.0.0'}
 
+  fast-sha256@1.3.0:
+    resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
+
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
 
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
     engines: {node: '>=6'}
+
+  glob-to-regexp@0.4.1:
+    resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
@@ -1627,6 +1682,10 @@ packages:
   jiti@2.6.1:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
+
+  js-cookie@3.0.5:
+    resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
+    engines: {node: '>=14'}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -1883,6 +1942,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
+
   sharp@0.34.4:
     resolution: {integrity: sha512-FUH39xp3SBPnxWvd5iib1X8XY7J0K0X7d93sie9CJg2PO8/7gmg89Nve6OjItK53/MlAushNNxteBYfM6DEuoA==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
@@ -1897,6 +1959,12 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
+  standardwebhooks@1.0.0:
+    resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
+
+  std-env@3.10.0:
+    resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
+
   styled-jsx@5.1.6:
     resolution: {integrity: sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==}
     engines: {node: '>= 12.0.0'}
@@ -1909,6 +1977,11 @@ packages:
         optional: true
       babel-plugin-macros:
         optional: true
+
+  swr@2.3.4:
+    resolution: {integrity: sha512-bYd2lrhc+VarcpkgWclcUi92wYCpOgMws9Sd1hG1ntAu0NEy+14CbotuFjshBU2kt9rYj9TSmDcybpxpeTU1fg==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   tailwind-merge@2.5.5:
     resolution: {integrity: sha512-0LXunzzAZzo0tEPxV3I297ffKZPlKDrjj7NXphC8V5ak9yHC5zRmxnOe2m/Rd/7ivsOMJe3JZ2JVocoDdQTRBA==}
@@ -2024,6 +2097,53 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
 
   '@babel/runtime@7.28.4': {}
+
+  '@clerk/backend@2.18.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/shared': 3.28.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/types': 4.95.0
+      cookie: 1.0.2
+      standardwebhooks: 1.0.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@clerk/clerk-react@5.53.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/shared': 3.28.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/types': 4.95.0
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      tslib: 2.8.1
+
+  '@clerk/nextjs@6.33.7(next@15.5.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/backend': 2.18.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/clerk-react': 5.53.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/shared': 3.28.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/types': 4.95.0
+      next: 15.5.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      server-only: 0.0.1
+      tslib: 2.8.1
+
+  '@clerk/shared@3.28.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/types': 4.95.0
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.5
+      std-env: 3.10.0
+      swr: 2.3.4(react@19.2.0)
+    optionalDependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+
+  '@clerk/types@4.95.0':
+    dependencies:
+      csstype: 3.1.3
 
   '@date-fns/tz@1.2.0': {}
 
@@ -3042,6 +3162,8 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
+  '@stablelib/base64@1.0.1': {}
+
   '@supabase/auth-js@2.76.1':
     dependencies:
       '@supabase/node-fetch': 2.6.15
@@ -3260,6 +3382,8 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
+  cookie@1.0.2: {}
+
   csstype@3.1.3: {}
 
   d3-array@3.2.4:
@@ -3306,6 +3430,8 @@ snapshots:
 
   decimal.js-light@2.5.1: {}
 
+  dequal@2.0.3: {}
+
   detect-libc@2.1.2: {}
 
   detect-node-es@1.1.0: {}
@@ -3340,9 +3466,13 @@ snapshots:
 
   fast-equals@5.3.2: {}
 
+  fast-sha256@1.3.0: {}
+
   fraction.js@4.3.7: {}
 
   get-nonce@1.0.1: {}
+
+  glob-to-regexp@0.4.1: {}
 
   graceful-fs@4.2.11: {}
 
@@ -3354,6 +3484,8 @@ snapshots:
   internmap@2.0.3: {}
 
   jiti@2.6.1: {}
+
+  js-cookie@3.0.5: {}
 
   js-tokens@4.0.0: {}
 
@@ -3578,6 +3710,8 @@ snapshots:
   semver@7.7.3:
     optional: true
 
+  server-only@0.0.1: {}
+
   sharp@0.34.4:
     dependencies:
       '@img/colour': 1.0.0
@@ -3615,10 +3749,23 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
+  standardwebhooks@1.0.0:
+    dependencies:
+      '@stablelib/base64': 1.0.1
+      fast-sha256: 1.3.0
+
+  std-env@3.10.0: {}
+
   styled-jsx@5.1.6(react@19.2.0):
     dependencies:
       client-only: 0.0.1
       react: 19.2.0
+
+  swr@2.3.4(react@19.2.0):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.0
+      use-sync-external-store: 1.6.0(react@19.2.0)
 
   tailwind-merge@2.5.5: {}
 
