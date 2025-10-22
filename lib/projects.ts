@@ -116,8 +116,8 @@ export async function uploadProjectAvatar(
   const fileExt = file.name.split(".").pop();
   const fileName = `${projectId}-${Date.now()}.${fileExt}`;
 
-  // Upload file to project-avatars bucket
-  const avatarUrl = await uploadFile("project-avatars", fileName, file);
+      // Upload file to project-avatars bucket
+      const avatarUrl = await uploadFile("project-avatars", fileName, file);
 
   // Update project with avatar URL
   const { error } = await supabase

@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Conditional OpenAI import to prevent build errors
+let OpenAI: any = null;
+let openai: any = null;
+
+if (process.env.OPENAI_API_KEY) {
+  try {
+    OpenAI = require("openai").default;
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  } catch (error) {
+    console.warn("OpenAI not available:", error);
+  }
+}
 
 // Create Supabase client for server-side queries
 const supabase = createClient<Database>(
@@ -15,14 +25,14 @@ const supabase = createClient<Database>(
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY not found in environment variables");
+    // Check if OpenAI is available
+    if (!openai || !process.env.OPENAI_API_KEY) {
+      console.error("OpenAI not available - API key missing or import failed");
       return NextResponse.json(
         {
           error: "OpenAI API key not configured",
           details:
-            "Please add OPENAI_API_KEY to your .env.local file and restart the dev server",
+            "Please add OPENAI_API_KEY to your environment variables",
         },
         { status: 500 }
       );
