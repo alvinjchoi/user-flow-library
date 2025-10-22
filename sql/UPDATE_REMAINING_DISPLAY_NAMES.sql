@@ -40,16 +40,16 @@ SET display_name = 'Verifying phone number'
 WHERE id = '6c8e2e54-2998-40be-bffa-71df5b0f0231';
 -- Was: "Verification" → Now: "Verifying phone number"
 
--- Moiio - Home Flow (Community Feed screens)
+-- Moiio - Home Flow (Community Feed screens - BOTH should be same)
 UPDATE screens 
-SET display_name = 'Community feed'
+SET display_name = 'Browsing community'
 WHERE id = '5c0dbb44-795e-4c74-9479-471156d15f03';
--- Was: "Community Feed" → Now: "Community feed"
+-- Was: "Community Feed" → Now: "Browsing community"
 
 UPDATE screens 
 SET display_name = 'Browsing community'
 WHERE id = 'f4b7ab59-4f88-479e-9796-e75d7c246209';
--- Was: "Community Feed" → Now: "Browsing community" (differentiated from duplicate)
+-- Was: "Community Feed" → Now: "Browsing community" (same screen, likely scroll capture)
 
 -- Moiio - Onboarding Flow (Google Sign-In)
 UPDATE screens 

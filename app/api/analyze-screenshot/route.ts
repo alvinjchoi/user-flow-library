@@ -29,15 +29,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build context prompt from existing screens
+    // Build context prompt from existing screens with display_name mapping
     const contextPrompt =
       context && context.length > 0
-        ? `\n\nFor context, here are other screens in this app:\n${context
-            .map(
-              (s: any) =>
-                `- ${s.title}${s.description ? `: ${s.description}` : ""}`
-            )
-            .join("\n")}`
+        ? `\n\n🔍 CONTEXT - Existing screens in this app (use this to maintain consistency):
+${context
+  .map(
+    (s: any) =>
+      `- Technical: "${s.title}" → Sidebar: "${s.display_name || s.title}"${
+        s.description ? ` | ${s.description}` : ""
+      }`
+  )
+  .join("\n")}
+
+📋 IMPORTANT GUIDELINES FOR USING CONTEXT:
+1. If this screenshot looks IDENTICAL or very similar to an existing screen, use the SAME names
+2. If it's a scroll/continuation of an existing screen with the same title, keep the displayName consistent
+3. Look for patterns in existing naming conventions and follow them
+4. Check if existing screens already have similar technical names - if so, match their displayName style
+5. Duplicate technical names (same screen, different scroll position) should have IDENTICAL displayName
+6. Only create NEW displayName if this is genuinely a DIFFERENT screen/action
+
+Example patterns to follow:
+- Multiple "Home Screen" captures → All should use same displayName like "Browsing community"
+- "Login Screen" series → All "Signing in" (not "Signing in (step 1)", "Signing in (step 2)")
+- Only differentiate if showing DIFFERENT content/state (e.g., "Home Screen" vs "Home Screen - Empty State")`
         : "";
 
     const completion = await openai.chat.completions.create({
@@ -93,10 +109,14 @@ NAMING RULES:
 
 7. Focus on WHAT the user is doing or seeing, not just WHERE they are
 
-HANDLING DUPLICATES:
-If you detect this is likely a continuation/scroll of an existing screen (similar layout, same header/navigation):
-- title: Add position suffix → "Home Screen (Middle)"
-- displayName: Add context → "Home feed (trending posts)"${contextPrompt}`,
+HANDLING DUPLICATES & CONTEXT AWARENESS:
+If you detect this is likely a continuation/scroll of an existing screen (check CONTEXT above!):
+- title: Keep SAME base name OR add subtle suffix → "Home Screen" or "Home Screen (2)"
+- displayName: Use the EXACT SAME displayName as the original → "Browsing community"
+- DO NOT create variations like "Browsing community (top)", "Browsing community (bottom)" for scroll captures
+- Only differentiate displayName if it's a genuinely DIFFERENT screen state or action
+
+CRITICAL: Review the CONTEXT section above before naming! If a screen with similar title exists, match its naming pattern exactly.${contextPrompt}`,
         },
         {
           role: "user",
