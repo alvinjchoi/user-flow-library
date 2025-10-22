@@ -217,26 +217,42 @@ export function FlowSidebar({
             </Button>
           </div>
         ) : (
-          flows.map((flow) => {
-            const screens = screensByFlow.get(flow.id) || [];
-            const tree = buildScreenTree(screens);
-
-            // Group root-level screens by display_name
-            const groupedTree = tree.map((rootScreen) => {
-              // For each root screen, group its direct children (not nested children)
-              if (rootScreen.children && rootScreen.children.length > 0) {
-                const groupedChildren = groupScreensByDisplayName(
-                  rootScreen.children
-                );
-                return { ...rootScreen, children: groupedChildren };
+          (() => {
+            // Organize flows hierarchically: main flows first, then branched flows
+            const mainFlows = flows.filter(f => !f.parent_screen_id);
+            const branchedFlows = flows.filter(f => f.parent_screen_id);
+            
+            // Group branched flows by their parent screen
+            const branchedFlowsByParent = new Map<string, Flow[]>();
+            branchedFlows.forEach(flow => {
+              if (flow.parent_screen_id) {
+                if (!branchedFlowsByParent.has(flow.parent_screen_id)) {
+                  branchedFlowsByParent.set(flow.parent_screen_id, []);
+                }
+                branchedFlowsByParent.get(flow.parent_screen_id)!.push(flow);
               }
-              return rootScreen;
             });
 
-            // Also group root-level screens themselves
-            const finalTree = groupScreensByDisplayName(groupedTree);
+            return mainFlows.map((flow) => {
+              const screens = screensByFlow.get(flow.id) || [];
+              const tree = buildScreenTree(screens);
 
-            const isExpanded = expandedFlows.has(flow.id);
+              // Group root-level screens by display_name
+              const groupedTree = tree.map((rootScreen) => {
+                // For each root screen, group its direct children (not nested children)
+                if (rootScreen.children && rootScreen.children.length > 0) {
+                  const groupedChildren = groupScreensByDisplayName(
+                    rootScreen.children
+                  );
+                  return { ...rootScreen, children: groupedChildren };
+                }
+                return rootScreen;
+              });
+
+              // Also group root-level screens themselves
+              const finalTree = groupScreensByDisplayName(groupedTree);
+
+              const isExpanded = expandedFlows.has(flow.id);
 
             return (
               <div key={flow.id} className="select-none">
@@ -315,22 +331,98 @@ export function FlowSidebar({
                       </div>
                     ) : (
                       finalTree.map((screen) => (
-                        <TreeNode
-                          key={screen.id}
-                          screen={screen}
-                          onAddChild={(parentId) =>
-                            onAddScreen?.(flow.id, parentId)
-                          }
-                          onSelect={onSelectScreen}
-                          onUpdateTitle={onUpdateScreenTitle}
-                          onAddFlowFromScreen={onAddFlowFromScreen}
-                          onDelete={onDeleteScreen}
-                          onDragStart={handleDragStart}
-                          onDragOver={handleDragOver}
-                          onDrop={handleDrop}
-                          selectedId={selectedScreenId}
-                          isDragging={draggedScreen?.id === screen.id}
-                        />
+                        <div key={screen.id}>
+                          <TreeNode
+                            screen={screen}
+                            level={screen.level}
+                            onAddChild={(parentId) =>
+                              onAddScreen?.(flow.id, parentId)
+                            }
+                            onSelect={onSelectScreen}
+                            onUpdateTitle={onUpdateScreenTitle}
+                            onAddFlowFromScreen={onAddFlowFromScreen}
+                            onDelete={onDeleteScreen}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            selectedId={selectedScreenId}
+                            isDragging={draggedScreen?.id === screen.id}
+                          />
+                          
+                          {/* Show branched flows under this screen */}
+                          {branchedFlowsByParent.has(screen.id) && (
+                            <div className="ml-6 border-l border-muted/20 pl-3 py-2">
+                              {branchedFlowsByParent.get(screen.id)!.map((branchedFlow) => {
+                                const branchedScreens = screensByFlow.get(branchedFlow.id) || [];
+                                const branchedTree = buildScreenTree(branchedScreens);
+                                const groupedBranchedTree = groupScreensByDisplayName(branchedTree);
+                                const isBranchedExpanded = expandedFlows.has(branchedFlow.id);
+
+                                return (
+                                  <div key={branchedFlow.id} className="mb-3">
+                                    {/* Branched Flow Header */}
+                                    <div
+                                      onClick={() => {
+                                        toggleFlow(branchedFlow.id);
+                                        onSelectFlow?.(branchedFlow);
+                                      }}
+                                      className={`flex h-8 items-center gap-2 px-2 text-xs font-medium cursor-pointer transition-all duration-150 hover:bg-muted/30 group ${
+                                        selectedFlowId === branchedFlow.id
+                                          ? "bg-primary/10 text-primary font-semibold"
+                                          : "text-muted-foreground"
+                                      }`}
+                                      role="button"
+                                      tabIndex={0}
+                                    >
+                                      <ChevronDown
+                                        className={`h-3 w-3 transition-transform flex-shrink-0 ${
+                                          isBranchedExpanded ? "" : "-rotate-90"
+                                        }`}
+                                      />
+                                      <span className="flex-1 truncate text-left">
+                                        {branchedFlow.name}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground font-normal">
+                                        {branchedFlow.screen_count}
+                                      </span>
+                                    </div>
+
+                                    {/* Branched Flow Screens */}
+                                    {isBranchedExpanded && (
+                                      <div className="ml-4 border-l border-muted/20 pl-2">
+                                        {groupedBranchedTree.length === 0 ? (
+                                          <div className="pl-4 py-2 text-xs text-muted-foreground">
+                                            No screens yet
+                                          </div>
+                                        ) : (
+                                          groupedBranchedTree.map((branchedScreen) => (
+                                            <TreeNode
+                                              key={branchedScreen.id}
+                                              screen={branchedScreen}
+                                              level={branchedScreen.level}
+                                              onAddChild={(parentId) =>
+                                                onAddScreen?.(branchedFlow.id, parentId)
+                                              }
+                                              onSelect={onSelectScreen}
+                                              onUpdateTitle={onUpdateScreenTitle}
+                                              onAddFlowFromScreen={onAddFlowFromScreen}
+                                              onDelete={onDeleteScreen}
+                                              onDragStart={handleDragStart}
+                                              onDragOver={handleDragOver}
+                                              onDrop={handleDrop}
+                                              selectedId={selectedScreenId}
+                                              isDragging={draggedScreen?.id === branchedScreen.id}
+                                            />
+                                          ))
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       ))
                     )}
                   </div>

@@ -82,53 +82,53 @@ ALTER TABLE screens ENABLE ROW LEVEL SECURITY;
 -- Projects policies
 DROP POLICY IF EXISTS "public_read_projects" ON projects;
 CREATE POLICY "public_read_projects" ON projects
-  FOR SELECT TO public USING (true);
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "public_insert_projects" ON projects;
 CREATE POLICY "public_insert_projects" ON projects
-  FOR INSERT TO public WITH CHECK (true);
+  FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "public_update_projects" ON projects;
 CREATE POLICY "public_update_projects" ON projects
-  FOR UPDATE TO public USING (true);
+  FOR UPDATE USING (true);
 
 DROP POLICY IF EXISTS "public_delete_projects" ON projects;
 CREATE POLICY "public_delete_projects" ON projects
-  FOR DELETE TO public USING (true);
+  FOR DELETE USING (true);
 
 -- Flows policies
 DROP POLICY IF EXISTS "public_read_flows" ON flows;
 CREATE POLICY "public_read_flows" ON flows
-  FOR SELECT TO public USING (true);
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "public_insert_flows" ON flows;
 CREATE POLICY "public_insert_flows" ON flows
-  FOR INSERT TO public WITH CHECK (true);
+  FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "public_update_flows" ON flows;
 CREATE POLICY "public_update_flows" ON flows
-  FOR UPDATE TO public USING (true);
+  FOR UPDATE USING (true);
 
 DROP POLICY IF EXISTS "public_delete_flows" ON flows;
 CREATE POLICY "public_delete_flows" ON flows
-  FOR DELETE TO public USING (true);
+  FOR DELETE USING (true);
 
 -- Screens policies
 DROP POLICY IF EXISTS "public_read_screens" ON screens;
 CREATE POLICY "public_read_screens" ON screens
-  FOR SELECT TO public USING (true);
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "public_insert_screens" ON screens;
 CREATE POLICY "public_insert_screens" ON screens
-  FOR INSERT TO public WITH CHECK (true);
+  FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "public_update_screens" ON screens;
 CREATE POLICY "public_update_screens" ON screens
-  FOR UPDATE TO public USING (true);
+  FOR UPDATE USING (true);
 
 DROP POLICY IF EXISTS "public_delete_screens" ON screens;
 CREATE POLICY "public_delete_screens" ON screens
-  FOR DELETE TO public USING (true);
+  FOR DELETE USING (true);
 
 -- =====================================================
 -- Helper Functions
