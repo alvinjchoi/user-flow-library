@@ -136,8 +136,8 @@ export function FlowSidebar({
                     onSelectFlow?.(flow);
                   }}
                   className={`w-full flex items-center gap-2 p-2 hover:bg-muted rounded-md group cursor-pointer transition-colors ${
-                    selectedFlowId === flow.id 
-                      ? "bg-primary/10 ring-1 ring-primary/20 font-medium" 
+                    selectedFlowId === flow.id
+                      ? "bg-primary/10 ring-1 ring-primary/20 font-medium"
                       : ""
                   }`}
                 >
@@ -146,9 +146,13 @@ export function FlowSidebar({
                       isExpanded ? "" : "-rotate-90"
                     }`}
                   />
-                  <span className={`text-sm font-medium flex-1 text-left truncate ${
-                    selectedFlowId === flow.id ? "text-primary font-semibold" : "text-primary"
-                  }`}>
+                  <span
+                    className={`text-sm font-medium flex-1 text-left truncate ${
+                      selectedFlowId === flow.id
+                        ? "text-primary font-semibold"
+                        : "text-primary"
+                    }`}
+                  >
                     {flow.name}
                   </span>
                   <span className="text-xs text-muted-foreground">

@@ -11,9 +11,10 @@ export async function POST(request: NextRequest) {
     if (!process.env.OPENAI_API_KEY) {
       console.error("OPENAI_API_KEY not found in environment variables");
       return NextResponse.json(
-        { 
+        {
           error: "OpenAI API key not configured",
-          details: "Please add OPENAI_API_KEY to your .env.local file and restart the dev server"
+          details:
+            "Please add OPENAI_API_KEY to your .env.local file and restart the dev server",
         },
         { status: 500 }
       );
