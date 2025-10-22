@@ -28,17 +28,16 @@ function ScreenCard({
   onUploadScreenshot?: (screenId: string) => void;
 }) {
   const borderRadius = 27.195;
-  
+
   return (
-    <div 
-      className="shrink-0"
-      style={{ WebkitTouchCallout: 'none' }}
-    >
-      <div style={{ 
-        position: 'relative', 
-        width: '100%', 
-        paddingBottom: '216.19584119584127%' 
-      }}>
+    <div className="shrink-0" style={{ WebkitTouchCallout: "none" }}>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          paddingBottom: "216.19584119584127%",
+        }}
+      >
         <a
           href="#"
           onClick={(e) => {
@@ -52,8 +51,8 @@ function ScreenCard({
             ${isSelected ? "ring-4 ring-primary/50" : ""}
           `}
           style={{
-            position: 'absolute',
-            inset: '0px',
+            position: "absolute",
+            inset: "0px",
             borderRadius: `${borderRadius}px`,
           }}
           tabIndex={0}
@@ -71,26 +70,34 @@ function ScreenCard({
                   }}
                 />
                 {/* Shadow overlay */}
-                <div 
+                <div
                   className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.1)]"
                   style={{ borderRadius: `${borderRadius}px` }}
                 />
-                
-                {/* Description overlay on hover */}
-                {screen.notes && (
-                  <div 
-                    className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-4"
-                    style={{ borderRadius: `${borderRadius}px` }}
-                  >
+
+                {/* Title and Description overlay on hover */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-4"
+                  style={{ borderRadius: `${borderRadius}px` }}
+                >
+                  {/* Title at top */}
+                  <div className="text-white">
+                    <p className="text-sm font-semibold mb-1">
+                      {screen.display_name || screen.title}
+                    </p>
+                  </div>
+                  
+                  {/* Description at bottom */}
+                  {screen.notes && (
                     <p className="text-white text-sm leading-relaxed">
                       {screen.notes}
                     </p>
-                  </div>
-                )}
-                
+                  )}
+                </div>
+
                 {/* Upload button overlay */}
                 {!screen.notes && (
-                  <div 
+                  <div
                     className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                     style={{ borderRadius: `${borderRadius}px` }}
                   >
@@ -110,7 +117,7 @@ function ScreenCard({
                 )}
               </>
             ) : (
-              <div 
+              <div
                 className="absolute inset-0 flex items-center justify-center bg-muted"
                 style={{ borderRadius: `${borderRadius}px` }}
               >
