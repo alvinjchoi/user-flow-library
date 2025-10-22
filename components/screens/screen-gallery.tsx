@@ -199,7 +199,7 @@ export function ScreenGallery({
           {/* Parent screens in horizontal scrollable row */}
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {parents.map((screen) => (
-              <div key={screen.id} className="flex-shrink-0 w-48">
+              <div key={screen.id} className="flex-shrink-0 w-64">
                 <ScreenCard
                   screen={screen}
                   isSelected={selectedScreenId === screen.id}
@@ -212,7 +212,7 @@ export function ScreenGallery({
             ))}
 
             {/* Add screen card */}
-            <div className="flex-shrink-0 w-48">
+            <div className="flex-shrink-0 w-64">
               <Card
                 className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
                 onClick={onAddScreen}
@@ -247,7 +247,7 @@ export function ScreenGallery({
                   <div className="border-l-2 border-primary/30 pl-4">
                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                       {children.map((child) => (
-                        <div key={child.id} className="flex-shrink-0 w-48">
+                        <div key={child.id} className="flex-shrink-0 w-64">
                           <ScreenCard
                             screen={child}
                             isSelected={selectedScreenId === child.id}
@@ -260,7 +260,7 @@ export function ScreenGallery({
                       ))}
 
                       {/* Add child screen card */}
-                      <div className="flex-shrink-0 w-48">
+                      <div className="flex-shrink-0 w-64">
                         <Card
                           className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
                           onClick={(e) => {
