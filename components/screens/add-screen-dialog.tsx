@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Upload, X, Image as ImageIcon, Sparkles, Loader2, Plus } from "lucide-react";
+import {
+  Upload,
+  X,
+  Image as ImageIcon,
+  Sparkles,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,11 +36,11 @@ async function analyzeScreenshot(imageUrl: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageUrl }),
   });
-  
+
   if (!response.ok) {
     throw new Error("AI analysis failed");
   }
-  
+
   return response.json();
 }
 
@@ -58,7 +65,7 @@ export function AddScreenDialog({
   const [parentId, setParentId] = useState<string>(defaultParentId || "none");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // New state for file upload and AI analysis
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -117,18 +124,21 @@ export function AddScreenDialog({
       const analysis = await analyzeScreenshot(imageUrl);
       setAiTitle(analysis.title);
       setAiDescription(analysis.description);
-      
+
       // Pre-populate the title field
       setTitle(analysis.title);
-      
+
       // Try to suggest a parent based on AI analysis
       // This is a simple heuristic - you could make this smarter
-      if (analysis.title.toLowerCase().includes("login") || 
-          analysis.title.toLowerCase().includes("sign")) {
+      if (
+        analysis.title.toLowerCase().includes("login") ||
+        analysis.title.toLowerCase().includes("sign")
+      ) {
         // Look for existing auth-related screens
-        const authParent = availableScreens.find(s => 
-          s.title.toLowerCase().includes("login") || 
-          s.title.toLowerCase().includes("sign")
+        const authParent = availableScreens.find(
+          (s) =>
+            s.title.toLowerCase().includes("login") ||
+            s.title.toLowerCase().includes("sign")
         );
         if (authParent) {
           setParentId(authParent.id);
@@ -157,7 +167,7 @@ export function AddScreenDialog({
     setLoading(true);
     try {
       await onAdd(
-        title.trim(), 
+        title.trim(),
         parentId === "none" ? undefined : parentId,
         file || undefined
       );
@@ -180,7 +190,7 @@ export function AddScreenDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>Add Screen to {flowName}</DialogTitle>
           <DialogDescription>
@@ -189,126 +199,130 @@ export function AddScreenDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          {/* File Upload Section */}
-          <div className="grid gap-2">
-            <Label htmlFor="screenshot">Screenshot (Optional)</Label>
-            {!preview ? (
-              <div
-                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium mb-1">
-                  Click to upload screenshot
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  AI will suggest title and parent
-                </p>
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="aspect-[9/16] relative rounded-lg overflow-hidden bg-muted max-w-[200px] mx-auto">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-background/80 hover:bg-background"
-                  onClick={() => {
-                    setFile(null);
-                    setPreview(null);
-                    setAiTitle("");
-                    setAiDescription("");
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = "";
-                    }
-                  }}
+        <div className="grid grid-cols-2 gap-6 py-4">
+          {/* Left Column - File Upload (Wider) */}
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="screenshot">Screenshot (Optional)</Label>
+              {!preview ? (
+                <div
+                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer min-h-[300px] flex flex-col items-center justify-center"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <X className="h-4 w-4" />
-                </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-medium mb-2">
+                    Click to upload screenshot
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    AI will suggest title and parent
+                  </p>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="aspect-[9/16] relative rounded-lg overflow-hidden bg-muted max-w-[280px] mx-auto">
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                    onClick={() => {
+                      setFile(null);
+                      setPreview(null);
+                      setAiTitle("");
+                      setAiDescription("");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* AI Analysis Results */}
+            {analyzing && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analyzing screenshot...
+              </div>
+            )}
+
+            {aiTitle && (
+              <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                    AI Suggestions
+                  </span>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  <strong>Title:</strong> {aiTitle}
+                </p>
+                {aiDescription && (
+                  <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                    <strong>Description:</strong> {aiDescription}
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          {/* AI Analysis Results */}
-          {analyzing && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Analyzing screenshot...
+          {/* Right Column - Configuration Options */}
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Screen Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                placeholder="e.g., Welcome Screen"
+                disabled={loading}
+              />
+              {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             </div>
-          )}
 
-          {aiTitle && (
-            <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                  AI Suggestions
-                </span>
-              </div>
-              <p className="text-sm text-green-700 dark:text-green-300">
-                <strong>Title:</strong> {aiTitle}
-              </p>
-              {aiDescription && (
-                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                  <strong>Description:</strong> {aiDescription}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Manual Input Fields */}
-          <div className="grid gap-2">
-            <Label htmlFor="title">Screen Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="e.g., Welcome Screen"
-              disabled={loading}
-            />
-            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="parent">Stems from (Optional)</Label>
-            <Select
-              value={parentId}
-              onValueChange={setParentId}
-              disabled={loading}
-            >
-              <SelectTrigger id="parent">
-                <SelectValue placeholder="No parent (root level)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">
-                  <span className="text-muted-foreground">
-                    No parent (root level)
-                  </span>
-                </SelectItem>
-                {availableScreens.map((screen) => (
-                  <SelectItem key={screen.id} value={screen.id}>
-                    {screen.title}
+            <div className="grid gap-2">
+              <Label htmlFor="parent">Stems from (Optional)</Label>
+              <Select
+                value={parentId}
+                onValueChange={setParentId}
+                disabled={loading}
+              >
+                <SelectTrigger id="parent">
+                  <SelectValue placeholder="No parent (root level)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="text-muted-foreground">
+                      No parent (root level)
+                    </span>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Select a parent screen to create a hierarchical structure
-            </p>
+                  {availableScreens.map((screen) => (
+                    <SelectItem key={screen.id} value={screen.id}>
+                      {screen.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Select a parent screen to create a hierarchical structure
+              </p>
+            </div>
           </div>
         </div>
 
