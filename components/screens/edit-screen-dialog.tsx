@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Upload, X, Image as ImageIcon, Sparkles, Loader2, Save, Edit2 } from "lucide-react";
+import {
+  Upload,
+  X,
+  Image as ImageIcon,
+  Sparkles,
+  Loader2,
+  Save,
+  Edit2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,11 +40,11 @@ async function analyzeScreenshot(imageUrl: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageUrl }),
   });
-  
+
   if (!response.ok) {
     throw new Error("AI analysis failed");
   }
-  
+
   return response.json();
 }
 
@@ -61,7 +69,7 @@ export function EditScreenDialog({
   const [parentId, setParentId] = useState<string>("none");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // File upload and AI analysis state
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -123,7 +131,7 @@ export function EditScreenDialog({
       const analysis = await analyzeScreenshot(imageUrl);
       setAiTitle(analysis.title);
       setAiDescription(analysis.description);
-      
+
       // Pre-populate the fields
       setTitle(analysis.title);
       setDescription(analysis.description || "");
@@ -167,13 +175,15 @@ export function EditScreenDialog({
           }
         } catch (uploadError) {
           console.error("Error uploading screenshot:", uploadError);
-          setError("Failed to upload screenshot, but other changes will be saved");
+          setError(
+            "Failed to upload screenshot, but other changes will be saved"
+          );
         }
       }
 
       // Update the screen
       const updatedScreen = await updateScreen(screen.id, updates);
-      
+
       // Notify parent
       onUpdate(updatedScreen);
 
@@ -311,7 +321,8 @@ export function EditScreenDialog({
                 disabled={loading}
               />
               <p className="text-xs text-muted-foreground">
-                Action-oriented name shown in sidebar (e.g., "Searching posts", "Adding comments")
+                Action-oriented name shown in sidebar (e.g., "Searching posts",
+                "Adding comments")
               </p>
             </div>
 
@@ -325,7 +336,8 @@ export function EditScreenDialog({
                 disabled={loading}
               />
               <p className="text-xs text-muted-foreground">
-                Technical name for developers (e.g., "Projects Screen", "Search Screen")
+                Technical name for developers (e.g., "Projects Screen", "Search
+                Screen")
               </p>
               {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             </div>
@@ -347,12 +359,12 @@ export function EditScreenDialog({
                     </span>
                   </SelectItem>
                   {availableScreens
-                    .filter(s => s.id !== screen.id) // Don't allow self as parent
+                    .filter((s) => s.id !== screen.id) // Don't allow self as parent
                     .map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.title}
-                    </SelectItem>
-                  ))}
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.title}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">

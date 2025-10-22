@@ -18,7 +18,7 @@ import type { Project, Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
 import { ScreenGalleryByFlow } from "@/components/screens/screen-gallery-by-flow";
 import { UploadDialog } from "@/components/screens/upload-dialog";
-import { EditScreenDialog } from "@/components/screens/edit-screen-dialog";
+import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { initializeStorage, uploadScreenshot } from "@/lib/storage";
@@ -40,8 +40,11 @@ export default function ProjectPage() {
   const [uploadingScreenId, setUploadingScreenId] = useState<string | null>(
     null
   );
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingScreen, setEditingScreen] = useState<Screen | null>(null);
+  const [addScreenDialogOpen, setAddScreenDialogOpen] = useState(false);
+  const [addScreenFlowId, setAddScreenFlowId] = useState<string | null>(null);
+  const [addScreenParentId, setAddScreenParentId] = useState<
+    string | undefined
+  >(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
