@@ -80,7 +80,8 @@ export async function createScreen(
   flowId: string,
   title: string,
   parentId?: string,
-  description?: string
+  description?: string,
+  displayName?: string
 ): Promise<Screen> {
   // Get the max order_index for this flow
   const { data: existingScreens } = await supabase
@@ -94,6 +95,25 @@ export async function createScreen(
     existingScreens && existingScreens.length > 0
       ? existingScreens[0].order_index + 1
       : 0;
+
+  // Determine parent level and path
+  let parentLevel = 0;
+  let parentPath: string | null = null;
+  if (parentId) {
+    const { data: parentScreen, error: parentError } = await supabase
+      .from("screens")
+      .select("level, path")
+      .eq("id", parentId)
+      .single();
+
+    if (parentError) {
+      console.error("Error fetching parent screen:", parentError);
+      // Proceed without parent_id if parent not found
+    } else if (parentScreen) {
+      parentLevel = parentScreen.level;
+      parentPath = parentScreen.path;
+    }
+  }
 
   const { data, error } = await supabase
     .from("screens")

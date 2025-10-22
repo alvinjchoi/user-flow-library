@@ -137,12 +137,13 @@ export default function ProjectPage() {
     if (!addScreenFlowId) return;
 
     try {
-      // Create the screen first with description
+      // Create the screen first with description and display name
       const newScreen = await createScreen(
         addScreenFlowId,
         title,
         parentId,
-        description
+        description,
+        displayName
       );
 
       // If there's a screenshot file, upload it
@@ -196,7 +197,7 @@ export default function ProjectPage() {
       setAddScreenFlowId(null);
       setAddScreenParentId(undefined);
     } catch (error) {
-      console.error("Error adding screen:", error);
+      console.error("Error adding screen:", error instanceof Error ? error.message : String(error));
       alert("Failed to create screen");
     }
   }
