@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, CornerDownRight } from "lucide-react";
 import type { Screen } from "@/lib/database.types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,53 @@ interface ScreenGalleryProps {
   selectedScreenId?: string;
 }
 
+interface ScreenWithChildren extends Screen {
+  children: ScreenWithChildren[];
+  level: number;
+}
+
+// Build hierarchical structure for display
+function buildScreenHierarchy(screens: Screen[]): ScreenWithChildren[] {
+  const screenMap = new Map<string, ScreenWithChildren>();
+  const result: ScreenWithChildren[] = [];
+
+  // First pass: create map with children arrays
+  screens.forEach((screen) => {
+    screenMap.set(screen.id, { ...screen, children: [], level: 0 });
+  });
+
+  // Second pass: build tree structure and calculate levels
+  screens.forEach((screen) => {
+    const node = screenMap.get(screen.id)!;
+    if (screen.parent_id) {
+      const parent = screenMap.get(screen.parent_id);
+      if (parent) {
+        node.level = parent.level + 1;
+        parent.children.push(node);
+      } else {
+        result.push(node);
+      }
+    } else {
+      result.push(node);
+    }
+  });
+
+  return result;
+}
+
+// Flatten hierarchy for rendering
+function flattenHierarchy(screens: ScreenWithChildren[]): ScreenWithChildren[] {
+  const result: ScreenWithChildren[] = [];
+  
+  function traverse(screen: ScreenWithChildren) {
+    result.push(screen);
+    screen.children.forEach((child) => traverse(child));
+  }
+  
+  screens.forEach((screen) => traverse(screen));
+  return result;
+}
+
 export function ScreenGallery({
   screens,
   onSelectScreen,
@@ -21,6 +68,9 @@ export function ScreenGallery({
   onAddScreen,
   selectedScreenId,
 }: ScreenGalleryProps) {
+  const hierarchy = buildScreenHierarchy(screens);
+  const flatScreens = flattenHierarchy(hierarchy);
+
   return (
     <div className="p-6">
       {screens.length === 0 ? (
@@ -38,19 +88,42 @@ export function ScreenGallery({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {screens.map((screen) => {
+        <div className="space-y-6">
+          {flatScreens.map((screen, index) => {
             const isSelected = selectedScreenId === screen.id;
+            const isChild = screen.level > 0;
+            const prevScreen = index > 0 ? flatScreens[index - 1] : null;
+            const isFirstChildInGroup = isChild && (!prevScreen || prevScreen.level === 0);
+
             return (
-              <Card
-                key={screen.id}
-                className={`
-                  group relative overflow-hidden cursor-pointer transition-all
-                  hover:shadow-lg hover:scale-[1.02]
-                  ${isSelected ? "ring-2 ring-primary" : ""}
-                `}
-                onClick={() => onSelectScreen?.(screen)}
-              >
+              <div key={screen.id} className="relative">
+                {/* Arrow indicator for child screens */}
+                {isChild && isFirstChildInGroup && (
+                  <div className="flex items-center gap-2 mb-4 text-muted-foreground">
+                    <div className="h-px flex-1 bg-border" />
+                    <div className="flex items-center gap-2 text-sm">
+                      <CornerDownRight className="h-4 w-4" />
+                      <span>Branches from parent screen</span>
+                    </div>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                )}
+
+                <div 
+                  className={`transition-all ${
+                    isChild ? "ml-8 md:ml-12" : ""
+                  }`}
+                >
+                  <Card
+                    key={screen.id}
+                    className={`
+                      group relative overflow-hidden cursor-pointer transition-all
+                      hover:shadow-lg hover:scale-[1.02] inline-block
+                      ${isSelected ? "ring-2 ring-primary" : ""}
+                      ${isChild ? "border-l-4 border-l-primary/30" : ""}
+                    `}
+                    onClick={() => onSelectScreen?.(screen)}
+                  >
                 <div className="aspect-[9/16] relative bg-muted">
                   {screen.screenshot_url ? (
                     <Image
@@ -88,29 +161,33 @@ export function ScreenGallery({
                       Upload
                     </Button>
                   </div>
+                    </div>
+                    <div className="p-3 border-t">
+                      <p className="text-sm font-medium truncate">{screen.title}</p>
+                      {screen.path && (
+                        <p className="text-xs text-muted-foreground truncate mt-1">
+                          {screen.path}
+                        </p>
+                      )}
+                    </div>
+                  </Card>
                 </div>
-                <div className="p-3 border-t">
-                  <p className="text-sm font-medium truncate">{screen.title}</p>
-                  {screen.path && (
-                    <p className="text-xs text-muted-foreground truncate mt-1">
-                      {screen.path}
-                    </p>
-                  )}
-                </div>
-              </Card>
+              </div>
             );
           })}
 
           {/* Add screen card */}
-          <Card
-            className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center"
-            onClick={onAddScreen}
-          >
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <Plus className="h-8 w-8" />
-              <span className="text-sm">Add screen</span>
-            </div>
-          </Card>
+          <div className="mt-6">
+            <Card
+              className="aspect-[9/16] w-full max-w-[280px] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center"
+              onClick={onAddScreen}
+            >
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <Plus className="h-8 w-8" />
+                <span className="text-sm">Add screen</span>
+              </div>
+            </Card>
+          </div>
         </div>
       )}
     </div>
