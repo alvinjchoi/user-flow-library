@@ -88,10 +88,11 @@ export function FlowHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-100 transition-opacity hover:bg-muted"
+            className="h-6 w-6 opacity-100 transition-opacity hover:bg-muted border border-red-500"
             onClick={(e) => e.stopPropagation()}
+            title="Flow actions"
           >
-            <MoreHorizontal className="h-3 w-3" />
+            <MoreHorizontal className="h-4 w-4 text-red-500" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
