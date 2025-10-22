@@ -17,6 +17,21 @@ import { uploadScreenshot } from "@/lib/storage";
 import { updateScreen } from "@/lib/flows";
 import type { Screen } from "@/lib/database.types";
 
+// Utility to analyze screenshot with AI
+async function analyzeScreenshot(imageUrl: string, context?: { title: string; description: string | null }[]) {
+  const response = await fetch("/api/analyze-screenshot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageUrl, context }),
+  });
+  
+  if (!response.ok) {
+    throw new Error("AI analysis failed");
+  }
+  
+  return response.json();
+}
+
 interface UploadDialogProps {
   screenId: string;
   screenTitle: string;
@@ -117,7 +132,15 @@ export function UploadDialog({
       if (useAI && !aiTitle) {
         setAnalyzing(true);
         try {
-          const analysis = await analyzeScreenshot(url);
+          // Build context from other screens
+          const context = allScreens
+            .filter((s) => s.screenshot_url)
+            .map((s) => ({
+              title: s.title,
+              description: s.notes,
+            }));
+          
+          const analysis = await analyzeScreenshot(url, context);
           finalTitle = analysis.title;
           finalDisplayName = analysis.displayName || analysis.title;
           finalDescription = analysis.description;
@@ -136,6 +159,7 @@ export function UploadDialog({
       await updateScreen(screenId, {
         screenshot_url: url,
         ...(finalTitle && { title: finalTitle }),
+        ...(finalDisplayName && { display_name: finalDisplayName }),
         ...(finalDescription && { notes: finalDescription })
       });
 

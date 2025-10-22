@@ -187,6 +187,7 @@ export default function ProjectPage() {
               ...s,
               screenshot_url: url,
               ...(title && { title }),
+              ...(displayName && { display_name: displayName }),
               ...(description && { notes: description }),
             }
           : s
