@@ -113,20 +113,20 @@ export async function uploadProjectAvatar(
   file: File
 ): Promise<string> {
   // Generate unique filename
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name.split(".").pop();
   const fileName = `${projectId}-${Date.now()}.${fileExt}`;
-  
-  // Upload file to project-avatars bucket
-  const avatarUrl = await uploadFile('project-avatars', fileName, file);
-  
+
+  // Upload file to project-images bucket (using existing bucket with policies)
+  const avatarUrl = await uploadFile("project-images", fileName, file);
+
   // Update project with avatar URL
   const { error } = await supabase
     .from("projects")
     .update({ avatar_url: avatarUrl })
     .eq("id", projectId);
-  
+
   if (error) throw error;
-  
+
   return avatarUrl;
 }
 
@@ -139,6 +139,6 @@ export async function updateProjectAvatar(
     .from("projects")
     .update({ avatar_url: avatarUrl })
     .eq("id", projectId);
-  
+
   if (error) throw error;
 }
