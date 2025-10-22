@@ -19,8 +19,8 @@ import type { Screen } from "@/lib/database.types";
 
 // Utility to analyze screenshot with AI (now with Supabase knowledge base access)
 async function analyzeScreenshot(
-  imageUrl: string, 
-  projectId: string, 
+  imageUrl: string,
+  projectId: string,
   flowId: string
 ) {
   const response = await fetch("/api/analyze-screenshot", {
@@ -28,11 +28,11 @@ async function analyzeScreenshot(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageUrl, projectId, flowId }),
   });
-  
+
   if (!response.ok) {
     throw new Error("AI analysis failed");
   }
-  
+
   return response.json();
 }
 
@@ -43,7 +43,12 @@ interface UploadDialogProps {
   flowId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUploadComplete?: (url: string, title?: string, displayName?: string, description?: string) => void;
+  onUploadComplete?: (
+    url: string,
+    title?: string,
+    displayName?: string,
+    description?: string
+  ) => void;
 }
 
 export function UploadDialog({
@@ -96,21 +101,21 @@ export function UploadDialog({
   const analyzeScreenshot = async (imageUrl: string) => {
     // Build context from existing screens
     const context = allScreens
-      .filter(s => s.screenshot_url)
-      .map(s => ({
+      .filter((s) => s.screenshot_url)
+      .map((s) => ({
         title: s.title,
-        description: s.notes
+        description: s.notes,
       }));
 
-    const response = await fetch('/api/analyze-screenshot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/analyze-screenshot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageUrl, context }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to analyze screenshot');
+      throw new Error(errorData.error || "Failed to analyze screenshot");
     }
 
     return response.json();
@@ -159,7 +164,7 @@ export function UploadDialog({
         screenshot_url: url,
         ...(finalTitle && { title: finalTitle }),
         ...(finalDisplayName && { display_name: finalDisplayName }),
-        ...(finalDescription && { notes: finalDescription })
+        ...(finalDescription && { notes: finalDescription }),
       });
 
       // Notify parent
@@ -283,7 +288,10 @@ export function UploadDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="flex items-center gap-2">
+                <Label
+                  htmlFor="displayName"
+                  className="flex items-center gap-2"
+                >
                   <Sparkles className="h-3 w-3 text-purple-500" />
                   Display Name (for sidebar)
                 </Label>
@@ -296,7 +304,10 @@ export function UploadDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="flex items-center gap-2">
+                <Label
+                  htmlFor="description"
+                  className="flex items-center gap-2"
+                >
                   <Sparkles className="h-3 w-3 text-purple-500" />
                   Description
                 </Label>
@@ -325,7 +336,10 @@ export function UploadDialog({
               onChange={(e) => setUseAI(e.target.checked)}
               className="rounded"
             />
-            <Label htmlFor="useAI" className="text-sm cursor-pointer font-normal">
+            <Label
+              htmlFor="useAI"
+              className="text-sm cursor-pointer font-normal"
+            >
               Use AI to auto-name
             </Label>
           </div>

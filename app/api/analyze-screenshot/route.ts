@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // 🔥 NEW: Query Supabase for complete knowledge base context
     let contextPrompt = "";
-    
+
     if (projectId) {
       try {
         // Get project details
@@ -59,11 +59,10 @@ export async function POST(request: NextRequest) {
         // Get all screens in this project (across all flows)
         const { data: allScreens } = await supabase
           .from("screens")
-          .select("id, flow_id, title, display_name, notes, parent_id, order_index")
-          .in(
-            "flow_id",
-            flows?.map((f) => f.id) || []
+          .select(
+            "id, flow_id, title, display_name, notes, parent_id, order_index"
           )
+          .in("flow_id", flows?.map((f) => f.id) || [])
           .order("order_index");
 
         // Get current flow name if specified
@@ -71,7 +70,9 @@ export async function POST(request: NextRequest) {
 
         // Build rich context
         if (allScreens && allScreens.length > 0) {
-          contextPrompt = `\n\n🔍 KNOWLEDGE BASE - Complete context from "${project?.name || "this project"}":
+          contextPrompt = `\n\n🔍 KNOWLEDGE BASE - Complete context from "${
+            project?.name || "this project"
+          }":
 
 📊 PROJECT STRUCTURE:
 ${flows
@@ -88,16 +89,18 @@ ${allScreens
   .map((s) => {
     const flow = flows?.find((f) => f.id === s.flow_id);
     const parentPrefix = s.parent_id ? "  ↳ " : "";
-    return `${parentPrefix}[${flow?.name}] "${s.title}" → "${s.display_name || s.title}"${
-      s.notes ? ` | ${s.notes.substring(0, 50)}...` : ""
-    }`;
+    return `${parentPrefix}[${flow?.name}] "${s.title}" → "${
+      s.display_name || s.title
+    }"${s.notes ? ` | ${s.notes.substring(0, 50)}...` : ""}`;
   })
   .join("\n")}
 
 📋 CRITICAL GUIDELINES FOR USING THIS KNOWLEDGE BASE:
 1. **Match existing patterns**: If this screenshot looks similar to an existing screen, use the EXACT SAME names
 2. **Scroll captures**: Multiple screenshots of same screen (e.g., "Home Screen") must have IDENTICAL displayName
-3. **Flow context**: You're adding to "${currentFlow?.name || "the current flow"}" - consider what makes sense in this flow
+3. **Flow context**: You're adding to "${
+            currentFlow?.name || "the current flow"
+          }" - consider what makes sense in this flow
 4. **Naming consistency**: Look at how similar screens are named across ALL flows, not just current flow
 5. **Duplicate detection**: Check if a screen with similar title already exists - match its naming pattern
 6. **Hierarchical awareness**: Parent screens in other flows may indicate this is a child/continuation
@@ -115,11 +118,14 @@ ${
 
 ⚠️ IMPORTANT: Review the ENTIRE knowledge base above before naming. This ensures consistency across the whole project.`;
         } else {
-          contextPrompt = `\n\n🔍 KNOWLEDGE BASE: This is the first screen in "${project?.name || "this project"}". Set a good naming pattern!`;
+          contextPrompt = `\n\n🔍 KNOWLEDGE BASE: This is the first screen in "${
+            project?.name || "this project"
+          }". Set a good naming pattern!`;
         }
       } catch (error) {
         console.error("Error fetching knowledge base:", error);
-        contextPrompt = "\n\n⚠️ Could not load knowledge base. Proceeding with best judgment.";
+        contextPrompt =
+          "\n\n⚠️ Could not load knowledge base. Proceeding with best judgment.";
       }
     }
 
