@@ -511,7 +511,7 @@ export default function ProjectPage() {
 
             <TabsContent
               value="screens"
-              className="flex-1 overflow-y-auto m-0 min-h-0"
+              className="flex-1 overflow-auto m-0 min-h-0"
             >
               <ScreenGalleryByFlow
                 flows={flows}

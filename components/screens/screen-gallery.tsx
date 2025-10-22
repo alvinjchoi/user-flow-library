@@ -179,7 +179,7 @@ export function ScreenGallery({
   const { parents, childrenByParent } = groupScreensByParent(screens);
 
   return (
-    <div className="p-6">
+    <div className="p-6 min-w-0">
       {screens.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="text-center">
@@ -197,7 +197,7 @@ export function ScreenGallery({
       ) : (
         <div className="space-y-8">
           {/* Parent screens in horizontal scrollable row */}
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {parents.map((screen) => (
               <div key={screen.id} className="flex-shrink-0 w-48">
                 <ScreenCard
@@ -245,7 +245,7 @@ export function ScreenGallery({
                 {/* Child screens */}
                 <div className="pl-8 md:pl-12">
                   <div className="border-l-2 border-primary/30 pl-4">
-                    <div className="flex gap-4 overflow-x-auto pb-4">
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                       {children.map((child) => (
                         <div key={child.id} className="flex-shrink-0 w-48">
                           <ScreenCard
