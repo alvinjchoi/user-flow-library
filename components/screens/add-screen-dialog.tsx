@@ -285,6 +285,33 @@ export function AddScreenDialog({
 
           {/* Right Column - Configuration Options */}
           <div className="space-y-4">
+            {/* AI Analysis Results */}
+            {analyzing && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Analyzing screenshot...
+              </div>
+            )}
+
+            {aiTitle && (
+              <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                    AI Suggestions
+                  </span>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  <strong>Title:</strong> {aiTitle}
+                </p>
+                {aiDescription && (
+                  <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                    <strong>Description:</strong> {aiDescription}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="title">Screen Title</Label>
               <Input
@@ -324,6 +351,18 @@ export function AddScreenDialog({
               <p className="text-xs text-muted-foreground">
                 Select a parent screen to create a hierarchical structure
               </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description of what happens on this screen..."
+                disabled={loading}
+                rows={3}
+              />
             </div>
           </div>
         </div>
