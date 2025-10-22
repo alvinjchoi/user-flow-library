@@ -100,7 +100,22 @@ export default function ProjectPage() {
     if (!title) return;
 
     try {
-      await createScreen(flowId, title, parentId);
+      // Create the new screen (it will be added at the end automatically)
+      const newScreen = await createScreen(flowId, title, parentId);
+      
+      // Optimistic update - add to local state immediately
+      const flowScreens = screensByFlow.get(flowId) || [];
+      const updatedFlowScreens = [...flowScreens, newScreen];
+      
+      const updatedScreensByFlow = new Map(screensByFlow);
+      updatedScreensByFlow.set(flowId, updatedFlowScreens);
+      
+      const updatedAllScreens = [...allScreens, newScreen];
+      
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+      
+      // Reload to get the updated screen count on flows
       await loadProjectData();
     } catch (error) {
       console.error("Error creating screen:", error);
@@ -132,7 +147,7 @@ export default function ProjectPage() {
 
     setScreensByFlow(updatedScreensByFlow);
     setAllScreens(updatedAllScreens);
-    
+
     // Close the dialog
     setUploadDialogOpen(false);
     setUploadingScreenId(null);
