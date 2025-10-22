@@ -14,7 +14,7 @@ import {
 } from "@/lib/flows";
 import type { Project, Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
-import { ScreenGallery } from "@/components/screens/screen-gallery";
+import { ScreenGalleryByFlow } from "@/components/screens/screen-gallery-by-flow";
 import { UploadDialog } from "@/components/screens/upload-dialog";
 import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,9 @@ export default function ProjectPage() {
   );
   const [addScreenDialogOpen, setAddScreenDialogOpen] = useState(false);
   const [addScreenFlowId, setAddScreenFlowId] = useState<string | null>(null);
-  const [addScreenParentId, setAddScreenParentId] = useState<string | undefined>(undefined);
+  const [addScreenParentId, setAddScreenParentId] = useState<
+    string | undefined
+  >(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -338,10 +340,8 @@ export default function ProjectPage() {
     return flow.name;
   };
 
-  // Get screens for the selected flow
-  const displayedScreens = selectedFlow
-    ? screensByFlow.get(selectedFlow.id) || []
-    : allScreens;
+  // Show all screens by default (not filtered by flow)
+  const displayedScreens = allScreens;
 
   if (loading) {
     return (
@@ -468,13 +468,12 @@ export default function ProjectPage() {
                   </p>
                 </div>
               )}
-              <ScreenGallery
-                screens={displayedScreens}
+              <ScreenGalleryByFlow
+                flows={flows}
+                screensByFlow={screensByFlow}
                 onSelectScreen={setSelectedScreen}
                 onUploadScreenshot={handleUploadScreenshot}
-                onAddScreen={(parentId) =>
-                  selectedFlow && openAddScreenDialog(selectedFlow.id, parentId)
-                }
+                onAddScreen={openAddScreenDialog}
                 selectedScreenId={selectedScreen?.id}
               />
             </TabsContent>
