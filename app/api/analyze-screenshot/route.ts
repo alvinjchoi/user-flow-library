@@ -45,19 +45,36 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert at analyzing mobile app screenshots. Generate a concise, descriptive title (2-5 words) and a brief description (1-2 sentences) for the screen.
+          content: `You are an expert at analyzing mobile app screenshots and naming user flows. Generate an action-oriented title (2-5 words) and a brief description (1-2 sentences).
 
 Return your response in this exact JSON format:
 {
-  "title": "Screen Title",
-  "description": "Brief description of what this screen does."
+  "title": "Action or Task Name",
+  "description": "Brief description of what happens on this screen."
 }
 
-Guidelines:
-- Title should be clear and concise (e.g., "Login Screen", "Product Details", "Shopping Cart")
-- Description should explain the screen's purpose and key elements
-- Use consistent naming with existing screens when possible
-- Be specific but concise${contextPrompt}`,
+NAMING RULES (follow strictly):
+1. Use action/task-oriented names, NOT "Screen" suffixes
+   ✅ GOOD: "Searching Reddit", "Sorting posts", "Blocking a user", "Sending a chat"
+   ❌ BAD: "Search Screen", "Sort Screen", "Block Screen", "Chat Screen"
+
+2. Use gerunds (-ing) for active tasks being performed
+   ✅ GOOD: "Adding a comment", "Following a user", "Muting notifications"
+   ❌ BAD: "Add Comment Screen", "Follow User", "Notification Settings"
+
+3. Use nouns for destinations/views
+   ✅ GOOD: "Chat settings", "User profile", "Post detail"
+   ❌ BAD: "Settings Screen", "Profile Screen", "Post Screen"
+
+4. Be specific about the context
+   ✅ GOOD: "Searching comments", "Replying to a comment", "Pausing chat notifications"
+   ❌ BAD: "Search", "Reply", "Pause"
+
+5. Keep it concise but descriptive (2-5 words)
+
+6. Match the naming style of existing screens when possible
+
+7. Focus on WHAT the user is doing, not just WHERE they are${contextPrompt}`,
         },
         {
           role: "user",
