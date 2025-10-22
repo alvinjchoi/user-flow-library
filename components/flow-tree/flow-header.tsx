@@ -73,11 +73,11 @@ export function FlowHeader({
         }`}
       />
       <span className="flex-1 truncate text-left">{flow.name}</span>
-      
+
       {hasScreenshots && (
         <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
       )}
-      
+
       <span className="text-xs text-muted-foreground font-normal">
         {flow.screen_count}
       </span>

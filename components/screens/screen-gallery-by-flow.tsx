@@ -142,8 +142,6 @@ export function ScreenGalleryByFlow({
         const screens = screensByFlow.get(flow.id) || [];
         const { parents, childrenByParent } = groupScreensByParent(screens);
 
-        if (screens.length === 0) return null;
-
         return (
           <div key={flow.id} className="space-y-6">
             {/* Flow Header */}
@@ -154,86 +152,115 @@ export function ScreenGalleryByFlow({
               </span>
             </div>
 
-            {/* Parent screens */}
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              {parents.map((screen) => (
-                <div key={screen.id} className="flex-shrink-0 w-64">
-                  <ScreenCard
-                    screen={screen}
-                    isSelected={selectedScreenId === screen.id}
-                    onSelectScreen={onSelectScreen}
-                    onUploadScreenshot={onUploadScreenshot}
-                  />
-                </div>
-              ))}
-
-              {/* Add screen card */}
-              <div className="flex-shrink-0 w-64">
-                <Card
-                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                  onClick={() => onAddScreen?.(flow.id)}
-                >
-                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                    <Plus className="h-8 w-8" />
-                    <span className="text-sm">Add screen</span>
-                  </div>
-                </Card>
-              </div>
-            </div>
-
-            {/* Child screens */}
-            {parents.map((parent) => {
-              const children = childrenByParent.get(parent.id);
-              if (!children || children.length === 0) return null;
-
-              return (
-                <div key={`children-${parent.id}`} className="space-y-4">
-                  {/* Arrow indicator */}
-                  <div className="flex items-start gap-4">
-                    <div className="w-[calc((100%/2)-0.5rem)] md:w-[calc((100%/3)-0.667rem)] lg:w-[calc((100%/4)-0.75rem)] xl:w-[calc((100%/5)-0.8rem)] flex flex-col items-center">
-                      <div className="text-primary text-sm font-medium mb-2 text-center truncate w-full px-2">
-                        {parent.title}
-                      </div>
-                      <CornerDownRight className="h-6 w-6 text-primary" />
+            {screens.length === 0 ? (
+              /* Empty flow skeleton */
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                <div className="flex-shrink-0 w-64">
+                  <Card className="aspect-[9/16] border-dashed border-muted-foreground/25 bg-muted/20 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Upload className="h-8 w-8 opacity-50" />
+                      <span className="text-sm opacity-50">No screens yet</span>
                     </div>
+                  </Card>
+                </div>
+                
+                {/* Add screen card */}
+                <div className="flex-shrink-0 w-64">
+                  <Card
+                    className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                    onClick={() => onAddScreen?.(flow.id)}
+                  >
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Plus className="h-8 w-8" />
+                      <span className="text-sm">Add screen</span>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Parent screens */}
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  {parents.map((screen) => (
+                    <div key={screen.id} className="flex-shrink-0 w-64">
+                      <ScreenCard
+                        screen={screen}
+                        isSelected={selectedScreenId === screen.id}
+                        onSelectScreen={onSelectScreen}
+                        onUploadScreenshot={onUploadScreenshot}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Add screen card */}
+                  <div className="flex-shrink-0 w-64">
+                    <Card
+                      className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                      onClick={() => onAddScreen?.(flow.id)}
+                    >
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <Plus className="h-8 w-8" />
+                        <span className="text-sm">Add screen</span>
+                      </div>
+                    </Card>
                   </div>
+                </div>
 
-                  {/* Child screens grid */}
-                  <div className="pl-8 md:pl-12">
-                    <div className="border-l-2 border-primary/30 pl-4">
-                      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                        {children.map((child) => (
-                          <div key={child.id} className="flex-shrink-0 w-64">
-                            <ScreenCard
-                              screen={child}
-                              isSelected={selectedScreenId === child.id}
-                              onSelectScreen={onSelectScreen}
-                              onUploadScreenshot={onUploadScreenshot}
-                            />
+                {/* Child screens */}
+                {parents.map((parent) => {
+                  const children = childrenByParent.get(parent.id);
+                  if (!children || children.length === 0) return null;
+
+                  return (
+                    <div key={`children-${parent.id}`} className="space-y-4">
+                      {/* Arrow indicator */}
+                      <div className="flex items-start gap-4">
+                        <div className="w-[calc((100%/2)-0.5rem)] md:w-[calc((100%/3)-0.667rem)] lg:w-[calc((100%/4)-0.75rem)] xl:w-[calc((100%/5)-0.8rem)] flex flex-col items-center">
+                          <div className="text-primary text-sm font-medium mb-2 text-center truncate w-full px-2">
+                            {parent.title}
                           </div>
-                        ))}
+                          <CornerDownRight className="h-6 w-6 text-primary" />
+                        </div>
+                      </div>
 
-                        {/* Add child screen card */}
-                        <div className="flex-shrink-0 w-64">
-                          <Card
-                            className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddScreen?.(flow.id, parent.id);
-                            }}
-                          >
-                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                              <Plus className="h-6 w-6" />
-                              <span className="text-xs">Add child</span>
+                      {/* Child screens grid */}
+                      <div className="pl-8 md:pl-12">
+                        <div className="border-l-2 border-primary/30 pl-4">
+                          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            {children.map((child) => (
+                              <div key={child.id} className="flex-shrink-0 w-64">
+                                <ScreenCard
+                                  screen={child}
+                                  isSelected={selectedScreenId === child.id}
+                                  onSelectScreen={onSelectScreen}
+                                  onUploadScreenshot={onUploadScreenshot}
+                                />
+                              </div>
+                            ))}
+
+                            {/* Add child screen card */}
+                            <div className="flex-shrink-0 w-64">
+                              <Card
+                                className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAddScreen?.(flow.id, parent.id);
+                                }}
+                              >
+                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                  <Plus className="h-6 w-6" />
+                                  <span className="text-xs">Add child</span>
+                                </div>
+                              </Card>
                             </div>
-                          </Card>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </>
+            )}
           </div>
         );
       })}
