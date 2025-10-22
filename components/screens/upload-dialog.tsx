@@ -98,29 +98,6 @@ export function UploadDialog({
     reader.readAsDataURL(selectedFile);
   };
 
-  const analyzeScreenshot = async (imageUrl: string) => {
-    // Build context from existing screens
-    const context = allScreens
-      .filter((s) => s.screenshot_url)
-      .map((s) => ({
-        title: s.title,
-        description: s.notes,
-      }));
-
-    const response = await fetch("/api/analyze-screenshot", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageUrl, context }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to analyze screenshot");
-    }
-
-    return response.json();
-  };
-
   const handleUpload = async () => {
     if (!file) return;
 
