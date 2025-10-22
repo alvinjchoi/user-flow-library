@@ -91,7 +91,7 @@ export function BranchedFlowItem({
   const groupedTree = groupScreensByDisplayName(tree);
 
   return (
-    <div className="mb-3">
+    <div>
       {/* Branched Flow Header */}
       <div
         onClick={() => {
@@ -181,7 +181,7 @@ export function BranchedFlowItem({
 
       {/* Branched Flow Screens */}
       {isExpanded && (
-        <div className="ml-4 border-l border-muted/20 pl-2">
+        <div>
           {groupedTree.length === 0 ? (
             <div className="pl-4 py-2 text-xs text-muted-foreground">
               No screens yet
@@ -191,7 +191,7 @@ export function BranchedFlowItem({
               <TreeNode
                 key={screen.id}
                 screen={screen}
-                level={screen.level}
+                level={0}
                 onAddChild={(parentId) => onAddScreen(parentId)}
                 onSelect={onSelectScreen}
                 onUpdateTitle={onUpdateScreenTitle}
