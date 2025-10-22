@@ -122,6 +122,9 @@ export function ScreenGalleryByFlow({
   onAddScreen,
   selectedScreenId,
 }: ScreenGalleryByFlowProps) {
+  console.log("ScreenGalleryByFlow - flows:", flows);
+  console.log("ScreenGalleryByFlow - screensByFlow:", screensByFlow);
+
   if (flows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -140,6 +143,7 @@ export function ScreenGalleryByFlow({
     <div className="p-6 space-y-12">
       {flows.map((flow) => {
         const screens = screensByFlow.get(flow.id) || [];
+        console.log(`Flow "${flow.name}" - screens:`, screens);
         const { parents, childrenByParent } = groupScreensByParent(screens);
 
         return (
