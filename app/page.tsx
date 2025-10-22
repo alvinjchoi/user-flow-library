@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { getProjects, createProject } from "@/lib/projects";
 import type { Project } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { Header } from "@/components/header";
 import {
   Card,
   CardContent,
@@ -57,12 +58,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 h-14 flex items-center">
-          <h1 className="text-lg font-semibold">User Flow Organizer</h1>
-        </div>
-      </header>
+      <Header />
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">

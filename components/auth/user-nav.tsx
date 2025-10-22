@@ -12,9 +12,6 @@ import { Button } from "@/components/ui/button";
 export function UserNav() {
   return (
     <div className="flex items-center gap-2">
-      {/* Debug: Always show something */}
-      <div className="text-xs text-muted-foreground">Auth:</div>
-      
       <SignedOut>
         <SignInButton mode="modal">
           <Button variant="ghost" size="sm">
