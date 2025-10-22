@@ -4,7 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Edit2 } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { getProjects, createProject, deleteProject, uploadProjectAvatar } from "@/lib/projects";
+import {
+  getProjects,
+  createProject,
+  deleteProject,
+  uploadProjectAvatar,
+} from "@/lib/projects";
 import type { Project } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/header";
@@ -82,7 +87,9 @@ export default function HomePage() {
     setDeleteDialogOpen(true);
   }
 
-  const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(null);
+  const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(
+    null
+  );
 
   async function handleAvatarUpload(project: Project, event: React.MouseEvent) {
     event.stopPropagation(); // Prevent card click
@@ -105,7 +112,7 @@ export default function HomePage() {
       setUploadingProjectId(null);
       // Reset file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   }
