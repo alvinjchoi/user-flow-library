@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert at analyzing mobile app screenshots and naming user flows. Generate an action-oriented title (2-5 words) and a brief description (1-2 sentences).
+          content: `You are an expert at analyzing mobile app screenshots and naming user flows. Generate both a technical screen name and an action-oriented display name.
 
 Return your response in this exact JSON format:
 {
@@ -54,11 +54,23 @@ Return your response in this exact JSON format:
   "description": "Brief description of what happens on this screen."
 }
 
-IMPORTANT: Generate BOTH names:
-- "title": Technical name for developers/files (e.g., "Search Screen", "Profile Screen")
-- "displayName": Action-oriented name for user flows (e.g., "Searching Reddit", "User profile")
+CRITICAL: Generate BOTH names with different purposes:
+- "title": Technical/consistent name for developers (e.g., "Home Screen", "Search Screen", "Profile Screen")
+- "displayName": Action-oriented name for UX flow sidebar (e.g., "Community feed", "Searching posts", "User profile")
 
-NAMING RULES for displayName (follow strictly):
+NAMING RULES:
+
+📱 For "title" (Technical/Developer Reference):
+- Keep it CONSISTENT and SIMPLE
+- Use standard UI naming: "Home Screen", "Profile Screen", "Settings Screen"
+- If multiple screenshots of SAME screen (e.g., capturing long scroll):
+  * Base: "Home Screen"
+  * Variants: "Home Screen (Top)", "Home Screen (Middle)", "Home Screen (Bottom)"
+  * OR: "Home Screen - Hero", "Home Screen - Feed", "Home Screen - Footer"
+- This helps developers identify files and components
+- Examples: "Search Screen", "Login Screen", "Chat Screen", "Post Detail Screen"
+
+🎯 For "displayName" (Sidebar/Flow/Action-Oriented):
 1. Use action/task-oriented names, NOT "Screen" suffixes
    ✅ GOOD: "Searching Reddit", "Sorting posts", "Blocking a user", "Sending a chat"
    ❌ BAD: "Search Screen", "Sort Screen", "Block Screen", "Chat Screen"
@@ -67,19 +79,24 @@ NAMING RULES for displayName (follow strictly):
    ✅ GOOD: "Adding a comment", "Following a user", "Muting notifications"
    ❌ BAD: "Add Comment Screen", "Follow User", "Notification Settings"
 
-3. Use nouns for destinations/views
-   ✅ GOOD: "Chat settings", "User profile", "Post detail"
+3. Use nouns for destinations/views (lowercase for readability)
+   ✅ GOOD: "Chat settings", "User profile", "Post detail", "Community feed"
    ❌ BAD: "Settings Screen", "Profile Screen", "Post Screen"
 
-4. Be specific about the context
-   ✅ GOOD: "Searching comments", "Replying to a comment", "Pausing chat notifications"
-   ❌ BAD: "Search", "Reply", "Pause"
+4. Be specific about the context and scroll position if capturing long screens
+   ✅ GOOD: "Home feed (top)", "Home feed (posts)", "Home feed (recommendations)"
+   ❌ BAD: "Home", "Home 2", "Home 3"
 
 5. Keep it concise but descriptive (2-5 words)
 
 6. Match the naming style of existing screens when possible
 
-7. Focus on WHAT the user is doing, not just WHERE they are${contextPrompt}`,
+7. Focus on WHAT the user is doing or seeing, not just WHERE they are
+
+HANDLING DUPLICATES:
+If you detect this is likely a continuation/scroll of an existing screen (similar layout, same header/navigation):
+- title: Add position suffix → "Home Screen (Middle)"
+- displayName: Add context → "Home feed (trending posts)"${contextPrompt}`,
         },
         {
           role: "user",
