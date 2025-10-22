@@ -7,6 +7,35 @@ import { TreeNode } from "./tree-node";
 import { Button } from "@/components/ui/button";
 import { buildScreenTree } from "@/lib/flows";
 
+// Helper to group screens by display_name (for scroll captures)
+function groupScreensByDisplayName(screens: Screen[]): Screen[] {
+  const grouped = new Map<string, Screen[]>();
+  const result: Screen[] = [];
+
+  // Group screens by display_name
+  screens.forEach((screen) => {
+    const displayName = screen.display_name || screen.title;
+    if (!grouped.has(displayName)) {
+      grouped.set(displayName, []);
+    }
+    grouped.get(displayName)!.push(screen);
+  });
+
+  // Create representative screens with groupedScreens property
+  grouped.forEach((groupScreens, displayName) => {
+    if (groupScreens.length === 1) {
+      // Single screen, add as-is
+      result.push(groupScreens[0]);
+    } else {
+      // Multiple screens with same display_name - use first as representative
+      const representative = { ...groupScreens[0], groupedScreens: groupScreens };
+      result.push(representative);
+    }
+  });
+
+  return result;
+}
+
 interface FlowSidebarProps {
   flows: Flow[];
   screensByFlow: Map<string, Screen[]>;
@@ -122,10 +151,24 @@ export function FlowSidebar({
             </Button>
           </div>
         ) : (
-          flows.map((flow) => {
-            const screens = screensByFlow.get(flow.id) || [];
-            const tree = buildScreenTree(screens);
-            const isExpanded = expandedFlows.has(flow.id);
+              flows.map((flow) => {
+                const screens = screensByFlow.get(flow.id) || [];
+                const tree = buildScreenTree(screens);
+                
+                // Group root-level screens by display_name
+                const groupedTree = tree.map(rootScreen => {
+                  // For each root screen, group its direct children (not nested children)
+                  if (rootScreen.children && rootScreen.children.length > 0) {
+                    const groupedChildren = groupScreensByDisplayName(rootScreen.children);
+                    return { ...rootScreen, children: groupedChildren };
+                  }
+                  return rootScreen;
+                });
+                
+                // Also group root-level screens themselves
+                const finalTree = groupScreensByDisplayName(groupedTree);
+                
+                const isExpanded = expandedFlows.has(flow.id);
 
             return (
               <div key={flow.id} className="mb-2">
@@ -190,35 +233,35 @@ export function FlowSidebar({
                   </Button>
                 </div>
 
-                {/* Screen Tree */}
-                {isExpanded && (
-                  <div className="mt-1">
-                    {tree.length === 0 ? (
-                      <div className="pl-8 py-2 text-xs text-muted-foreground">
-                        No screens yet
+                    {/* Screen Tree */}
+                    {isExpanded && (
+                      <div className="mt-1">
+                        {finalTree.length === 0 ? (
+                          <div className="pl-8 py-2 text-xs text-muted-foreground">
+                            No screens yet
+                          </div>
+                        ) : (
+                          finalTree.map((screen) => (
+                            <TreeNode
+                              key={screen.id}
+                              screen={screen}
+                              onAddChild={(parentId) =>
+                                onAddScreen?.(flow.id, parentId)
+                              }
+                              onSelect={onSelectScreen}
+                              onUpdateTitle={onUpdateScreenTitle}
+                              onAddFlowFromScreen={onAddFlowFromScreen}
+                              onDelete={onDeleteScreen}
+                              onDragStart={handleDragStart}
+                              onDragOver={handleDragOver}
+                              onDrop={handleDrop}
+                              selectedId={selectedScreenId}
+                              isDragging={draggedScreen?.id === screen.id}
+                            />
+                          ))
+                        )}
                       </div>
-                    ) : (
-                      tree.map((screen) => (
-                        <TreeNode
-                          key={screen.id}
-                          screen={screen}
-                          onAddChild={(parentId) =>
-                            onAddScreen?.(flow.id, parentId)
-                          }
-                          onSelect={onSelectScreen}
-                          onUpdateTitle={onUpdateScreenTitle}
-                          onAddFlowFromScreen={onAddFlowFromScreen}
-                          onDelete={onDeleteScreen}
-                          onDragStart={handleDragStart}
-                          onDragOver={handleDragOver}
-                          onDrop={handleDrop}
-                          selectedId={selectedScreenId}
-                          isDragging={draggedScreen?.id === screen.id}
-                        />
-                      ))
                     )}
-                  </div>
-                )}
               </div>
             );
           })

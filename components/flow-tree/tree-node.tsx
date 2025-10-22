@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface TreeNodeProps {
-  screen: Screen & { children?: Screen[] };
+  screen: Screen & { children?: Screen[]; groupedScreens?: Screen[] };
   level?: number;
   onAddChild?: (parentId: string) => void;
   onSelect?: (screen: Screen) => void;
@@ -184,6 +184,12 @@ export function TreeNode({
 
                 {screen.screenshot_url && (
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                )}
+
+                {screen.groupedScreens && screen.groupedScreens.length > 1 && (
+                  <span className="text-xs text-muted-foreground">
+                    {screen.groupedScreens.length}
+                  </span>
                 )}
 
             {descendantCount > 0 && (
