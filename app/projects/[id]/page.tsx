@@ -130,7 +130,8 @@ export default function ProjectPage() {
   async function handleAddScreen(
     title: string,
     parentId?: string,
-    screenshotFile?: File
+    screenshotFile?: File,
+    description?: string
   ) {
     if (!addScreenFlowId) return;
 
