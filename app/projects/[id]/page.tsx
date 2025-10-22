@@ -162,6 +162,7 @@ export default function ProjectPage() {
   async function handleUploadComplete(
     url: string,
     title?: string,
+    displayName?: string,
     description?: string
   ) {
     if (!uploadingScreenId) return;
@@ -174,6 +175,7 @@ export default function ProjectPage() {
             ...s,
             screenshot_url: url,
             ...(title && { title }),
+            ...(displayName && { display_name: displayName }),
             ...(description && { notes: description }),
           }
         : s
