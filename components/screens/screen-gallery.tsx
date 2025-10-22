@@ -77,55 +77,6 @@ function ScreenCard({
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                 className="object-cover"
               />
-              {/* Combined overlay with description and action buttons */}
-              {showOverlay && (
-                <div className="absolute inset-0 bg-black/70 flex flex-col justify-between p-4 rounded-lg">
-                  {/* Action buttons at top */}
-                  <div className="flex justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditDialogOpen(true);
-                      }}
-                    >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onUploadScreenshot?.(screen.id);
-                      }}
-                    >
-                      <Upload className="h-4 w-4 mr-1" />
-                      {screen.screenshot_url ? "Replace" : "Upload"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.(screen.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Description at bottom */}
-                  {screen.notes && (
-                    <div className="flex items-end">
-                      <p className="text-white text-sm leading-relaxed">
-                        {screen.notes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
             </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -139,6 +90,56 @@ function ScreenCard({
                 <Upload className="h-8 w-8" />
                 <span className="text-xs">Upload</span>
               </button>
+            </div>
+          )}
+
+          {/* Combined overlay with description and action buttons - always show on hover */}
+          {showOverlay && (
+            <div className="absolute inset-0 bg-black/70 flex flex-col justify-between p-4 rounded-lg z-10">
+              {/* Action buttons at top */}
+              <div className="flex justify-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditDialogOpen(true);
+                  }}
+                >
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUploadScreenshot?.(screen.id);
+                  }}
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  {screen.screenshot_url ? "Replace" : "Upload"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete?.(screen.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Description at bottom */}
+              {screen.notes && (
+                <div className="flex items-end">
+                  <p className="text-white text-sm leading-relaxed">
+                    {screen.notes}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
