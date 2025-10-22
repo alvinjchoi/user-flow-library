@@ -20,7 +20,10 @@ if (process.env.OPENAI_API_KEY) {
 // Create Supabase client for server-side queries (conditional)
 let supabase: any = null;
 
-if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+if (
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+) {
   try {
     supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -39,8 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "OpenAI API key not configured",
-          details:
-            "Please add OPENAI_API_KEY to your environment variables",
+          details: "Please add OPENAI_API_KEY to your environment variables",
         },
         { status: 500 }
       );
