@@ -88,8 +88,8 @@ function ScreenCard({
             </button>
           </div>
         )}
-                        {/* Upload button overlay - only show if no description */}
-                        {!screen.notes && (
+                        {/* Upload button overlay - only show if has screenshot but no description */}
+                        {screen.screenshot_url && !screen.notes && (
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Button
                               variant="secondary"
