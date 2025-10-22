@@ -74,7 +74,7 @@ export function FlowHeader({
       <span className="text-xs text-muted-foreground font-normal">
         {flow.screen_count}
       </span>
-      
+
       {/* Three-dot menu */}
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
@@ -88,15 +88,17 @@ export function FlowHeader({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={(e) => {
-            e.stopPropagation();
-            onAddScreen();
-            setMenuOpen(false);
-          }}>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddScreen();
+              setMenuOpen(false);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add screen
           </DropdownMenuItem>
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
