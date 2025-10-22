@@ -127,8 +127,9 @@ export function AddScreenDialog({
       setAiTitle(analysis.title);
       setAiDescription(analysis.description);
 
-      // Pre-populate the title field
+      // Pre-populate the title and description fields
       setTitle(analysis.title);
+      setDescription(analysis.description || "");
 
       // Try to suggest a parent based on AI analysis
       // This is a simple heuristic - you could make this smarter

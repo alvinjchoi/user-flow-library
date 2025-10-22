@@ -137,7 +137,12 @@ export default function ProjectPage() {
 
     try {
       // Create the screen first with description
-      const newScreen = await createScreen(addScreenFlowId, title, parentId, description);
+      const newScreen = await createScreen(
+        addScreenFlowId,
+        title,
+        parentId,
+        description
+      );
 
       // If there's a screenshot file, upload it
       if (screenshotFile) {
