@@ -502,7 +502,10 @@ export default function ProjectPage() {
           screenTitle={
             allScreens.find((s) => s.id === uploadingScreenId)?.title || ""
           }
-          allScreens={allScreens}
+          projectId={project.id}
+          flowId={
+            allScreens.find((s) => s.id === uploadingScreenId)?.flow_id || ""
+          }
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           onUploadComplete={handleUploadComplete}

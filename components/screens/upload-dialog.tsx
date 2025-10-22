@@ -17,12 +17,16 @@ import { uploadScreenshot } from "@/lib/storage";
 import { updateScreen } from "@/lib/flows";
 import type { Screen } from "@/lib/database.types";
 
-// Utility to analyze screenshot with AI
-async function analyzeScreenshot(imageUrl: string, context?: { title: string; description: string | null }[]) {
+// Utility to analyze screenshot with AI (now with Supabase knowledge base access)
+async function analyzeScreenshot(
+  imageUrl: string, 
+  projectId: string, 
+  flowId: string
+) {
   const response = await fetch("/api/analyze-screenshot", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageUrl, context }),
+    body: JSON.stringify({ imageUrl, projectId, flowId }),
   });
   
   if (!response.ok) {
@@ -35,7 +39,8 @@ async function analyzeScreenshot(imageUrl: string, context?: { title: string; de
 interface UploadDialogProps {
   screenId: string;
   screenTitle: string;
-  allScreens: Screen[];
+  projectId: string;
+  flowId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUploadComplete?: (url: string, title?: string, displayName?: string, description?: string) => void;
@@ -44,7 +49,8 @@ interface UploadDialogProps {
 export function UploadDialog({
   screenId,
   screenTitle,
-  allScreens,
+  projectId,
+  flowId,
   open,
   onOpenChange,
   onUploadComplete,
@@ -129,18 +135,11 @@ export function UploadDialog({
       let finalDescription = aiDescription;
 
       // 2. Analyze with AI if enabled and not already analyzed
+      // AI now queries Supabase directly for complete knowledge base!
       if (useAI && !aiTitle) {
         setAnalyzing(true);
         try {
-          // Build context from other screens
-          const context = allScreens
-            .filter((s) => s.screenshot_url)
-            .map((s) => ({
-              title: s.title,
-              description: s.notes,
-            }));
-          
-          const analysis = await analyzeScreenshot(url, context);
+          const analysis = await analyzeScreenshot(url, projectId, flowId);
           finalTitle = analysis.title;
           finalDisplayName = analysis.displayName || analysis.title;
           finalDescription = analysis.description;

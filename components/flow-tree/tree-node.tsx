@@ -177,20 +177,20 @@ export function TreeNode({
             </Button>
           </div>
         ) : (
-              <>
-                <span className="text-sm flex-1 truncate">
-                  {screen.display_name || screen.title}
-                </span>
+          <>
+            <span className="text-sm flex-1 truncate">
+              {screen.display_name || screen.title}
+            </span>
 
-                {screen.screenshot_url && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                )}
+            {screen.screenshot_url && (
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            )}
 
-                {screen.groupedScreens && screen.groupedScreens.length > 1 && (
-                  <span className="text-xs text-muted-foreground">
-                    {screen.groupedScreens.length}
-                  </span>
-                )}
+            {screen.groupedScreens && screen.groupedScreens.length > 1 && (
+              <span className="text-xs text-muted-foreground">
+                {screen.groupedScreens.length}
+              </span>
+            )}
 
             {descendantCount > 0 && (
               <span className="text-xs text-muted-foreground">

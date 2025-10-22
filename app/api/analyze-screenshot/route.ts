@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Create Supabase client for server-side queries
+const supabase = createClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +28,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { imageUrl, context } = await request.json();
+    const { imageUrl, projectId, flowId } = await request.json();
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -29,32 +37,91 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build context prompt from existing screens with display_name mapping
-    const contextPrompt =
-      context && context.length > 0
-        ? `\n\n🔍 CONTEXT - Existing screens in this app (use this to maintain consistency):
-${context
-  .map(
-    (s: any) =>
-      `- Technical: "${s.title}" → Sidebar: "${s.display_name || s.title}"${
-        s.description ? ` | ${s.description}` : ""
-      }`
-  )
+    // 🔥 NEW: Query Supabase for complete knowledge base context
+    let contextPrompt = "";
+    
+    if (projectId) {
+      try {
+        // Get project details
+        const { data: project } = await supabase
+          .from("projects")
+          .select("name")
+          .eq("id", projectId)
+          .single();
+
+        // Get all flows in this project
+        const { data: flows } = await supabase
+          .from("flows")
+          .select("id, name, description")
+          .eq("project_id", projectId)
+          .order("order_index");
+
+        // Get all screens in this project (across all flows)
+        const { data: allScreens } = await supabase
+          .from("screens")
+          .select("id, flow_id, title, display_name, notes, parent_id, order_index")
+          .in(
+            "flow_id",
+            flows?.map((f) => f.id) || []
+          )
+          .order("order_index");
+
+        // Get current flow name if specified
+        const currentFlow = flows?.find((f) => f.id === flowId);
+
+        // Build rich context
+        if (allScreens && allScreens.length > 0) {
+          contextPrompt = `\n\n🔍 KNOWLEDGE BASE - Complete context from "${project?.name || "this project"}":
+
+📊 PROJECT STRUCTURE:
+${flows
+  ?.map((f) => {
+    const flowScreens = allScreens.filter((s) => s.flow_id === f.id);
+    return `• ${f.name} (${flowScreens.length} screens)${
+      f.id === flowId ? " ← YOU ARE HERE" : ""
+    }`;
+  })
   .join("\n")}
 
-📋 IMPORTANT GUIDELINES FOR USING CONTEXT:
-1. If this screenshot looks IDENTICAL or very similar to an existing screen, use the SAME names
-2. If it's a scroll/continuation of an existing screen with the same title, keep the displayName consistent
-3. Look for patterns in existing naming conventions and follow them
-4. Check if existing screens already have similar technical names - if so, match their displayName style
-5. Duplicate technical names (same screen, different scroll position) should have IDENTICAL displayName
-6. Only create NEW displayName if this is genuinely a DIFFERENT screen/action
+📱 EXISTING SCREENS (Technical → Sidebar mapping):
+${allScreens
+  .map((s) => {
+    const flow = flows?.find((f) => f.id === s.flow_id);
+    const parentPrefix = s.parent_id ? "  ↳ " : "";
+    return `${parentPrefix}[${flow?.name}] "${s.title}" → "${s.display_name || s.title}"${
+      s.notes ? ` | ${s.notes.substring(0, 50)}...` : ""
+    }`;
+  })
+  .join("\n")}
 
-Example patterns to follow:
-- Multiple "Home Screen" captures → All should use same displayName like "Browsing community"
-- "Login Screen" series → All "Signing in" (not "Signing in (step 1)", "Signing in (step 2)")
-- Only differentiate if showing DIFFERENT content/state (e.g., "Home Screen" vs "Home Screen - Empty State")`
-        : "";
+📋 CRITICAL GUIDELINES FOR USING THIS KNOWLEDGE BASE:
+1. **Match existing patterns**: If this screenshot looks similar to an existing screen, use the EXACT SAME names
+2. **Scroll captures**: Multiple screenshots of same screen (e.g., "Home Screen") must have IDENTICAL displayName
+3. **Flow context**: You're adding to "${currentFlow?.name || "the current flow"}" - consider what makes sense in this flow
+4. **Naming consistency**: Look at how similar screens are named across ALL flows, not just current flow
+5. **Duplicate detection**: Check if a screen with similar title already exists - match its naming pattern
+6. **Hierarchical awareness**: Parent screens in other flows may indicate this is a child/continuation
+
+🎯 PATTERN EXAMPLES FROM THIS PROJECT:
+${
+  allScreens.filter((s) => s.display_name).length > 0
+    ? allScreens
+        .filter((s) => s.display_name && s.display_name !== s.title)
+        .slice(0, 5)
+        .map((s) => `- "${s.title}" is called "${s.display_name}" in sidebar`)
+        .join("\n")
+    : "- No patterns established yet - you're setting the standard!"
+}
+
+⚠️ IMPORTANT: Review the ENTIRE knowledge base above before naming. This ensures consistency across the whole project.`;
+        } else {
+          contextPrompt = `\n\n🔍 KNOWLEDGE BASE: This is the first screen in "${project?.name || "this project"}". Set a good naming pattern!`;
+        }
+      } catch (error) {
+        console.error("Error fetching knowledge base:", error);
+        contextPrompt = "\n\n⚠️ Could not load knowledge base. Proceeding with best judgment.";
+      }
+    }
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
