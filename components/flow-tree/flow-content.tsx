@@ -53,6 +53,7 @@ interface FlowContentProps {
   onUpdateScreenTitle: (screenId: string, newTitle: string) => void;
   onAddFlowFromScreen: (screenId: string) => void;
   onDeleteScreen: (screenId: string) => void;
+  onDeleteFlow?: (flowId: string) => void;
   onDragStart: (screen: Screen) => void;
   onDragOver: (screen: Screen) => void;
   onDrop: (screen: Screen) => void;
@@ -75,6 +76,7 @@ export function FlowContent({
   onUpdateScreenTitle,
   onAddFlowFromScreen,
   onDeleteScreen,
+  onDeleteFlow,
   onDragStart,
   onDragOver,
   onDrop,
@@ -153,6 +155,7 @@ export function FlowContent({
                             onUpdateScreenTitle={onUpdateScreenTitle}
                             onAddFlowFromScreen={onAddFlowFromScreen}
                             onDeleteScreen={onDeleteScreen}
+                            onDeleteFlow={onDeleteFlow}
                             onDragStart={onDragStart}
                             onDragOver={onDragOver}
                             onDrop={onDrop}

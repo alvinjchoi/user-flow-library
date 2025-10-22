@@ -1,9 +1,17 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Plus, Trash2, MoreHorizontal } from "lucide-react";
 import type { Flow, Screen } from "@/lib/database.types";
 import { TreeNode } from "./tree-node";
 import { buildScreenTree } from "@/lib/flows";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Helper to group screens by display_name (for scroll captures)
 function groupScreensByDisplayName(screens: Screen[]): Screen[] {
@@ -50,6 +58,7 @@ interface BranchedFlowItemProps {
   onUpdateScreenTitle: (screenId: string, newTitle: string) => void;
   onAddFlowFromScreen: (screenId: string) => void;
   onDeleteScreen: (screenId: string) => void;
+  onDeleteFlow?: (flowId: string) => void; // Add delete flow handler
   onDragStart: (screen: Screen) => void;
   onDragOver: (screen: Screen) => void;
   onDrop: (screen: Screen) => void;
@@ -70,12 +79,14 @@ export function BranchedFlowItem({
   onUpdateScreenTitle,
   onAddFlowFromScreen,
   onDeleteScreen,
+  onDeleteFlow,
   onDragStart,
   onDragOver,
   onDrop,
   selectedScreenId,
   draggedScreen,
 }: BranchedFlowItemProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const tree = buildScreenTree(screens);
   const groupedTree = groupScreensByDisplayName(tree);
 
@@ -87,24 +98,85 @@ export function BranchedFlowItem({
           onToggle();
           onSelect();
         }}
-        className={`group flex items-center gap-2 py-1.5 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150 ${
+        className={`group flex items-center gap-2 h-9 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150 relative ${
           isSelected
             ? "bg-primary/10 text-primary font-medium"
             : "text-foreground"
         }`}
-        style={{ paddingLeft: `${level * 12 + 12}px` }}
         role="button"
         tabIndex={0}
       >
-        <ChevronDown
-          className={`h-4 w-4 transition-transform flex-shrink-0 ${
-            isExpanded ? "" : "-rotate-90"
-          }`}
-        />
-        <span className="text-sm flex-1 truncate font-medium">{flow.name}</span>
+        {/* Visual hierarchy lines - same as TreeNode */}
+        <div
+          className="absolute left-0 top-0 bottom-0 flex items-stretch"
+          style={{ width: `${(level + 1) * 48}px` }}
+        >
+          {Array.from({ length: level + 1 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-12 flex items-center border-l border-border"
+              style={{ marginLeft: i === 0 ? "12px" : "0" }}
+            >
+              {i === level && (
+                <div className="w-full border-b border-border h-1/2"></div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="flex items-center gap-2 flex-1 relative"
+          style={{ marginLeft: `${(level + 1) * 48}px` }}
+        >
+          <ChevronDown
+            className={`h-4 w-4 transition-transform flex-shrink-0 ${
+              isExpanded ? "" : "-rotate-90"
+            }`}
+          />
+          <span className="text-sm flex-1 truncate font-medium">{flow.name}</span>
         <span className="text-xs text-muted-foreground font-normal">
           {flow.screen_count}
         </span>
+
+        {/* Three-dot menu */}
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddScreen();
+                setMenuOpen(false);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add screen
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(`Delete flow "${flow.name}" and all its screens?`)) {
+                  onDeleteFlow?.(flow.id);
+                }
+                setMenuOpen(false);
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete flow
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        </div>
       </div>
 
       {/* Branched Flow Screens */}
