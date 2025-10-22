@@ -37,9 +37,10 @@ export function AddScreenDialog({
   onAdd,
   availableScreens,
   flowName,
+  defaultParentId,
 }: AddScreenDialogProps) {
   const [title, setTitle] = useState("");
-  const [parentId, setParentId] = useState<string>("none");
+  const [parentId, setParentId] = useState<string>(defaultParentId || "none");
   const [loading, setLoading] = useState(false);
 
   const handleAdd = async () => {
