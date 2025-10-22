@@ -67,6 +67,87 @@ export function AddScreenDialog({
   const [aiDescription, setAiDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (open) {
+      setTitle("");
+      setParentId(defaultParentId || "none");
+      setError(null);
+      setLoading(false);
+      setFile(null);
+      setPreview(null);
+      setAiTitle("");
+      setAiDescription("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [open, defaultParentId]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    // Validate file type
+    if (!selectedFile.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError("File size must be less than 10MB");
+      return;
+    }
+
+    setFile(selectedFile);
+    setError(null);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result as string);
+    };
+    reader.readAsDataURL(selectedFile);
+  };
+
+  const analyzeWithAI = async (imageUrl: string) => {
+    setAnalyzing(true);
+    setError(null);
+    try {
+      const analysis = await analyzeScreenshot(imageUrl);
+      setAiTitle(analysis.title);
+      setAiDescription(analysis.description);
+      
+      // Pre-populate the title field
+      setTitle(analysis.title);
+      
+      // Try to suggest a parent based on AI analysis
+      // This is a simple heuristic - you could make this smarter
+      if (analysis.title.toLowerCase().includes("login") || 
+          analysis.title.toLowerCase().includes("sign")) {
+        // Look for existing auth-related screens
+        const authParent = availableScreens.find(s => 
+          s.title.toLowerCase().includes("login") || 
+          s.title.toLowerCase().includes("sign")
+        );
+        if (authParent) {
+          setParentId(authParent.id);
+        }
+      }
+    } catch (err) {
+      console.error("AI analysis failed:", err);
+      setError("AI analysis failed - you can still add the screen manually");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (preview) {
+      analyzeWithAI(preview);
+    }
+  }, [preview]);
+
   const handleAdd = async () => {
     if (!title.trim()) {
       setError("Screen title cannot be empty.");
