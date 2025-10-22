@@ -10,7 +10,7 @@ import {
   GitBranch,
   Trash2,
   MoreHorizontal,
-} } from "lucide-react";
+} from "lucide-react";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
