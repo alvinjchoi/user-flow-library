@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronRight, Plus, Edit2, Check, X } from "lucide-react";
+import { ChevronRight, Plus, Edit2, Check, X, GitBranch } from "lucide-react";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ interface TreeNodeProps {
   onAddChild?: (parentId: string) => void;
   onSelect?: (screen: Screen) => void;
   onUpdateTitle?: (screenId: string, newTitle: string) => void;
+  onAddFlowFromScreen?: (screenId: string) => void;
   onDragStart?: (screen: Screen) => void;
   onDragOver?: (screen: Screen) => void;
   onDrop?: (targetScreen: Screen) => void;
@@ -36,6 +37,7 @@ export function TreeNode({
   onAddChild,
   onSelect,
   onUpdateTitle,
+  onAddFlowFromScreen,
   onDragStart,
   onDragOver,
   onDrop,
@@ -186,6 +188,7 @@ export function TreeNode({
                 e.stopPropagation();
                 setIsEditing(true);
               }}
+              title="Edit screen name"
             >
               <Edit2 className="h-3 w-3" />
             </Button>
@@ -196,8 +199,22 @@ export function TreeNode({
               className="h-5 w-5 opacity-0 group-hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation();
+                onAddFlowFromScreen?.(screen.id);
+              }}
+              title="Create flow from this screen"
+            >
+              <GitBranch className="h-3 w-3" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 opacity-0 group-hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
                 onAddChild?.(screen.id);
               }}
+              title="Add child screen"
             >
               <Plus className="h-3 w-3" />
             </Button>
@@ -215,6 +232,7 @@ export function TreeNode({
               onAddChild={onAddChild}
               onSelect={onSelect}
               onUpdateTitle={onUpdateTitle}
+              onAddFlowFromScreen={onAddFlowFromScreen}
               onDragStart={onDragStart}
               onDragOver={onDragOver}
               onDrop={onDrop}

@@ -80,17 +80,35 @@ export default function ProjectPage() {
     }
   }
 
-  async function handleAddFlow() {
+  async function handleAddFlow(parentScreenId?: string) {
     if (!project) return;
 
     const name = prompt("Flow name:");
     if (!name) return;
 
     try {
-      await createFlow(project.id, name);
+      await createFlow(project.id, name, undefined, parentScreenId);
       await loadProjectData();
     } catch (error) {
       console.error("Error creating flow:", error);
+      alert("Failed to create flow");
+    }
+  }
+
+  async function handleAddFlowFromScreen(screenId: string) {
+    const screen = allScreens.find((s) => s.id === screenId);
+    if (!screen) return;
+
+    const flowName = prompt(
+      `Create a new flow branching from "${screen.title}".\n\nFlow name:`
+    );
+    if (!flowName) return;
+
+    try {
+      await createFlow(project.id, flowName, undefined, screenId);
+      await loadProjectData();
+    } catch (error) {
+      console.error("Error creating flow from screen:", error);
       alert("Failed to create flow");
     }
   }
@@ -102,19 +120,19 @@ export default function ProjectPage() {
     try {
       // Create the new screen (it will be added at the end automatically)
       const newScreen = await createScreen(flowId, title, parentId);
-      
+
       // Optimistic update - add to local state immediately
       const flowScreens = screensByFlow.get(flowId) || [];
       const updatedFlowScreens = [...flowScreens, newScreen];
-      
+
       const updatedScreensByFlow = new Map(screensByFlow);
       updatedScreensByFlow.set(flowId, updatedFlowScreens);
-      
+
       const updatedAllScreens = [...allScreens, newScreen];
-      
+
       setScreensByFlow(updatedScreensByFlow);
       setAllScreens(updatedAllScreens);
-      
+
       // Reload to get the updated screen count on flows
       await loadProjectData();
     } catch (error) {
@@ -311,11 +329,12 @@ export default function ProjectPage() {
         <FlowSidebar
           flows={flows}
           screensByFlow={screensByFlow}
-          onAddFlow={handleAddFlow}
+          onAddFlow={() => handleAddFlow()}
           onAddScreen={handleAddScreen}
           onSelectScreen={setSelectedScreen}
           onSelectFlow={setSelectedFlow}
           onUpdateScreenTitle={handleUpdateScreenTitle}
+          onAddFlowFromScreen={handleAddFlowFromScreen}
           onReorderScreens={handleReorderScreens}
           selectedScreenId={selectedScreen?.id}
           selectedFlowId={selectedFlow?.id}

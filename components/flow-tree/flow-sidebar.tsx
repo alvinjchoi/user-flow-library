@@ -15,6 +15,7 @@ interface FlowSidebarProps {
   onSelectScreen?: (screen: Screen) => void;
   onSelectFlow?: (flow: Flow) => void;
   onUpdateScreenTitle?: (screenId: string, newTitle: string) => void;
+  onAddFlowFromScreen?: (screenId: string) => void;
   onReorderScreens?: (flowId: string, screens: Screen[]) => void;
   selectedScreenId?: string;
   selectedFlowId?: string;
@@ -28,6 +29,7 @@ export function FlowSidebar({
   onSelectScreen,
   onSelectFlow,
   onUpdateScreenTitle,
+  onAddFlowFromScreen,
   onReorderScreens,
   selectedScreenId,
   selectedFlowId,
@@ -174,6 +176,7 @@ export function FlowSidebar({
                           }
                           onSelect={onSelectScreen}
                           onUpdateTitle={onUpdateScreenTitle}
+                          onAddFlowFromScreen={onAddFlowFromScreen}
                           onDragStart={handleDragStart}
                           onDragOver={handleDragOver}
                           onDrop={handleDrop}

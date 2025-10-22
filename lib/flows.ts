@@ -57,7 +57,8 @@ export function buildScreenTree(screens: Screen[]): Screen[] {
 export async function createFlow(
   projectId: string,
   name: string,
-  description?: string
+  description?: string,
+  parentScreenId?: string
 ): Promise<Flow> {
   const { data, error } = await supabase
     .from("flows")
@@ -65,6 +66,7 @@ export async function createFlow(
       project_id: projectId,
       name,
       description,
+      parent_screen_id: parentScreenId || null,
     })
     .select()
     .single();
@@ -82,7 +84,7 @@ export async function createScreen(
 ): Promise<Screen> {
   // If no order index provided, get the max order_index for this flow
   let finalOrderIndex = orderIndex;
-  
+
   if (finalOrderIndex === undefined) {
     const { data: existingScreens } = await supabase
       .from("screens")
@@ -91,9 +93,10 @@ export async function createScreen(
       .order("order_index", { ascending: false })
       .limit(1);
 
-    finalOrderIndex = existingScreens && existingScreens.length > 0 
-      ? existingScreens[0].order_index + 1 
-      : 0;
+    finalOrderIndex =
+      existingScreens && existingScreens.length > 0
+        ? existingScreens[0].order_index + 1
+        : 0;
   }
 
   const { data, error } = await supabase
