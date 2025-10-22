@@ -457,17 +457,6 @@ export default function ProjectPage() {
               value="screens"
               className="flex-1 overflow-y-auto m-0 min-h-0"
             >
-              {selectedFlow && (
-                <div className="border-b bg-background px-6 py-4 flex-shrink-0">
-                  <h2 className="text-xl font-semibold">
-                    {getFlowDisplayName(selectedFlow)}
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {displayedScreens.length} screen
-                    {displayedScreens.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
-              )}
               <ScreenGalleryByFlow
                 flows={flows}
                 screensByFlow={screensByFlow}
