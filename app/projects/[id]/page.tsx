@@ -466,25 +466,27 @@ export default function ProjectPage() {
 
       {/* Main content with sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Flow Tree Sidebar */}
-        <FlowSidebar
-          flows={flows}
-          screensByFlow={screensByFlow}
-          onAddFlow={() => handleAddFlow()}
-          onAddScreen={openAddScreenDialog}
-          onSelectScreen={setSelectedScreen}
-          onSelectFlow={setSelectedFlow}
-          onUpdateScreenTitle={handleUpdateScreenTitle}
-          onAddFlowFromScreen={handleAddFlowFromScreen}
-          onDeleteScreen={handleDeleteScreen}
-          onDeleteFlow={handleDeleteFlow}
-          onReorderScreens={handleReorderScreens}
-          selectedScreenId={selectedScreen?.id}
-          selectedFlowId={selectedFlow?.id}
-        />
+        {/* Flow Tree Sidebar - Fixed width */}
+        <div className="w-96 flex-shrink-0">
+          <FlowSidebar
+            flows={flows}
+            screensByFlow={screensByFlow}
+            onAddFlow={() => handleAddFlow()}
+            onAddScreen={openAddScreenDialog}
+            onSelectScreen={setSelectedScreen}
+            onSelectFlow={setSelectedFlow}
+            onUpdateScreenTitle={handleUpdateScreenTitle}
+            onAddFlowFromScreen={handleAddFlowFromScreen}
+            onDeleteScreen={handleDeleteScreen}
+            onDeleteFlow={handleDeleteFlow}
+            onReorderScreens={handleReorderScreens}
+            selectedScreenId={selectedScreen?.id}
+            selectedFlowId={selectedFlow?.id}
+          />
+        </div>
 
-        {/* Main area with tabs */}
-        <div className="flex-1 flex flex-col min-h-0">
+        {/* Main area with tabs - Takes remaining space */}
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
           <Tabs defaultValue="screens" className="flex-1 flex flex-col min-h-0">
             <div className="border-b px-6 flex-shrink-0">
               <TabsList className="h-12 bg-transparent">

@@ -129,7 +129,7 @@ export function FlowSidebar({
   };
 
   return (
-    <div className="w-96 border-r bg-background h-full overflow-y-auto">
+    <div className="w-full border-r bg-background h-full overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 bg-background border-b z-10 p-3 flex items-center justify-between">
         <h2 className="font-semibold text-sm">Flow Tree</h2>
