@@ -101,7 +101,7 @@ export function BranchedFlowItem({
             isExpanded ? "" : "-rotate-90"
           }`}
         />
-        <span className="flex-1 truncate text-left">{flow.name}</span>
+        <span className="text-sm flex-1 truncate font-medium">{flow.name}</span>
         <span className="text-xs text-muted-foreground font-normal">
           {flow.screen_count}
         </span>
