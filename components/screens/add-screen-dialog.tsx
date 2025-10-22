@@ -64,6 +64,7 @@ export function AddScreenDialog({
 }: AddScreenDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [parentId, setParentId] = useState<string>(defaultParentId || "none");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +128,10 @@ export function AddScreenDialog({
       setAiTitle(analysis.title);
       setAiDescription(analysis.description);
 
-      // Pre-populate the title and description fields
+      // Pre-populate the title, description, and displayName fields
       setTitle(analysis.title);
       setDescription(analysis.description || "");
+      setDisplayName(analysis.displayName || analysis.title);
 
       // Try to suggest a parent based on AI analysis
       // This is a simple heuristic - you could make this smarter
@@ -314,15 +316,32 @@ export function AddScreenDialog({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="title">Screen Title</Label>
+              <Label htmlFor="displayName">Display Name (Sidebar)</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g., Managing projects"
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Action-oriented name shown in sidebar (e.g., "Searching posts", "Adding comments")
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="title">Technical Name</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                placeholder="e.g., Welcome Screen"
+                placeholder="e.g., Projects Screen"
                 disabled={loading}
               />
+              <p className="text-xs text-muted-foreground">
+                Technical name for developers (e.g., "Projects Screen", "Search Screen")
+              </p>
               {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             </div>
 

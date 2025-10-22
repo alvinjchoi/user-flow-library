@@ -131,7 +131,8 @@ export default function ProjectPage() {
     title: string,
     parentId?: string,
     screenshotFile?: File,
-    description?: string
+    description?: string,
+    displayName?: string
   ) {
     if (!addScreenFlowId) return;
 

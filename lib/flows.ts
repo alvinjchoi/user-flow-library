@@ -100,6 +100,7 @@ export async function createScreen(
     .insert({
       flow_id: flowId,
       title,
+      display_name: displayName || title,
       parent_id: parentId || null,
       order_index: finalOrderIndex,
       level: parentId ? parentLevel + 1 : 0,
