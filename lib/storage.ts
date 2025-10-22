@@ -4,25 +4,10 @@ const BUCKET_NAME = "screenshots";
 
 // Initialize storage bucket (run once)
 export async function initializeStorage() {
-  try {
-    // Check if bucket exists
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some((b) => b.name === BUCKET_NAME);
-
-    if (!bucketExists) {
-      console.warn("⚠️ Storage bucket 'screenshots' not found!");
-      console.log(
-        "💡 Create it in Supabase Dashboard or run sql/CREATE_STORAGE_BUCKET.sql"
-      );
-      return false;
-    }
-
-    console.log("✅ Storage bucket ready:", BUCKET_NAME);
-    return true;
-  } catch (error) {
-    console.error("⚠️ Error checking storage:", error);
-    return false;
-  }
+  // Note: Bucket must be created manually in Supabase Dashboard
+  // or by running sql/CREATE_STORAGE_BUCKET.sql
+  // We don't need to check on every page load since uploads will fail gracefully if not configured
+  return true;
 }
 
 // Upload screenshot
