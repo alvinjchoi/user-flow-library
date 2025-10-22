@@ -84,7 +84,7 @@ function ScreenCard({
                   <p className="text-white text-sm font-semibold mb-2">
                     {screen.display_name || screen.title}
                   </p>
-                  
+
                   {/* Description */}
                   {screen.notes && (
                     <p className="text-white text-sm leading-relaxed">
