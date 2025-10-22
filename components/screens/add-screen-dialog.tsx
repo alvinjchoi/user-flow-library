@@ -28,6 +28,7 @@ interface AddScreenDialogProps {
   onAdd: (title: string, parentId?: string) => void;
   availableScreens: Screen[];
   flowName: string;
+  defaultParentId?: string;
 }
 
 export function AddScreenDialog({

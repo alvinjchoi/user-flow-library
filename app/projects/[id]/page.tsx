@@ -40,6 +40,7 @@ export default function ProjectPage() {
   );
   const [addScreenDialogOpen, setAddScreenDialogOpen] = useState(false);
   const [addScreenFlowId, setAddScreenFlowId] = useState<string | null>(null);
+  const [addScreenParentId, setAddScreenParentId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -523,6 +524,7 @@ export default function ProjectPage() {
           onAdd={handleAddScreen}
           availableScreens={screensByFlow.get(addScreenFlowId) || []}
           flowName={flows.find((f) => f.id === addScreenFlowId)?.name || "Flow"}
+          defaultParentId={addScreenParentId}
         />
       )}
     </div>
