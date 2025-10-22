@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { getProjects, createProject } from "@/lib/projects";
+import { getProjects, createProject, deleteProject } from "@/lib/projects";
 import type { Project } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/header";
@@ -15,11 +15,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function HomePage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -49,6 +61,26 @@ export default function HomePage() {
     }
   }
 
+  async function handleDeleteProject() {
+    if (!projectToDelete) return;
+
+    try {
+      await deleteProject(projectToDelete.id);
+      setProjects(projects.filter(p => p.id !== projectToDelete.id));
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      alert("Failed to delete project. Please try again.");
+    }
+  }
+
+  function openDeleteDialog(project: Project, event: React.MouseEvent) {
+    event.stopPropagation(); // Prevent card click
+    setProjectToDelete(project);
+    setDeleteDialogOpen(true);
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -66,9 +98,12 @@ export default function HomePage() {
         <SignedOut>
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-center max-w-md">
-              <h2 className="text-2xl font-bold mb-2">Welcome to User Flow Organizer!</h2>
+              <h2 className="text-2xl font-bold mb-2">
+                Welcome to User Flow Organizer!
+              </h2>
               <p className="text-muted-foreground mb-6">
-                Sign in to start organizing user flows and uploading screenshots for your projects.
+                Sign in to start organizing user flows and uploading screenshots
+                for your projects.
               </p>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
@@ -96,8 +131,8 @@ export default function HomePage() {
                 <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg text-sm">
                   <p className="font-semibold mb-2">⚠️ Setup Required</p>
                   <p className="text-left text-muted-foreground">
-                    If this is your first time, make sure you've run the SQL setup
-                    in Supabase:
+                    If this is your first time, make sure you've run the SQL
+                    setup in Supabase:
                     <br />
                     <code className="text-xs bg-muted px-2 py-1 rounded mt-2 inline-block">
                       sql/CREATE_FLOW_TABLES.sql
@@ -120,9 +155,19 @@ export default function HomePage() {
                 {projects.map((project) => (
                   <Card
                     key={project.id}
-                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    className="cursor-pointer hover:shadow-lg transition-shadow group relative"
                     onClick={() => router.push(`/projects/${project.id}`)}
                   >
+                    {/* Delete button - appears on hover */}
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      onClick={(e) => openDeleteDialog(project, e)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">
                         <div
@@ -152,6 +197,27 @@ export default function HomePage() {
           )}
         </SignedIn>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{projectToDelete?.name}"? This will permanently delete the project and all associated flows and screens. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
