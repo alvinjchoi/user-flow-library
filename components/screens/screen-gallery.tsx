@@ -115,7 +115,7 @@ export function ScreenGallery({
   const { parents, childrenByParent } = groupScreensByParent(screens);
 
   return (
-    <div className="p-6 overflow-y-auto">
+    <div className="p-6">
       {screens.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="text-center">
