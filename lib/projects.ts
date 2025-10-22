@@ -66,33 +66,42 @@ export async function updateProject(
 
 // Soft delete project (and all related data)
 export async function deleteProject(id: string): Promise<void> {
-  // Start a transaction-like operation by soft-deleting related data first
-  // 1. Soft delete all screens in flows belonging to this project
-  const { error: screensError } = await supabase
-    .from("screens")
-    .update({ deleted_at: new Date().toISOString() })
-    .in("flow_id", 
-      supabase
-        .from("flows")
-        .select("id")
-        .eq("project_id", id)
-    );
-  
-  if (screensError) throw screensError;
+  // 1. First, get all flow IDs for this project
+  const { data: flows, error: flowsSelectError } = await supabase
+    .from("flows")
+    .select("id")
+    .eq("project_id", id)
+    .is("deleted_at", null); // Only get non-deleted flows
 
-  // 2. Soft delete all flows belonging to this project
+  if (flowsSelectError) throw flowsSelectError;
+
+  // 2. Soft delete all screens in flows belonging to this project
+  if (flows && flows.length > 0) {
+    const flowIds = flows.map(flow => flow.id);
+    const { error: screensError } = await supabase
+      .from("screens")
+      .update({ deleted_at: new Date().toISOString() })
+      .in("flow_id", flowIds)
+      .is("deleted_at", null); // Only update non-deleted screens
+
+    if (screensError) throw screensError;
+  }
+
+  // 3. Soft delete all flows belonging to this project
   const { error: flowsError } = await supabase
     .from("flows")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("project_id", id);
-  
+    .eq("project_id", id)
+    .is("deleted_at", null); // Only update non-deleted flows
+
   if (flowsError) throw flowsError;
 
-  // 3. Soft delete the project itself
+  // 4. Soft delete the project itself
   const { error: projectError } = await supabase
     .from("projects")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
-  
+    .eq("id", id)
+    .is("deleted_at", null); // Only update non-deleted projects
+
   if (projectError) throw projectError;
 }
