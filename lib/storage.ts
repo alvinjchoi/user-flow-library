@@ -10,6 +10,38 @@ export async function initializeStorage() {
   return true;
 }
 
+// Generic file upload function
+export async function uploadFile(
+  bucketName: string,
+  fileName: string,
+  file: File
+): Promise<string> {
+  try {
+    // Upload file
+    const { error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      throw new Error(`Failed to upload file: ${uploadError.message}`);
+    }
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+}
+
 // Upload screenshot
 export async function uploadScreenshot(
   file: File,
