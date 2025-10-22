@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-  Upload,
-  X,
-  Image as ImageIcon,
-  Sparkles,
-  Loader2,
-  Plus,
-} from "lucide-react";
+import { Upload, X, Image as ImageIcon, Sparkles, Loader2, Save, Edit2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Screen } from "@/lib/database.types";
+import { updateScreen } from "@/lib/flows";
+import { uploadScreenshot } from "@/lib/storage";
 
 // Utility to analyze screenshot with AI
 async function analyzeScreenshot(imageUrl: string) {
@@ -37,39 +32,37 @@ async function analyzeScreenshot(imageUrl: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageUrl }),
   });
-
+  
   if (!response.ok) {
     throw new Error("AI analysis failed");
   }
-
+  
   return response.json();
 }
 
-interface AddScreenDialogProps {
+interface EditScreenDialogProps {
+  screen: Screen | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (title: string, parentId?: string, screenshotFile?: File) => void;
+  onUpdate: (updatedScreen: Screen) => void;
   availableScreens: Screen[];
-  flowName: string;
-  defaultParentId?: string;
 }
 
-export function AddScreenDialog({
+export function EditScreenDialog({
+  screen,
   open,
   onOpenChange,
-  onAdd,
+  onUpdate,
   availableScreens,
-  flowName,
-  defaultParentId,
-}: AddScreenDialogProps) {
+}: EditScreenDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [parentId, setParentId] = useState<string>(defaultParentId || "none");
+  const [parentId, setParentId] = useState<string>("none");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // New state for file upload and AI analysis
+  
+  // File upload and AI analysis state
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -77,10 +70,13 @@ export function AddScreenDialog({
   const [aiDescription, setAiDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize form when screen changes
   useEffect(() => {
-    if (open) {
-      setTitle("");
-      setParentId(defaultParentId || "none");
+    if (screen && open) {
+      setTitle(screen.title);
+      setDescription(screen.notes || "");
+      setDisplayName(screen.display_name || screen.title);
+      setParentId(screen.parent_id || "none");
       setError(null);
       setLoading(false);
       setFile(null);
@@ -91,7 +87,7 @@ export function AddScreenDialog({
         fileInputRef.current.value = "";
       }
     }
-  }, [open, defaultParentId]);
+  }, [screen, open]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -127,31 +123,14 @@ export function AddScreenDialog({
       const analysis = await analyzeScreenshot(imageUrl);
       setAiTitle(analysis.title);
       setAiDescription(analysis.description);
-
-      // Pre-populate the title, description, and displayName fields
+      
+      // Pre-populate the fields
       setTitle(analysis.title);
       setDescription(analysis.description || "");
       setDisplayName(analysis.displayName || analysis.title);
-
-      // Try to suggest a parent based on AI analysis
-      // This is a simple heuristic - you could make this smarter
-      if (
-        analysis.title.toLowerCase().includes("login") ||
-        analysis.title.toLowerCase().includes("sign")
-      ) {
-        // Look for existing auth-related screens
-        const authParent = availableScreens.find(
-          (s) =>
-            s.title.toLowerCase().includes("login") ||
-            s.title.toLowerCase().includes("sign")
-        );
-        if (authParent) {
-          setParentId(authParent.id);
-        }
-      }
     } catch (err) {
       console.error("AI analysis failed:", err);
-      setError("AI analysis failed - you can still add the screen manually");
+      setError("AI analysis failed - you can still edit manually");
     } finally {
       setAnalyzing(false);
     }
@@ -163,53 +142,87 @@ export function AddScreenDialog({
     }
   }, [preview]);
 
-  const handleAdd = async () => {
-    if (!title.trim()) {
+  const handleSave = async () => {
+    if (!screen || !title.trim()) {
       setError("Screen title cannot be empty.");
       return;
     }
 
     setLoading(true);
     try {
-      await onAdd(
-        title.trim(),
-        parentId === "none" ? undefined : parentId,
-        file || undefined
-      );
+      // Prepare updates
+      const updates: Partial<Screen> = {
+        title: title.trim(),
+        display_name: displayName.trim() || title.trim(),
+        notes: description.trim() || null,
+        parent_id: parentId === "none" ? null : parentId,
+      };
 
-      // Reset form (handled by useEffect on dialog close)
+      // If there's a new screenshot file, upload it
+      if (file) {
+        try {
+          const screenshotUrl = await uploadScreenshot(file, screen.id);
+          if (screenshotUrl) {
+            updates.screenshot_url = screenshotUrl;
+          }
+        } catch (uploadError) {
+          console.error("Error uploading screenshot:", uploadError);
+          setError("Failed to upload screenshot, but other changes will be saved");
+        }
+      }
+
+      // Update the screen
+      const updatedScreen = await updateScreen(screen.id, updates);
+      
+      // Notify parent
+      onUpdate(updatedScreen);
+
+      // Close dialog
       onOpenChange(false);
     } catch (err) {
-      console.error("Error adding screen:", err);
-      setError(err instanceof Error ? err.message : "Failed to add screen");
+      console.error("Error updating screen:", err);
+      setError(err instanceof Error ? err.message : "Failed to update screen");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && title.trim()) {
-      handleAdd();
-    }
-  };
+  if (!screen) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Add Screen to {flowName}</DialogTitle>
+          <DialogTitle>Edit Screen</DialogTitle>
           <DialogDescription>
-            Create a new screen and optionally choose which screen it stems
-            from.
+            Update screen details and optionally upload a new screenshot.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-6 py-4">
-          {/* Left Column - File Upload (Wider) */}
+          {/* Left Column - Screenshot */}
           <div className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="screenshot">Screenshot (Optional)</Label>
-              {!preview ? (
+              <Label htmlFor="screenshot">Screenshot</Label>
+              {screen.screenshot_url && !preview ? (
+                <div className="relative">
+                  <div className="aspect-[9/16] relative rounded-lg overflow-hidden bg-muted max-w-[280px] mx-auto">
+                    <img
+                      src={screen.screenshot_url}
+                      alt="Current screenshot"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : !preview ? (
                 <div
                   className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer min-h-[300px] flex flex-col items-center justify-center"
                   onClick={() => fileInputRef.current?.click()}
@@ -226,7 +239,7 @@ export function AddScreenDialog({
                     Click to upload screenshot
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    AI will suggest title and parent
+                    AI will suggest new title and description
                   </p>
                 </div>
               ) : (
@@ -234,7 +247,7 @@ export function AddScreenDialog({
                   <div className="aspect-[9/16] relative rounded-lg overflow-hidden bg-muted max-w-[280px] mx-auto">
                     <img
                       src={preview}
-                      alt="Preview"
+                      alt="New preview"
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -288,33 +301,6 @@ export function AddScreenDialog({
 
           {/* Right Column - Configuration Options */}
           <div className="space-y-4">
-            {/* AI Analysis Results */}
-            {analyzing && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Analyzing screenshot...
-              </div>
-            )}
-
-            {aiTitle && (
-              <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                    AI Suggestions
-                  </span>
-                </div>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  <strong>Title:</strong> {aiTitle}
-                </p>
-                {aiDescription && (
-                  <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                    <strong>Description:</strong> {aiDescription}
-                  </p>
-                )}
-              </div>
-            )}
-
             <div className="grid gap-2">
               <Label htmlFor="displayName">Display Name (Sidebar)</Label>
               <Input
@@ -325,8 +311,7 @@ export function AddScreenDialog({
                 disabled={loading}
               />
               <p className="text-xs text-muted-foreground">
-                Action-oriented name shown in sidebar (e.g., "Searching posts",
-                "Adding comments")
+                Action-oriented name shown in sidebar (e.g., "Searching posts", "Adding comments")
               </p>
             </div>
 
@@ -336,13 +321,11 @@ export function AddScreenDialog({
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
                 placeholder="e.g., Projects Screen"
                 disabled={loading}
               />
               <p className="text-xs text-muted-foreground">
-                Technical name for developers (e.g., "Projects Screen", "Search
-                Screen")
+                Technical name for developers (e.g., "Projects Screen", "Search Screen")
               </p>
               {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             </div>
@@ -363,9 +346,11 @@ export function AddScreenDialog({
                       No parent (root level)
                     </span>
                   </SelectItem>
-                  {availableScreens.map((screen) => (
-                    <SelectItem key={screen.id} value={screen.id}>
-                      {screen.title}
+                  {availableScreens
+                    .filter(s => s.id !== screen.id) // Don't allow self as parent
+                    .map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -397,14 +382,14 @@ export function AddScreenDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleAdd} disabled={!title.trim() || loading}>
+          <Button onClick={handleSave} disabled={!title.trim() || loading}>
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
               </>
             ) : (
               <>
-                <Plus className="h-4 w-4 mr-2" /> Add Screen
+                <Save className="h-4 w-4 mr-2" /> Save Changes
               </>
             )}
           </Button>

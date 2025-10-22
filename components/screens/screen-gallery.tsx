@@ -113,7 +113,19 @@ function ScreenCard({
           </p>
         )}
       </div>
-    </Card>
+      </Card>
+
+      {/* Edit Dialog */}
+      {onUpdate && availableScreens && (
+        <EditScreenDialog
+          screen={screen}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onUpdate={onUpdate}
+          availableScreens={availableScreens}
+        />
+      )}
+    </>
   );
 }
 
