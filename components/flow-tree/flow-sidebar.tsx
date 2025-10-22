@@ -194,12 +194,12 @@ export function FlowSidebar({
   return (
     <div className="w-full border-r bg-background h-full overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 bg-background border-b z-10 p-3 flex items-center justify-between">
-        <h2 className="font-semibold text-sm">Flow Tree</h2>
+      <div className="sticky top-0 bg-background border-b z-10 px-4 py-3 flex items-center justify-between">
+        <h2 className="font-semibold text-sm text-foreground">Flow Tree</h2>
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-7 w-7 hover:bg-muted"
           onClick={onAddFlow}
         >
           <Plus className="h-4 w-4" />
@@ -207,7 +207,7 @@ export function FlowSidebar({
       </div>
 
       {/* Flows List */}
-      <div className="p-2">
+      <div className="py-2">
         {flows.length === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">
             <p className="mb-2">No flows yet</p>
@@ -239,7 +239,7 @@ export function FlowSidebar({
             const isExpanded = expandedFlows.has(flow.id);
 
             return (
-              <div key={flow.id} className="mb-2">
+              <div key={flow.id} className="select-none">
                 {/* Flow Header */}
                 <div
                   draggable
@@ -251,70 +251,68 @@ export function FlowSidebar({
                     toggleFlow(flow.id);
                     onSelectFlow?.(flow);
                   }}
-                  className={`w-full flex items-center gap-2 p-2 hover:bg-muted rounded-md group cursor-pointer transition-colors ${
+                  className={`flex h-9 items-center gap-2 px-3 text-sm font-medium relative cursor-pointer transition-all duration-150 hover:bg-muted/50 group ${
                     selectedFlowId === flow.id
-                      ? "bg-primary/10 ring-1 ring-primary/20 font-medium"
-                      : ""
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-foreground"
                   } ${
                     draggedFlow?.id === flow.id ? "opacity-50" : ""
                   } ${
                     dragTargetFlow?.id === flow.id ? "bg-primary/20 border-t-2 border-primary" : ""
                   }`}
+                  role="button"
+                  tabIndex={0}
                 >
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform ${
+                    className={`h-4 w-4 transition-transform flex-shrink-0 ${
                       isExpanded ? "" : "-rotate-90"
                     }`}
                   />
-                  <span
-                    className={`text-sm font-medium flex-1 text-left truncate ${
-                      selectedFlowId === flow.id
-                        ? "text-primary font-semibold"
-                        : "text-primary"
-                    }`}
-                  >
+                  <span className="flex-1 truncate text-left">
                     {flow.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-normal">
                     {flow.screen_count}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddScreen?.(flow.id);
-                    }}
-                    title="Add screen"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (
-                        confirm(
-                          `Delete flow "${flow.name}" and all its screens?`
-                        )
-                      ) {
-                        onDeleteFlow?.(flow.id);
-                      }
-                    }}
-                    title="Delete flow"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 hover:bg-muted"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddScreen?.(flow.id);
+                      }}
+                      title="Add screen"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (
+                          confirm(
+                            `Delete flow "${flow.name}" and all its screens?`
+                          )
+                        ) {
+                          onDeleteFlow?.(flow.id);
+                        }
+                      }}
+                      title="Delete flow"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Screen Tree */}
                 {isExpanded && (
-                  <div className="mt-1">
+                  <div className="border-l border-muted/30 ml-3">
                     {finalTree.length === 0 ? (
-                      <div className="pl-8 py-2 text-xs text-muted-foreground">
+                      <div className="pl-6 py-3 text-xs text-muted-foreground">
                         No screens yet
                       </div>
                     ) : (

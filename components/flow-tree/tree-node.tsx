@@ -117,12 +117,12 @@ export function TreeNode({
           onDrop?.(screen);
         }}
         className={`
-          group flex items-center gap-1 py-1 px-2 hover:bg-muted/50 rounded-sm cursor-pointer
-          ${isSelected ? "bg-accent text-accent-foreground" : ""}
+          group flex items-center gap-2 py-1.5 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150
+          ${isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground"}
           ${isDragOver ? "bg-primary/20 border-t-2 border-primary" : ""}
           ${isDragging ? "opacity-50" : ""}
         `}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{ paddingLeft: `${level * 12 + 12}px` }}
         onClick={() => !isEditing && onSelect?.(screen)}
       >
         {hasChildren ? (
@@ -131,16 +131,16 @@ export function TreeNode({
               e.stopPropagation();
               setIsExpanded(!isExpanded);
             }}
-            className="p-0.5 hover:bg-muted rounded"
+            className="p-0.5 hover:bg-muted/50 rounded flex-shrink-0"
           >
             <ChevronRight
-              className={`h-3 w-3 transition-transform ${
+              className={`h-3 w-3 transition-transform text-muted-foreground ${
                 isExpanded ? "rotate-90" : ""
               }`}
             />
           </button>
         ) : (
-          <div className="w-4" />
+          <div className="w-4 flex-shrink-0" />
         )}
 
         {isEditing ? (
@@ -178,93 +178,95 @@ export function TreeNode({
           </div>
         ) : (
           <>
-            <span className="text-sm flex-1 truncate">
+            <span className="text-sm flex-1 truncate font-medium">
               {screen.display_name || screen.title}
             </span>
 
             {screen.screenshot_url && (
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
             )}
 
             {screen.groupedScreens && screen.groupedScreens.length > 1 && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground font-normal">
                 {screen.groupedScreens.length}
               </span>
             )}
 
             {descendantCount > 0 && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground font-normal">
                 {descendantCount}
               </span>
             )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 opacity-0 group-hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-              title="Edit screen name"
-            >
-              <Edit2 className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+                title="Edit screen name"
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 opacity-0 group-hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddFlowFromScreen?.(screen.id);
-              }}
-              title="Create flow from this screen"
-            >
-              <GitBranch className="h-3 w-3" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddFlowFromScreen?.(screen.id);
+                }}
+                title="Create flow from this screen"
+              >
+                <GitBranch className="h-3 w-3" />
+              </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 opacity-0 group-hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddChild?.(screen.id);
-              }}
-              title="Add child screen"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddChild?.(screen.id);
+                }}
+                title="Add child screen"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 opacity-0 group-hover:opacity-100 hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (
-                  confirm(
-                    `Delete "${screen.title}"?${
-                      hasChildren
-                        ? " This will also delete all child screens."
-                        : ""
-                    }`
-                  )
-                ) {
-                  onDelete?.(screen.id);
-                }
-              }}
-              title="Delete screen"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    confirm(
+                      `Delete "${screen.title}"?${
+                        hasChildren
+                          ? " This will also delete all child screens."
+                          : ""
+                      }`
+                    )
+                  ) {
+                    onDelete?.(screen.id);
+                  }
+                }}
+                title="Delete screen"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
           </>
         )}
       </div>
 
       {hasChildren && isExpanded && (
-        <div>
+        <div className="border-l border-muted/30 ml-3">
           {screen.children!.map((child) => (
             <TreeNode
               key={child.id}
