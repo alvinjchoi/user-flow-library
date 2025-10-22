@@ -16,6 +16,7 @@ import type { Project, Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
 import { ScreenGallery } from "@/components/screens/screen-gallery";
 import { UploadDialog } from "@/components/screens/upload-dialog";
+import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { initializeStorage } from "@/lib/storage";
@@ -37,6 +38,8 @@ export default function ProjectPage() {
   const [uploadingScreenId, setUploadingScreenId] = useState<string | null>(
     null
   );
+  const [addScreenDialogOpen, setAddScreenDialogOpen] = useState(false);
+  const [addScreenFlowId, setAddScreenFlowId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -113,26 +116,30 @@ export default function ProjectPage() {
     }
   }
 
-  async function handleAddScreen(flowId: string, parentId?: string) {
-    const title = prompt("Screen title:");
-    if (!title) return;
+  function openAddScreenDialog(flowId: string, parentId?: string) {
+    setAddScreenFlowId(flowId);
+    setAddScreenDialogOpen(true);
+  }
+
+  async function handleAddScreen(title: string, parentId?: string) {
+    if (!addScreenFlowId) return;
 
     try {
       // Create the new screen (it will be added at the end automatically)
-      const newScreen = await createScreen(flowId, title, parentId);
-
+      const newScreen = await createScreen(addScreenFlowId, title, parentId);
+      
       // Optimistic update - add to local state immediately
-      const flowScreens = screensByFlow.get(flowId) || [];
+      const flowScreens = screensByFlow.get(addScreenFlowId) || [];
       const updatedFlowScreens = [...flowScreens, newScreen];
-
+      
       const updatedScreensByFlow = new Map(screensByFlow);
-      updatedScreensByFlow.set(flowId, updatedFlowScreens);
-
+      updatedScreensByFlow.set(addScreenFlowId, updatedFlowScreens);
+      
       const updatedAllScreens = [...allScreens, newScreen];
-
+      
       setScreensByFlow(updatedScreensByFlow);
       setAllScreens(updatedAllScreens);
-
+      
       // Reload to get the updated screen count on flows
       await loadProjectData();
     } catch (error) {
@@ -330,7 +337,7 @@ export default function ProjectPage() {
           flows={flows}
           screensByFlow={screensByFlow}
           onAddFlow={() => handleAddFlow()}
-          onAddScreen={handleAddScreen}
+          onAddScreen={openAddScreenDialog}
           onSelectScreen={setSelectedScreen}
           onSelectFlow={setSelectedFlow}
           onUpdateScreenTitle={handleUpdateScreenTitle}
@@ -383,7 +390,7 @@ export default function ProjectPage() {
                 onSelectScreen={setSelectedScreen}
                 onUploadScreenshot={handleUploadScreenshot}
                 onAddScreen={() =>
-                  selectedFlow && handleAddScreen(selectedFlow.id)
+                  selectedFlow && openAddScreenDialog(selectedFlow.id)
                 }
                 selectedScreenId={selectedScreen?.id}
               />
@@ -419,6 +426,19 @@ export default function ProjectPage() {
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           onUploadComplete={handleUploadComplete}
+        />
+      )}
+
+      {/* Add Screen Dialog */}
+      {addScreenFlowId && (
+        <AddScreenDialog
+          open={addScreenDialogOpen}
+          onOpenChange={setAddScreenDialogOpen}
+          onAdd={handleAddScreen}
+          availableScreens={screensByFlow.get(addScreenFlowId) || []}
+          flowName={
+            flows.find((f) => f.id === addScreenFlowId)?.name || "Flow"
+          }
         />
       )}
     </div>
