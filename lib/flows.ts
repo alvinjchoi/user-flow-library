@@ -82,22 +82,18 @@ export async function createScreen(
   parentId?: string,
   description?: string
 ): Promise<Screen> {
-  // If no order index provided, get the max order_index for this flow
-  let finalOrderIndex = orderIndex;
+  // Get the max order_index for this flow
+  const { data: existingScreens } = await supabase
+    .from("screens")
+    .select("order_index")
+    .eq("flow_id", flowId)
+    .order("order_index", { ascending: false })
+    .limit(1);
 
-  if (finalOrderIndex === undefined) {
-    const { data: existingScreens } = await supabase
-      .from("screens")
-      .select("order_index")
-      .eq("flow_id", flowId)
-      .order("order_index", { ascending: false })
-      .limit(1);
-
-    finalOrderIndex =
-      existingScreens && existingScreens.length > 0
-        ? existingScreens[0].order_index + 1
-        : 0;
-  }
+  const finalOrderIndex =
+    existingScreens && existingScreens.length > 0
+      ? existingScreens[0].order_index + 1
+      : 0;
 
   const { data, error } = await supabase
     .from("screens")
