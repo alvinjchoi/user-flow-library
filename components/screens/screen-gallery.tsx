@@ -57,14 +57,16 @@ function ScreenCard({
   const [showOverlay, setShowOverlay] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   return (
-    <Card
-      className={`
-        group relative overflow-hidden cursor-pointer transition-all
-        hover:shadow-lg hover:scale-[1.02]
-        ${isSelected ? "ring-2 ring-primary" : ""}
-      `}
-      onClick={() => onSelectScreen?.(screen)}
-    >
+    <>
+      <Card
+        className={`
+          group relative overflow-hidden cursor-pointer transition-all
+          hover:shadow-lg hover:scale-[1.02]
+          ${isSelected ? "ring-2 ring-primary" : ""}
+        `}
+        onMouseEnter={() => setShowOverlay(true)}
+        onMouseLeave={() => setShowOverlay(false)}
+      >
       <div className="aspect-[9/16] relative bg-muted">
         {screen.screenshot_url ? (
           <>
@@ -75,14 +77,52 @@ function ScreenCard({
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
               className="object-cover"
             />
-            {/* Description overlay on hover */}
-            {screen.notes && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-4">
-                <p className="text-white text-sm leading-relaxed">
-                  {screen.notes}
-                </p>
-              </div>
-            )}
+        {/* Action buttons overlay */}
+        {showOverlay && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 rounded-lg">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditDialogOpen(true);
+              }}
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUploadScreenshot?.(screen.id);
+              }}
+            >
+              <Upload className="h-4 w-4 mr-1" />
+              Upload
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(screen.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Description overlay on hover */}
+        {screen.notes && !showOverlay && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-4">
+            <p className="text-white text-sm leading-relaxed">
+              {screen.notes}
+            </p>
+          </div>
+        )}
           </>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
