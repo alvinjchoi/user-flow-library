@@ -459,6 +459,10 @@ export default function ProjectPage() {
                 onSelectScreen={setSelectedScreen}
                 onUploadScreenshot={handleUploadScreenshot}
                 onAddScreen={openAddScreenDialog}
+                onEditScreen={(screen) => {
+                  setEditingScreen(screen);
+                  setEditScreenDialogOpen(true);
+                }}
                 selectedScreenId={selectedScreen?.id}
               />
             </TabsContent>

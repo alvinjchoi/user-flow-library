@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { Plus, Upload, CornerDownRight } from "lucide-react";
+import { useState } from "react";
 import type { Screen, Flow } from "@/lib/database.types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ScreenViewerModal } from "./screen-viewer-modal";
 
 interface ScreenGalleryByFlowProps {
   flows: Flow[];
@@ -12,6 +14,7 @@ interface ScreenGalleryByFlowProps {
   onSelectScreen?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
   onAddScreen?: (flowId: string, parentId?: string) => void;
+  onEditScreen?: (screen: Screen) => void;
   selectedScreenId?: string;
 }
 
@@ -38,12 +41,17 @@ function ScreenCard({
           paddingBottom: "216.19584119584127%",
         }}
       >
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
+        <div
+          onClick={() => {
             onSelectScreen?.(screen);
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onSelectScreen?.(screen);
+            }
+          }}
+          role="button"
           className={`
             group flex h-full w-full overflow-hidden 
             cursor-zoom-in
@@ -77,7 +85,7 @@ function ScreenCard({
 
                 {/* Title and Description overlay on hover */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4"
+                  className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4 pointer-events-none"
                   style={{ borderRadius: `${borderRadius}px` }}
                 >
                   {/* Title above description */}
@@ -96,12 +104,13 @@ function ScreenCard({
                 {/* Upload button overlay */}
                 {!screen.notes && (
                   <div
-                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none"
                     style={{ borderRadius: `${borderRadius}px` }}
                   >
                     <Button
                       variant="secondary"
                       size="sm"
+                      className="pointer-events-auto"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -116,24 +125,26 @@ function ScreenCard({
               </>
             ) : (
               <div
-                className="absolute inset-0 flex items-center justify-center bg-muted"
+                className="absolute inset-0 flex items-center justify-center bg-muted pointer-events-none"
                 style={{ borderRadius: `${borderRadius}px` }}
               >
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="pointer-events-auto"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onUploadScreenshot?.(screen.id);
                   }}
-                  className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <Upload className="h-8 w-8" />
+                  <Upload className="h-8 w-8 mb-1" />
                   <span className="text-xs">Upload</span>
-                </button>
+                </Button>
               </div>
             )}
           </div>
-        </a>
+        </div>
       </div>
     </div>
   );
@@ -166,10 +177,29 @@ export function ScreenGalleryByFlow({
   onSelectScreen,
   onUploadScreenshot,
   onAddScreen,
+  onEditScreen,
   selectedScreenId,
 }: ScreenGalleryByFlowProps) {
+  const [viewerScreen, setViewerScreen] = useState<Screen | null>(null);
+
   console.log("ScreenGalleryByFlow - flows:", flows);
   console.log("ScreenGalleryByFlow - screensByFlow:", screensByFlow);
+
+  // Get all screens in order for the viewer
+  const allScreensInOrder: Screen[] = [];
+  flows.forEach((flow) => {
+    const screens = screensByFlow.get(flow.id) || [];
+    allScreensInOrder.push(...screens);
+  });
+
+  const handleScreenClick = (screen: Screen) => {
+    setViewerScreen(screen);
+    onSelectScreen?.(screen);
+  };
+
+  const handleCloseViewer = () => {
+    setViewerScreen(null);
+  };
 
   // Separate main flows from branched flows
   const mainFlows = flows.filter((f) => !f.parent_screen_id);
@@ -253,7 +283,7 @@ export function ScreenGalleryByFlow({
                       <ScreenCard
                         screen={screen}
                         isSelected={selectedScreenId === screen.id}
-                        onSelectScreen={onSelectScreen}
+                        onSelectScreen={handleScreenClick}
                         onUploadScreenshot={onUploadScreenshot}
                       />
                     </div>
@@ -309,7 +339,7 @@ export function ScreenGalleryByFlow({
                                   <ScreenCard
                                     screen={child}
                                     isSelected={selectedScreenId === child.id}
-                                    onSelectScreen={onSelectScreen}
+                                    onSelectScreen={handleScreenClick}
                                     onUploadScreenshot={onUploadScreenshot}
                                   />
                                 </div>
@@ -406,7 +436,7 @@ export function ScreenGalleryByFlow({
                                           isSelected={
                                             selectedScreenId === screen.id
                                           }
-                                          onSelectScreen={onSelectScreen}
+                                          onSelectScreen={handleScreenClick}
                                           onUploadScreenshot={
                                             onUploadScreenshot
                                           }
@@ -475,7 +505,7 @@ export function ScreenGalleryByFlow({
                                                       child.id
                                                     }
                                                     onSelectScreen={
-                                                      onSelectScreen
+                                                      handleScreenClick
                                                     }
                                                     onUploadScreenshot={
                                                       onUploadScreenshot
@@ -524,6 +554,18 @@ export function ScreenGalleryByFlow({
           </div>
         );
       })}
+
+      {/* Full Screen Viewer Modal */}
+      {viewerScreen && (
+        <ScreenViewerModal
+          screen={viewerScreen}
+          allScreens={allScreensInOrder}
+          onClose={handleCloseViewer}
+          onNavigate={handleScreenClick}
+          onEdit={onEditScreen}
+          onUploadScreenshot={onUploadScreenshot}
+        />
+      )}
     </div>
   );
 }
