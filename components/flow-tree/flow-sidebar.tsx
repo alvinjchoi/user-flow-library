@@ -29,6 +29,7 @@ interface FlowSidebarProps {
   ) => void;
   selectedScreenId?: string;
   selectedFlowId?: string;
+  readOnly?: boolean;
 }
 
 export function FlowSidebar({
@@ -49,6 +50,7 @@ export function FlowSidebar({
   onMoveFlow,
   selectedScreenId,
   selectedFlowId,
+  readOnly = false,
 }: FlowSidebarProps) {
   const [expandedFlows, setExpandedFlows] = useState<Set<string>>(
     new Set(flows.map((f) => f.id))
@@ -375,14 +377,16 @@ export function FlowSidebar({
               )}
             </Badge>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 hover:bg-muted"
-            onClick={() => onAddFlow?.()}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-muted"
+              onClick={() => onAddFlow?.()}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -391,10 +395,12 @@ export function FlowSidebar({
         {mainFlows.length === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">
             <p className="mb-2">No flows yet</p>
-            <Button variant="outline" size="sm" onClick={() => onAddFlow?.()}>
-              <Plus className="h-3 w-3 mr-1" />
-              Create first flow
-            </Button>
+            {!readOnly && (
+              <Button variant="outline" size="sm" onClick={() => onAddFlow?.()}>
+                <Plus className="h-3 w-3 mr-1" />
+                Create first flow
+              </Button>
+            )}
           </div>
         ) : (
           mainFlows.map((flow, index) => (

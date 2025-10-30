@@ -1,10 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, Share2, Copy, Check, X } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { UserNav } from "@/components/auth/user-nav";
 import Image from "next/image";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface HeaderProps {
   project?: {
@@ -19,6 +29,62 @@ interface HeaderProps {
 }
 
 export function Header({ project, stats }: HeaderProps) {
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+
+  const handleGenerateShareLink = async () => {
+    if (!project) return;
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`/api/projects/${project.id}/share`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setShareUrl(data.shareUrl);
+        setIsPublic(data.isPublic);
+        setShareDialogOpen(true);
+      } else {
+        alert("Failed to generate share link: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error generating share link:", error);
+      alert("Failed to generate share link");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDisableSharing = async () => {
+    if (!project) return;
+
+    try {
+      const response = await fetch(`/api/projects/${project.id}/share`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setIsPublic(false);
+        setShareDialogOpen(false);
+        alert("Sharing disabled successfully");
+      } else {
+        alert("Failed to disable sharing");
+      }
+    } catch (error) {
+      console.error("Error disabling sharing:", error);
+      alert("Failed to disable sharing");
+    }
+  };
+
   return (
     <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -72,6 +138,19 @@ export function Header({ project, stats }: HeaderProps) {
         </div>
         <nav className="flex items-center gap-6">
           <SignedIn>
+            {/* Share button for project pages */}
+            {project && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateShareLink}
+                disabled={isGenerating}
+                className="gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                {isGenerating ? "Generating..." : "Share"}
+              </Button>
+            )}
             <Link
               href="/"
               className="text-sm hover:text-primary transition-colors"
@@ -96,6 +175,57 @@ export function Header({ project, stats }: HeaderProps) {
           <UserNav />
         </nav>
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Project</DialogTitle>
+            <DialogDescription>
+              Anyone with this link can view this project and its flows.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <div className="grid flex-1 gap-2">
+              <Input
+                id="link"
+                value={shareUrl}
+                readOnly
+                className="h-9"
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="px-3"
+              onClick={handleCopyLink}
+            >
+              <span className="sr-only">Copy</span>
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          {isPublic && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-sm text-muted-foreground">
+                Sharing is enabled
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisableSharing}
+                className="text-destructive hover:text-destructive gap-2"
+              >
+                <X className="h-4 w-4" />
+                Disable sharing
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
