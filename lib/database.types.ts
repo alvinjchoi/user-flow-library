@@ -16,6 +16,8 @@ export interface Database {
           description: string | null;
           color: string;
           avatar_url: string | null;
+          share_token: string | null;
+          is_public: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -25,6 +27,8 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
+          share_token?: string | null;
+          is_public?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -34,6 +38,8 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
+          share_token?: string | null;
+          is_public?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -150,4 +156,5 @@ export interface Database {
 export type Project = Database["public"]["Tables"]["projects"]["Row"];
 export type Flow = Database["public"]["Tables"]["flows"]["Row"];
 export type Screen = Database["public"]["Tables"]["screens"]["Row"];
-export type ScreenInspiration = Database["public"]["Tables"]["screen_inspirations"]["Row"];
+export type ScreenInspiration =
+  Database["public"]["Tables"]["screen_inspirations"]["Row"];
