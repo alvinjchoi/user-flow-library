@@ -123,6 +123,26 @@ export interface Database {
           updated_at?: string;
         };
       };
+      screen_inspirations: {
+        Row: {
+          id: string;
+          screen_id: string;
+          related_screen_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          screen_id: string;
+          related_screen_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          screen_id?: string;
+          related_screen_id?: string;
+          created_at?: string;
+        };
+      };
     };
   };
 }
@@ -130,3 +150,4 @@ export interface Database {
 export type Project = Database["public"]["Tables"]["projects"]["Row"];
 export type Flow = Database["public"]["Tables"]["flows"]["Row"];
 export type Screen = Database["public"]["Tables"]["screens"]["Row"];
+export type ScreenInspiration = Database["public"]["Tables"]["screen_inspirations"]["Row"];
