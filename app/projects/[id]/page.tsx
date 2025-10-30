@@ -14,6 +14,7 @@ import {
   deleteScreen,
   deleteFlow,
   reorderFlows,
+  updateFlow,
 } from "@/lib/flows";
 import type { Project, Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
@@ -358,6 +359,72 @@ export default function ProjectPage() {
     }
   }
 
+  async function handleMoveFlowToScreen(flowId: string, screenId: string | null) {
+    try {
+      // Check if dropping on a flow (screenId starts with "flow:")
+      if (screenId && screenId.startsWith("flow:")) {
+        const parentFlowId = screenId.replace("flow:", "");
+        // Update the flow's parent_flow_id
+        await updateFlow(flowId, {
+          parent_flow_id: parentFlowId,
+          parent_screen_id: null,
+        });
+      } else {
+        // Update the flow's parent_screen_id
+        await updateFlow(flowId, {
+          parent_screen_id: screenId,
+          parent_flow_id: null,
+        });
+      }
+      
+      // Reload to reflect the changes
+      await loadProjectData();
+    } catch (error) {
+      console.error("Error moving flow:", error);
+      alert("Failed to move flow");
+    }
+  }
+
+  async function handleMoveFlow(flowId: string, targetId: string | null, targetType: "screen" | "flow" | "top-level") {
+    try {
+      console.log("Moving flow:", { flowId, targetId, targetType });
+      
+      if (targetType === "top-level") {
+        // Make it a top-level flow
+        const result = await updateFlow(flowId, {
+          parent_screen_id: null,
+          parent_flow_id: null,
+        });
+        console.log("Update result:", result);
+      } else if (targetType === "screen") {
+        // Move to branch from a screen
+        const result = await updateFlow(flowId, {
+          parent_screen_id: targetId,
+          parent_flow_id: null,
+        });
+        console.log("Update result:", result);
+      } else if (targetType === "flow") {
+        // Move to nest under another flow
+        const result = await updateFlow(flowId, {
+          parent_flow_id: targetId,
+          parent_screen_id: null,
+        });
+        console.log("Update result:", result);
+      }
+
+      // Reload to reflect the changes
+      await loadProjectData();
+    } catch (error) {
+      console.error("Error moving flow:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
+      alert(`Failed to move flow: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
   // Get the parent screen title for the selected flow
   const getFlowDisplayName = (flow: Flow): string => {
     if (!flow.parent_screen_id) {
@@ -418,6 +485,8 @@ export default function ProjectPage() {
             onDeleteFlow={handleDeleteFlow}
             onReorderScreens={handleReorderScreens}
             onReorderFlows={handleReorderFlows}
+            onMoveFlowToScreen={handleMoveFlowToScreen}
+            onMoveFlow={handleMoveFlow}
             selectedScreenId={selectedScreen?.id}
             selectedFlowId={selectedFlow?.id}
           />

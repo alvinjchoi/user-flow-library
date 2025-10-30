@@ -47,6 +47,8 @@ interface FlowContentProps {
   selectedScreenId?: string;
   selectedFlowId?: string;
   draggedScreen?: Screen | null;
+  draggedFlow?: Flow | null;
+  dragTargetScreenForFlow?: Screen | null;
   onAddScreen: (flowId: string, parentId?: string) => void;
   onSelectScreen: (screen: Screen) => void;
   onSelectFlow: (flow: Flow) => void;
@@ -58,6 +60,16 @@ interface FlowContentProps {
   onDragOver: (screen: Screen) => void;
   onDrop: (screen: Screen) => void;
   onToggleFlow: (flowId: string) => void;
+  onMoveFlowToScreen: (flowId: string, screenId: string | null) => void;
+  onFlowDragOverScreen: (screen: Screen) => void;
+  onFlowDragLeaveScreen: () => void;
+  allScreens?: Screen[];
+  allFlows?: Flow[];
+  onMoveFlow?: (
+    flowId: string,
+    targetId: string | null,
+    targetType: "screen" | "flow" | "top-level"
+  ) => void;
 }
 
 export function FlowContent({
@@ -70,6 +82,8 @@ export function FlowContent({
   selectedScreenId,
   selectedFlowId,
   draggedScreen,
+  draggedFlow,
+  dragTargetScreenForFlow,
   onAddScreen,
   onSelectScreen,
   onSelectFlow,
@@ -81,6 +95,12 @@ export function FlowContent({
   onDragOver,
   onDrop,
   onToggleFlow,
+  onMoveFlowToScreen,
+  onFlowDragOverScreen,
+  onFlowDragLeaveScreen,
+  allScreens,
+  allFlows,
+  onMoveFlow,
 }: FlowContentProps) {
   const tree = buildScreenTree(screens);
 
@@ -122,6 +142,11 @@ export function FlowContent({
                   onDrop={onDrop}
                   selectedId={selectedScreenId}
                   isDragging={draggedScreen?.id === screen.id}
+                  draggedFlow={draggedFlow}
+                  isFlowDragTarget={dragTargetScreenForFlow?.id === screen.id}
+                  onMoveFlowToScreen={onMoveFlowToScreen}
+                  onFlowDragOverScreen={onFlowDragOverScreen}
+                  onFlowDragLeaveScreen={onFlowDragLeaveScreen}
                 />
 
                 {/* Show branched flows under this screen */}
@@ -161,6 +186,14 @@ export function FlowContent({
                             onDrop={onDrop}
                             selectedScreenId={selectedScreenId}
                             draggedScreen={draggedScreen}
+                            draggedFlow={draggedFlow}
+                            dragTargetScreenForFlow={dragTargetScreenForFlow}
+                            onMoveFlowToScreen={onMoveFlowToScreen}
+                            onFlowDragOverScreen={onFlowDragOverScreen}
+                            onFlowDragLeaveScreen={onFlowDragLeaveScreen}
+                            allScreens={allScreens}
+                            allFlows={allFlows}
+                            onMoveFlow={onMoveFlow}
                           />
                         );
                       })}

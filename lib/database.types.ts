@@ -46,6 +46,8 @@ export interface Database {
           description: string | null;
           order_index: number;
           screen_count: number;
+          parent_screen_id: string | null;
+          parent_flow_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -56,6 +58,8 @@ export interface Database {
           description?: string | null;
           order_index?: number;
           screen_count?: number;
+          parent_screen_id?: string | null;
+          parent_flow_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -66,6 +70,8 @@ export interface Database {
           description?: string | null;
           order_index?: number;
           screen_count?: number;
+          parent_screen_id?: string | null;
+          parent_flow_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

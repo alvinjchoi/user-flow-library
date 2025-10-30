@@ -260,3 +260,32 @@ export async function deleteFlow(flowId: string): Promise<void> {
 
   if (error) throw error;
 }
+
+// Update flow (e.g., to change parent_screen_id when dragging)
+export async function updateFlow(
+  flowId: string,
+  updates: Partial<Flow>
+): Promise<Flow> {
+  console.log("updateFlow called with:", { flowId, updates });
+
+  const { data, error } = await supabase
+    .from("flows")
+    .update(updates)
+    .eq("id", flowId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("updateFlow error:", error);
+    throw new Error(
+      `Failed to update flow: ${error.message || JSON.stringify(error)}`
+    );
+  }
+
+  if (!data) {
+    throw new Error("No data returned from update");
+  }
+
+  console.log("updateFlow success:", data);
+  return data;
+}

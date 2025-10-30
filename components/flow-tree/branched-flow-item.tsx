@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Plus, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  ChevronDown,
+  Plus,
+  Trash2,
+  MoreHorizontal,
+  GitBranch,
+} from "lucide-react";
 import type { Flow, Screen } from "@/lib/database.types";
 import { TreeNode } from "./tree-node";
 import { buildScreenTree } from "@/lib/flows";
@@ -12,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MoveFlowDialog } from "./move-flow-dialog";
 
 // Helper to group screens by display_name (for scroll captures)
 function groupScreensByDisplayName(screens: Screen[]): Screen[] {
@@ -64,6 +71,18 @@ interface BranchedFlowItemProps {
   onDrop: (screen: Screen) => void;
   selectedScreenId?: string;
   draggedScreen?: Screen | null;
+  draggedFlow?: any;
+  dragTargetScreenForFlow?: Screen | null;
+  onMoveFlowToScreen?: (flowId: string, screenId: string | null) => void;
+  onFlowDragOverScreen?: (screen: Screen) => void;
+  onFlowDragLeaveScreen?: () => void;
+  allScreens?: Screen[];
+  allFlows?: Flow[];
+  onMoveFlow?: (
+    flowId: string,
+    targetId: string | null,
+    targetType: "screen" | "flow" | "top-level"
+  ) => void;
 }
 
 export function BranchedFlowItem({
@@ -85,8 +104,17 @@ export function BranchedFlowItem({
   onDrop,
   selectedScreenId,
   draggedScreen,
+  draggedFlow,
+  dragTargetScreenForFlow,
+  onMoveFlowToScreen,
+  onFlowDragOverScreen,
+  onFlowDragLeaveScreen,
+  allScreens = [],
+  allFlows = [],
+  onMoveFlow,
 }: BranchedFlowItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const tree = buildScreenTree(screens);
   const groupedTree = groupScreensByDisplayName(tree);
 
@@ -98,9 +126,9 @@ export function BranchedFlowItem({
           onToggle();
           onSelect();
         }}
-        className={`group flex items-center gap-2 h-9 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150 relative ${
+        className={`group flex items-center gap-2 h-9 px-3 cursor-pointer transition-all duration-150 relative border border-transparent hover:bg-primary/10 hover:border-primary/40 ${
           isSelected
-            ? "bg-primary/10 text-primary font-medium"
+            ? "bg-primary/15 text-primary font-medium border-primary/50"
             : "text-foreground"
         }`}
         role="button"
@@ -163,6 +191,18 @@ export function BranchedFlowItem({
                 <Plus className="h-4 w-4 mr-2" />
                 Add screen
               </DropdownMenuItem>
+              {onMoveFlow && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMoveDialogOpen(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <GitBranch className="h-4 w-4 mr-2" />
+                  Move flow to...
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
@@ -206,10 +246,29 @@ export function BranchedFlowItem({
                 onDrop={onDrop}
                 selectedId={selectedScreenId}
                 isDragging={draggedScreen?.id === screen.id}
+                draggedFlow={draggedFlow}
+                isFlowDragTarget={dragTargetScreenForFlow?.id === screen.id}
+                onMoveFlowToScreen={onMoveFlowToScreen}
+                onFlowDragOverScreen={onFlowDragOverScreen}
+                onFlowDragLeaveScreen={onFlowDragLeaveScreen}
               />
             ))
           )}
         </div>
+      )}
+
+      {/* Move Flow Dialog */}
+      {onMoveFlow && (
+        <MoveFlowDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          flow={flow}
+          allScreens={allScreens}
+          allFlows={allFlows}
+          onMove={(targetId, targetType) => {
+            onMoveFlow(flow.id, targetId, targetType);
+          }}
+        />
       )}
     </div>
   );
