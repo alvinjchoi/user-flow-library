@@ -76,6 +76,7 @@ export function TreeNode({
   const [editTitle, setEditTitle] = useState(screen.title);
   const [isDragOver, setIsDragOver] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isDraggingNow, setIsDraggingNow] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasChildren = screen.children && screen.children.length > 0;
@@ -115,12 +116,16 @@ export function TreeNode({
         draggable={!isEditing}
         onDragStart={(e) => {
           e.stopPropagation();
+          setIsDraggingNow(true);
           onDragStart?.(screen);
+        }}
+        onDragEnd={() => {
+          setIsDraggingNow(false);
         }}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           // Check if we're dragging a flow
           if (draggedFlow) {
             onFlowDragOverScreen?.(screen);
@@ -132,7 +137,7 @@ export function TreeNode({
         onDragLeave={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          
+
           if (draggedFlow) {
             onFlowDragLeaveScreen?.();
           } else {
@@ -143,7 +148,7 @@ export function TreeNode({
           e.preventDefault();
           e.stopPropagation();
           setIsDragOver(false);
-          
+
           // Check if we're dropping a flow
           if (draggedFlow) {
             onMoveFlowToScreen?.(draggedFlow.id, screen.id);
@@ -159,10 +164,18 @@ export function TreeNode({
               ? "bg-primary/15 text-primary font-medium border-primary/50"
               : "text-foreground"
           }
-          ${isDragOver || isFlowDragTarget ? "bg-primary/20 border-t-2 border-primary" : ""}
+          ${
+            isDragOver || isFlowDragTarget
+              ? "bg-primary/20 border-t-2 border-primary"
+              : ""
+          }
           ${isDragging ? "opacity-50" : ""}
         `}
-        onClick={() => !isEditing && onSelect?.(screen)}
+        onClick={() => {
+          if (!isEditing && !isDraggingNow) {
+            onSelect?.(screen);
+          }
+        }}
       >
         {/* Visual hierarchy lines - show for all screens including level 0 */}
         <div
@@ -346,7 +359,9 @@ export function TreeNode({
               onDragOver={onDragOver}
               onDrop={onDrop}
               selectedId={selectedId}
+              isDragging={false}
               draggedFlow={draggedFlow}
+              isFlowDragTarget={false}
               onMoveFlowToScreen={onMoveFlowToScreen}
               onFlowDragOverScreen={onFlowDragOverScreen}
               onFlowDragLeaveScreen={onFlowDragLeaveScreen}

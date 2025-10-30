@@ -23,6 +23,8 @@ export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
         description: "User onboarding and browsing flow",
         order_index: 0,
         screen_count: 2, // Now has 2 screens: parent + child
+        parent_screen_id: null,
+        parent_flow_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -121,7 +123,8 @@ export async function createFlow(
   projectId: string,
   name: string,
   description?: string,
-  parentScreenId?: string
+  parentScreenId?: string,
+  parentFlowId?: string
 ): Promise<Flow> {
   const { data, error } = await supabase
     .from("flows")
@@ -130,6 +133,7 @@ export async function createFlow(
       name,
       description,
       parent_screen_id: parentScreenId || null,
+      parent_flow_id: parentFlowId || null,
     })
     .select()
     .single();

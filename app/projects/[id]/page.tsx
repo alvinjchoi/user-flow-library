@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { getProject } from "@/lib/projects";
@@ -88,22 +88,50 @@ export default function ProjectPage() {
     }
   }
 
-  async function handleAddFlow(parentScreenId?: string) {
+  async function handleAddFlow(parentFlowId?: string) {
     if (!project) return;
 
-    const name = prompt("Flow name:");
+    let promptMessage = "Flow name:";
+    if (parentFlowId) {
+      const parentFlow = flows.find((f) => f.id === parentFlowId);
+      if (parentFlow) {
+        promptMessage = `Create a new flow under "${parentFlow.name}".\n\nFlow name:`;
+      }
+    }
+
+    const name = prompt(promptMessage);
     if (!name) return;
 
     try {
-      await createFlow(project.id, name, undefined, parentScreenId);
-      await loadProjectData();
+      // Create the flow in database
+      const newFlow = await createFlow(
+        project.id,
+        name,
+        undefined,
+        undefined,
+        parentFlowId
+      );
+
+      // Optimistic update - add to local state immediately
+      setFlows((prevFlows) => [...prevFlows, newFlow]);
+
+      // Initialize empty screens array for this flow
+      setScreensByFlow((prev) => {
+        const updated = new Map(prev);
+        updated.set(newFlow.id, []);
+        return updated;
+      });
     } catch (error) {
       console.error("Error creating flow:", error);
       alert("Failed to create flow");
+      // Reload on error to ensure consistency
+      await loadProjectData();
     }
   }
 
   async function handleAddFlowFromScreen(screenId: string) {
+    if (!project) return;
+
     const screen = allScreens.find((s) => s.id === screenId);
     if (!screen) return;
 
@@ -113,11 +141,28 @@ export default function ProjectPage() {
     if (!flowName) return;
 
     try {
-      await createFlow(project.id, flowName, undefined, screenId);
-      await loadProjectData();
+      // Create the flow in database
+      const newFlow = await createFlow(
+        project.id,
+        flowName,
+        undefined,
+        screenId
+      );
+
+      // Optimistic update - add to local state immediately
+      setFlows((prevFlows) => [...prevFlows, newFlow]);
+
+      // Initialize empty screens array for this flow
+      setScreensByFlow((prev) => {
+        const updated = new Map(prev);
+        updated.set(newFlow.id, []);
+        return updated;
+      });
     } catch (error) {
       console.error("Error creating flow from screen:", error);
       alert("Failed to create flow");
+      // Reload on error to ensure consistency
+      await loadProjectData();
     }
   }
 
@@ -242,6 +287,29 @@ export default function ProjectPage() {
     }
   }
 
+  async function handleUpdateFlowName(flowId: string, newName: string) {
+    try {
+      // Optimistic update - update local state immediately
+      const updatedFlows = flows.map((f) =>
+        f.id === flowId ? { ...f, name: newName } : f
+      );
+      setFlows(updatedFlows);
+
+      // Update selectedFlow if it's the one being updated
+      if (selectedFlow?.id === flowId) {
+        setSelectedFlow({ ...selectedFlow, name: newName });
+      }
+
+      // Update in background
+      await updateFlow(flowId, { name: newName });
+    } catch (error) {
+      console.error("Error updating flow name:", error);
+      alert("Failed to update flow name");
+      // Revert on error
+      await loadProjectData();
+    }
+  }
+
   async function handleReorderScreens(flowId: string, screens: Screen[]) {
     try {
       // Optimistic update - update local state immediately
@@ -341,8 +409,17 @@ export default function ProjectPage() {
 
   async function handleReorderFlows(reorderedFlows: Flow[]) {
     try {
-      // Optimistic update - update local state immediately
-      setFlows(reorderedFlows);
+      // Optimistic update - merge reordered flows with existing flows
+      setFlows((prevFlows) => {
+        const flowMap = new Map(prevFlows.map((f) => [f.id, f]));
+
+        // Update the flows that were reordered
+        reorderedFlows.forEach((flow) => {
+          flowMap.set(flow.id, flow);
+        });
+
+        return Array.from(flowMap.values());
+      });
 
       // Update database in background
       await reorderFlows(
@@ -359,61 +436,79 @@ export default function ProjectPage() {
     }
   }
 
-  async function handleMoveFlowToScreen(flowId: string, screenId: string | null) {
+  async function handleMoveFlowToScreen(
+    flowId: string,
+    screenId: string | null
+  ) {
     try {
+      let updatedFlow: Flow;
+
       // Check if dropping on a flow (screenId starts with "flow:")
       if (screenId && screenId.startsWith("flow:")) {
         const parentFlowId = screenId.replace("flow:", "");
         // Update the flow's parent_flow_id
-        await updateFlow(flowId, {
+        updatedFlow = await updateFlow(flowId, {
           parent_flow_id: parentFlowId,
           parent_screen_id: null,
         });
       } else {
         // Update the flow's parent_screen_id
-        await updateFlow(flowId, {
+        updatedFlow = await updateFlow(flowId, {
           parent_screen_id: screenId,
           parent_flow_id: null,
         });
       }
-      
-      // Reload to reflect the changes
-      await loadProjectData();
+
+      // Optimistic update: Update local state immediately without full reload
+      setFlows((prevFlows) =>
+        prevFlows.map((flow) => (flow.id === flowId ? updatedFlow : flow))
+      );
     } catch (error) {
       console.error("Error moving flow:", error);
       alert("Failed to move flow");
+
+      // On error, reload to ensure consistency
+      await loadProjectData();
     }
   }
 
-  async function handleMoveFlow(flowId: string, targetId: string | null, targetType: "screen" | "flow" | "top-level") {
+  async function handleMoveFlow(
+    flowId: string,
+    targetId: string | null,
+    targetType: "screen" | "flow" | "top-level"
+  ) {
     try {
       console.log("Moving flow:", { flowId, targetId, targetType });
-      
+
+      let updatedFlow: Flow;
       if (targetType === "top-level") {
         // Make it a top-level flow
-        const result = await updateFlow(flowId, {
+        updatedFlow = await updateFlow(flowId, {
           parent_screen_id: null,
           parent_flow_id: null,
         });
-        console.log("Update result:", result);
       } else if (targetType === "screen") {
         // Move to branch from a screen
-        const result = await updateFlow(flowId, {
+        updatedFlow = await updateFlow(flowId, {
           parent_screen_id: targetId,
           parent_flow_id: null,
         });
-        console.log("Update result:", result);
       } else if (targetType === "flow") {
         // Move to nest under another flow
-        const result = await updateFlow(flowId, {
+        updatedFlow = await updateFlow(flowId, {
           parent_flow_id: targetId,
           parent_screen_id: null,
         });
-        console.log("Update result:", result);
+      } else {
+        throw new Error("Invalid target type");
       }
 
-      // Reload to reflect the changes
-      await loadProjectData();
+      // Optimistic update: Update local state immediately without full reload
+      setFlows((prevFlows) =>
+        prevFlows.map((flow) => (flow.id === flowId ? updatedFlow : flow))
+      );
+
+      console.log("Update result:", updatedFlow);
     } catch (error) {
       console.error("Error moving flow:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
@@ -421,26 +516,63 @@ export default function ProjectPage() {
         console.error("Error message:", error.message);
         console.error("Error stack:", error.stack);
       }
-      alert(`Failed to move flow: ${error instanceof Error ? error.message : "Unknown error"}`);
+      alert(
+        `Failed to move flow: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+
+      // On error, reload to ensure consistency
+      await loadProjectData();
     }
   }
 
-  // Get the parent screen title for the selected flow
+  // Handler for screen selection with logging
+  function handleSelectScreen(screen: Screen) {
+    console.log("handleSelectScreen called:", {
+      screenId: screen?.id,
+      screenTitle: screen?.title,
+      flowId: screen?.flow_id,
+      parentId: screen?.parent_id,
+    });
+    setSelectedScreen(screen);
+    setSelectedFlow(null);
+  }
+
+  // Get the display name for the selected flow
   const getFlowDisplayName = (flow: Flow): string => {
-    if (!flow.parent_screen_id) {
-      return flow.name;
+    // Check if flow belongs to another flow (child flow)
+    if (flow.parent_flow_id) {
+      const parentFlow = flows.find((f) => f.id === flow.parent_flow_id);
+      if (parentFlow) {
+        return `${flow.name} from ${parentFlow.name}`;
+      }
     }
 
-    const parentScreen = allScreens.find((s) => s.id === flow.parent_screen_id);
-    if (parentScreen) {
-      return `${flow.name} from ${parentScreen.title}`;
+    // Check if flow branches from a screen
+    if (flow.parent_screen_id) {
+      const parentScreen = allScreens.find(
+        (s) => s.id === flow.parent_screen_id
+      );
+      if (parentScreen) {
+        return `${flow.name} from ${parentScreen.title}`;
+      }
     }
 
+    // Top-level flow
     return flow.name;
   };
 
   // Show all screens by default (not filtered by flow)
   const displayedScreens = allScreens;
+
+  // Calculate project statistics (must be before conditional returns)
+  const projectStats = useMemo(() => {
+    return {
+      totalScreens: allScreens.length,
+      totalFlows: flows.length,
+    };
+  }, [allScreens, flows]);
 
   if (loading) {
     return (
@@ -466,7 +598,7 @@ export default function ProjectPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header with project avatar */}
-      <Header project={project} />
+      <Header project={project} stats={projectStats} />
 
       {/* Main content with sidebar */}
       <div className="flex flex-1 overflow-hidden">
@@ -475,11 +607,19 @@ export default function ProjectPage() {
           <FlowSidebar
             flows={flows}
             screensByFlow={screensByFlow}
-            onAddFlow={() => handleAddFlow()}
+            onAddFlow={handleAddFlow}
             onAddScreen={openAddScreenDialog}
-            onSelectScreen={setSelectedScreen}
-            onSelectFlow={setSelectedFlow}
+            onSelectScreen={handleSelectScreen}
+            onSelectFlow={(flow) => {
+              console.log("onSelectFlow called:", {
+                flowId: flow?.id,
+                flowName: flow?.name,
+              });
+              setSelectedFlow(flow);
+              setSelectedScreen(null);
+            }}
             onUpdateScreenTitle={handleUpdateScreenTitle}
+            onUpdateFlowName={handleUpdateFlowName}
             onAddFlowFromScreen={handleAddFlowFromScreen}
             onDeleteScreen={handleDeleteScreen}
             onDeleteFlow={handleDeleteFlow}
@@ -525,7 +665,7 @@ export default function ProjectPage() {
               <ScreenGalleryByFlow
                 flows={flows}
                 screensByFlow={screensByFlow}
-                onSelectScreen={setSelectedScreen}
+                onSelectScreen={handleSelectScreen}
                 onUploadScreenshot={handleUploadScreenshot}
                 onAddScreen={openAddScreenDialog}
                 onEditScreen={(screen) => {
@@ -533,6 +673,7 @@ export default function ProjectPage() {
                   setEditScreenDialogOpen(true);
                 }}
                 selectedScreenId={selectedScreen?.id}
+                selectedFlowId={selectedFlow?.id}
               />
             </TabsContent>
 
@@ -566,18 +707,40 @@ export default function ProjectPage() {
           onOpenChange={setEditScreenDialogOpen}
           screen={editingScreen}
           availableScreens={screensByFlow.get(editingScreen.flow_id) || []}
-          flowName={
-            flows.find((f) => f.id === editingScreen.flow_id)?.name || "Flow"
-          }
           onUpdate={async (updates) => {
             try {
-              await updateScreen(editingScreen.id, updates);
-              await loadProjectData();
+              // Optimistic update - update local state immediately
+              const updatedScreensByFlow = new Map(screensByFlow);
+              const updatedAllScreens = allScreens.map((s) =>
+                s.id === editingScreen.id ? { ...s, ...updates } : s
+              );
+
+              // Update each flow's screens
+              for (const [flowId, screens] of screensByFlow.entries()) {
+                const updatedScreens = screens.map((s) =>
+                  s.id === editingScreen.id ? { ...s, ...updates } : s
+                );
+                updatedScreensByFlow.set(flowId, updatedScreens);
+              }
+
+              setScreensByFlow(updatedScreensByFlow);
+              setAllScreens(updatedAllScreens);
+
+              // Update selected screen if it's the one being updated
+              if (selectedScreen?.id === editingScreen.id) {
+                setSelectedScreen({ ...selectedScreen, ...updates });
+              }
+
               setEditScreenDialogOpen(false);
               setEditingScreen(null);
+
+              // Update in background
+              await updateScreen(editingScreen.id, updates);
             } catch (error) {
               console.error("Failed to update screen:", error);
               alert("Failed to update screen");
+              // Revert on error
+              await loadProjectData();
             }
           }}
         />

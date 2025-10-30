@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import type { Flow, Screen } from "@/lib/database.types";
 import { FlowItem } from "./flow-item";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface FlowSidebarProps {
   flows: Flow[];
   screensByFlow: Map<string, Screen[]>;
-  onAddFlow?: () => void;
+  onAddFlow?: (parentFlowId?: string) => void;
   onAddScreen?: (flowId: string, parentId?: string) => void;
   onSelectScreen?: (screen: Screen) => void;
   onSelectFlow?: (flow: Flow) => void;
   onUpdateScreenTitle?: (screenId: string, newTitle: string) => void;
+  onUpdateFlowName?: (flowId: string, newName: string) => void;
   onAddFlowFromScreen?: (screenId: string) => void;
   onDeleteScreen?: (screenId: string) => void;
   onDeleteFlow?: (flowId: string) => void;
@@ -37,6 +39,7 @@ export function FlowSidebar({
   onSelectScreen,
   onSelectFlow,
   onUpdateScreenTitle,
+  onUpdateFlowName,
   onAddFlowFromScreen,
   onDeleteScreen,
   onDeleteFlow,
@@ -61,11 +64,26 @@ export function FlowSidebar({
 
   const toggleFlow = (flowId: string) => {
     const newExpanded = new Set(expandedFlows);
+
     if (newExpanded.has(flowId)) {
+      // Collapsing: remove this flow and all its descendants
       newExpanded.delete(flowId);
+
+      // Find all descendant flows recursively and collapse them too
+      const collapseDescendants = (parentFlowId: string) => {
+        const children = flows.filter((f) => f.parent_flow_id === parentFlowId);
+        children.forEach((child) => {
+          newExpanded.delete(child.id);
+          collapseDescendants(child.id); // Recursive
+        });
+      };
+
+      collapseDescendants(flowId);
     } else {
+      // Expanding: just expand this flow
       newExpanded.add(flowId);
     }
+
     setExpandedFlows(newExpanded);
   };
 
@@ -142,7 +160,15 @@ export function FlowSidebar({
   const handleFlowDragOver = (e: React.DragEvent, flow: Flow) => {
     e.preventDefault();
     if (draggedFlow && draggedFlow.id !== flow.id) {
-      setDragTargetFlow(flow);
+      // Check if both are top-level flows for reordering
+      const draggedIsTopLevel =
+        !draggedFlow.parent_screen_id && !draggedFlow.parent_flow_id;
+      const targetIsTopLevel = !flow.parent_screen_id && !flow.parent_flow_id;
+
+      // Show visual feedback for top-level flow reordering
+      if (draggedIsTopLevel && targetIsTopLevel) {
+        setDragTargetFlow(flow);
+      }
     }
   };
 
@@ -165,29 +191,46 @@ export function FlowSidebar({
       return;
     }
 
-    // Reorder the flows array
-    const reordered = [...flows];
-    const draggedIndex = reordered.findIndex((f) => f.id === draggedFlow.id);
-    const targetIndex = reordered.findIndex((f) => f.id === targetFlow.id);
+    // Check if both flows are top-level (for drag-and-drop reordering)
+    const draggedIsTopLevel =
+      !draggedFlow.parent_screen_id && !draggedFlow.parent_flow_id;
+    const targetIsTopLevel =
+      !targetFlow.parent_screen_id && !targetFlow.parent_flow_id;
 
-    if (draggedIndex === -1 || targetIndex === -1) {
-      setDraggedFlow(null);
-      setDragTargetFlow(null);
-      return;
+    // Only allow reordering among top-level flows
+    if (draggedIsTopLevel && targetIsTopLevel) {
+      // Get only top-level flows
+      const topLevelFlows = flows
+        .filter((f) => !f.parent_screen_id && !f.parent_flow_id)
+        .sort((a, b) => a.order_index - b.order_index);
+
+      const draggedIndex = topLevelFlows.findIndex(
+        (f) => f.id === draggedFlow.id
+      );
+      const targetIndex = topLevelFlows.findIndex(
+        (f) => f.id === targetFlow.id
+      );
+
+      if (draggedIndex === -1 || targetIndex === -1) {
+        setDraggedFlow(null);
+        setDragTargetFlow(null);
+        return;
+      }
+
+      // Reorder within top-level flows
+      const reordered = [...topLevelFlows];
+      const [removed] = reordered.splice(draggedIndex, 1);
+      reordered.splice(targetIndex, 0, removed);
+
+      // Update order_index for reordered top-level flows only
+      const flowsWithNewOrder = reordered.map((flow, index) => ({
+        ...flow,
+        order_index: index,
+      }));
+
+      // Call the reorder callback
+      onReorderFlows(flowsWithNewOrder);
     }
-
-    // Remove dragged flow and insert at target position
-    const [removed] = reordered.splice(draggedIndex, 1);
-    reordered.splice(targetIndex, 0, removed);
-
-    // Update order_index for all flows
-    const flowsWithNewOrder = reordered.map((flow, index) => ({
-      ...flow,
-      order_index: index,
-    }));
-
-    // Call the reorder callback
-    onReorderFlows(flowsWithNewOrder);
 
     setDraggedFlow(null);
     setDragTargetFlow(null);
@@ -214,6 +257,14 @@ export function FlowSidebar({
     }
   });
 
+  // Sort each group of branched flows by order_index
+  branchedFlowsByParent.forEach((flows, parentId) => {
+    branchedFlowsByParent.set(
+      parentId,
+      flows.sort((a, b) => a.order_index - b.order_index)
+    );
+  });
+
   // Group child flows by their parent flow
   const childFlowsByParent = new Map<string, Flow[]>();
   childFlows.forEach((flow) => {
@@ -225,25 +276,114 @@ export function FlowSidebar({
     }
   });
 
+  // Sort each group of child flows by order_index
+  childFlowsByParent.forEach((flows, parentId) => {
+    childFlowsByParent.set(
+      parentId,
+      flows.sort((a, b) => a.order_index - b.order_index)
+    );
+  });
+
   // Collect all screens from all flows
   const allScreens: Screen[] = [];
   screensByFlow.forEach((screens) => {
     allScreens.push(...screens);
   });
 
+  // Move flow up in order
+  const handleMoveFlowUp = (flowId: string) => {
+    const index = mainFlows.findIndex((f) => f.id === flowId);
+    if (index <= 0) return; // Can't move up if first
+
+    const reordered = [...mainFlows];
+    [reordered[index - 1], reordered[index]] = [
+      reordered[index],
+      reordered[index - 1],
+    ];
+
+    const flowsWithNewOrder = reordered.map((flow, idx) => ({
+      ...flow,
+      order_index: idx,
+    }));
+
+    onReorderFlows?.(flowsWithNewOrder);
+  };
+
+  // Move flow down in order
+  const handleMoveFlowDown = (flowId: string) => {
+    const index = mainFlows.findIndex((f) => f.id === flowId);
+    if (index === -1 || index >= mainFlows.length - 1) return; // Can't move down if last
+
+    const reordered = [...mainFlows];
+    [reordered[index], reordered[index + 1]] = [
+      reordered[index + 1],
+      reordered[index],
+    ];
+
+    const flowsWithNewOrder = reordered.map((flow, idx) => ({
+      ...flow,
+      order_index: idx,
+    }));
+
+    onReorderFlows?.(flowsWithNewOrder);
+  };
+
+  // Collapse all flows
+  const handleCollapseAll = () => {
+    setExpandedFlows(new Set());
+  };
+
+  // Expand all flows
+  const handleExpandAll = () => {
+    const allFlowIds = new Set(flows.map((f) => f.id));
+    setExpandedFlows(allFlowIds);
+  };
+
+  // Toggle between expand all and collapse all
+  const handleToggleAll = () => {
+    if (expandedFlows.size > 0) {
+      handleCollapseAll();
+    } else {
+      handleExpandAll();
+    }
+  };
+
+  const allExpanded = expandedFlows.size > 0;
+
   return (
     <div className="w-full border-r bg-background h-full overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 bg-background border-b z-10 px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 bg-background border-b z-10 px-4 py-3 flex items-center justify-between gap-2">
         <h2 className="font-semibold text-sm text-foreground">Flow Tree</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 hover:bg-muted"
-          onClick={onAddFlow}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {flows.length > 0 && (
+            <Badge
+              variant="secondary"
+              className="cursor-pointer hover:bg-secondary/80 transition-colors text-xs h-6 px-2"
+              onClick={handleToggleAll}
+            >
+              {allExpanded ? (
+                <>
+                  <ChevronsDownUp className="h-3 w-3 mr-1" />
+                  Collapse all
+                </>
+              ) : (
+                <>
+                  <ChevronsUpDown className="h-3 w-3 mr-1" />
+                  Expand all
+                </>
+              )}
+            </Badge>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 hover:bg-muted"
+            onClick={() => onAddFlow?.()}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Flows List */}
@@ -251,13 +391,13 @@ export function FlowSidebar({
         {mainFlows.length === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">
             <p className="mb-2">No flows yet</p>
-            <Button variant="outline" size="sm" onClick={onAddFlow}>
+            <Button variant="outline" size="sm" onClick={() => onAddFlow?.()}>
               <Plus className="h-3 w-3 mr-1" />
               Create first flow
             </Button>
           </div>
         ) : (
-          mainFlows.map((flow) => (
+          mainFlows.map((flow, index) => (
             <FlowItem
               key={flow.id}
               flow={flow}
@@ -280,6 +420,7 @@ export function FlowSidebar({
               onAddFlow={onAddFlow}
               onAddScreen={onAddScreen || (() => {})}
               onUpdateScreenTitle={onUpdateScreenTitle || (() => {})}
+              onUpdateFlowName={onUpdateFlowName}
               onAddFlowFromScreen={onAddFlowFromScreen || (() => {})}
               onDeleteScreen={onDeleteScreen || (() => {})}
               onDeleteFlow={onDeleteFlow || (() => {})}
@@ -297,6 +438,11 @@ export function FlowSidebar({
               }
               onFlowDragLeaveScreen={() => setDragTargetScreenForFlow(null)}
               setDragTargetFlowForFlow={setDragTargetFlowForFlow}
+              onReorderFlows={onReorderFlows}
+              canMoveUp={index > 0}
+              canMoveDown={index < mainFlows.length - 1}
+              onMoveUp={() => handleMoveFlowUp(flow.id)}
+              onMoveDown={() => handleMoveFlowDown(flow.id)}
             />
           ))
         )}

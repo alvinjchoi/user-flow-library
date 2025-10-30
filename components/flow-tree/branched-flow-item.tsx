@@ -7,6 +7,7 @@ import {
   Trash2,
   MoreHorizontal,
   GitBranch,
+  Share2,
 } from "lucide-react";
 import type { Flow, Screen } from "@/lib/database.types";
 import { TreeNode } from "./tree-node";
@@ -123,8 +124,13 @@ export function BranchedFlowItem({
       {/* Branched Flow Header */}
       <div
         onClick={() => {
-          onToggle();
-          onSelect();
+          if (isSelected) {
+            // Already selected (viewing this section), toggle fold state
+            onToggle();
+          } else {
+            // Not selected, just jump to this section
+            onSelect();
+          }
         }}
         className={`group flex items-center gap-2 h-9 px-3 cursor-pointer transition-all duration-150 relative border border-transparent hover:bg-primary/10 hover:border-primary/40 ${
           isSelected
@@ -161,6 +167,7 @@ export function BranchedFlowItem({
               isExpanded ? "" : "-rotate-90"
             }`}
           />
+          <Share2 className="h-3.5 w-3.5 text-blue-500/70 flex-shrink-0" />
           <span className="text-sm flex-1 truncate font-medium">
             {flow.name}
           </span>
@@ -181,16 +188,39 @@ export function BranchedFlowItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddScreen();
-                  setMenuOpen(false);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add screen
-              </DropdownMenuItem>
+              {(() => {
+                // Check if parent flow is "Account"
+                let isAccountFlow = false;
+                if (flow.parent_screen_id && allScreens && allFlows) {
+                  const parentScreen = allScreens.find(
+                    (s) => s.id === flow.parent_screen_id
+                  );
+                  if (parentScreen) {
+                    const parentFlow = allFlows.find(
+                      (f) => f.id === parentScreen.flow_id
+                    );
+                    if (
+                      parentFlow &&
+                      parentFlow.name.toLowerCase() === "account"
+                    ) {
+                      isAccountFlow = true;
+                    }
+                  }
+                }
+
+                return !isAccountFlow ? (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddScreen();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add screen
+                  </DropdownMenuItem>
+                ) : null;
+              })()}
               {onMoveFlow && (
                 <DropdownMenuItem
                   onClick={(e) => {

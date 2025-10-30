@@ -22,9 +22,10 @@ interface FlowItemProps {
   onToggleFlow: (flowId: string) => void;
   onSelectFlow: (flow: Flow) => void;
   onSelectScreen: (screen: Screen) => void;
-  onAddFlow?: () => void;
+  onAddFlow?: (parentFlowId?: string) => void;
   onAddScreen: (flowId: string, parentId?: string) => void;
   onUpdateScreenTitle: (screenId: string, newTitle: string) => void;
+  onUpdateFlowName?: (flowId: string, newName: string) => void;
   onAddFlowFromScreen: (screenId: string) => void;
   onDeleteScreen: (screenId: string) => void;
   onDeleteFlow: (flowId: string) => void;
@@ -44,6 +45,11 @@ interface FlowItemProps {
   onFlowDragOverScreen: (screen: Screen) => void;
   onFlowDragLeaveScreen: () => void;
   setDragTargetFlowForFlow: (flow: Flow | null) => void;
+  onReorderFlows?: (flows: Flow[]) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export function FlowItem({
@@ -67,6 +73,7 @@ export function FlowItem({
   onAddFlow,
   onAddScreen,
   onUpdateScreenTitle,
+  onUpdateFlowName,
   onAddFlowFromScreen,
   onDeleteScreen,
   onDeleteFlow,
@@ -82,6 +89,11 @@ export function FlowItem({
   onFlowDragOverScreen,
   onFlowDragLeaveScreen,
   setDragTargetFlowForFlow,
+  onReorderFlows,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
 }: FlowItemProps) {
   const screens = screensByFlow.get(flow.id) || [];
   const isExpanded = expandedFlows.has(flow.id);
@@ -90,6 +102,46 @@ export function FlowItem({
   const isDragTarget = dragTargetFlow?.id === flow.id;
   const isFlowDragTarget = dragTargetFlowForFlow?.id === flow.id;
   const hasScreenshots = screens.some((screen) => screen.screenshot_url);
+
+  // Get child flows for this flow
+  const childFlows = childFlowsByParent.get(flow.id) || [];
+
+  // Create move up/down handlers for child flows
+  const handleChildMoveUp = (childFlowId: string) => {
+    const index = childFlows.findIndex((f) => f.id === childFlowId);
+    if (index <= 0) return; // Can't move up if first
+
+    const reordered = [...childFlows];
+    [reordered[index - 1], reordered[index]] = [
+      reordered[index],
+      reordered[index - 1],
+    ];
+
+    const flowsWithNewOrder = reordered.map((flow, idx) => ({
+      ...flow,
+      order_index: idx,
+    }));
+
+    onReorderFlows?.(flowsWithNewOrder);
+  };
+
+  const handleChildMoveDown = (childFlowId: string) => {
+    const index = childFlows.findIndex((f) => f.id === childFlowId);
+    if (index === -1 || index >= childFlows.length - 1) return; // Can't move down if last
+
+    const reordered = [...childFlows];
+    [reordered[index], reordered[index + 1]] = [
+      reordered[index + 1],
+      reordered[index],
+    ];
+
+    const flowsWithNewOrder = reordered.map((flow, idx) => ({
+      ...flow,
+      order_index: idx,
+    }));
+
+    onReorderFlows?.(flowsWithNewOrder);
+  };
 
   return (
     <div>
@@ -101,6 +153,7 @@ export function FlowItem({
         isDragTarget={isDragTarget}
         isFlowDragTarget={isFlowDragTarget}
         hasScreenshots={hasScreenshots}
+        screenCount={screens.length}
         onToggle={() => onToggleFlow(flow.id)}
         onSelect={() => onSelectFlow(flow)}
         onAddScreen={() => onAddScreen(flow.id)}
@@ -110,6 +163,7 @@ export function FlowItem({
             onDeleteFlow(flow.id);
           }
         }}
+        onUpdateFlowName={onUpdateFlowName}
         onDragStart={() => onFlowDragStart(flow)}
         onDragOver={(e) => onFlowDragOver(e, flow)}
         onDragLeave={onFlowDragLeave}
@@ -130,43 +184,19 @@ export function FlowItem({
         allScreens={allScreens}
         allFlows={flows}
         onMoveFlow={onMoveFlow}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
       />
 
-      <FlowContent
-        flow={flow}
-        screens={screens}
-        isExpanded={isExpanded}
-        branchedFlowsByParent={branchedFlowsByParent}
-        screensByFlow={screensByFlow}
-        expandedFlows={expandedFlows}
-        selectedScreenId={selectedScreenId}
-        selectedFlowId={selectedFlowId}
-        draggedScreen={draggedScreen}
-        draggedFlow={draggedFlow}
-        dragTargetScreenForFlow={dragTargetScreenForFlow}
-        onAddScreen={onAddScreen}
-        onSelectScreen={onSelectScreen}
-        onSelectFlow={onSelectFlow}
-        onUpdateScreenTitle={onUpdateScreenTitle}
-        onAddFlowFromScreen={onAddFlowFromScreen}
-        onDeleteScreen={onDeleteScreen}
-        onDeleteFlow={onDeleteFlow}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        onToggleFlow={onToggleFlow}
-        onMoveFlowToScreen={onMoveFlowToScreen}
-        onFlowDragOverScreen={onFlowDragOverScreen}
-        onFlowDragLeaveScreen={onFlowDragLeaveScreen}
-        allScreens={allScreens}
-        allFlows={flows}
-        onMoveFlow={onMoveFlow}
-      />
+      {/* Hide screens in sidebar - only show flows */}
+      {/* <FlowContent ... /> */}
 
-      {/* Recursively render child flows */}
-      {childFlowsByParent.has(flow.id) && (
-        <div className="border-l border-muted/30 ml-3">
-          {childFlowsByParent.get(flow.id)!.map((childFlow) => (
+      {/* Recursively render child flows - only when parent is expanded */}
+      {isExpanded && childFlowsByParent.has(flow.id) && (
+        <div className="border-l-2 border-primary/20 ml-4 pl-2 bg-muted/5">
+          {childFlowsByParent.get(flow.id)!.map((childFlow, index) => (
             <FlowItem
               key={childFlow.id}
               flow={childFlow}
@@ -189,6 +219,7 @@ export function FlowItem({
               onAddFlow={onAddFlow}
               onAddScreen={onAddScreen}
               onUpdateScreenTitle={onUpdateScreenTitle}
+              onUpdateFlowName={onUpdateFlowName}
               onAddFlowFromScreen={onAddFlowFromScreen}
               onDeleteScreen={onDeleteScreen}
               onDeleteFlow={onDeleteFlow}
@@ -204,6 +235,11 @@ export function FlowItem({
               onFlowDragOverScreen={onFlowDragOverScreen}
               onFlowDragLeaveScreen={onFlowDragLeaveScreen}
               setDragTargetFlowForFlow={setDragTargetFlowForFlow}
+              onReorderFlows={onReorderFlows}
+              canMoveUp={index > 0}
+              canMoveDown={index < childFlows.length - 1}
+              onMoveUp={() => handleChildMoveUp(childFlow.id)}
+              onMoveDown={() => handleChildMoveDown(childFlow.id)}
             />
           ))}
         </div>

@@ -12,9 +12,13 @@ interface HeaderProps {
     name: string;
     avatar_url?: string | null;
   };
+  stats?: {
+    totalScreens: number;
+    totalFlows: number;
+  };
 }
 
-export function Header({ project }: HeaderProps) {
+export function Header({ project, stats }: HeaderProps) {
   return (
     <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -47,9 +51,23 @@ export function Header({ project }: HeaderProps) {
                 <Search className="w-5 h-5 text-primary-foreground" />
               )}
             </div>
-            <span className="text-xl font-bold">
-              {project ? project.name : "User Flow Organizer"}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold">
+                {project ? project.name : "User Flow Organizer"}
+              </span>
+              {stats && (
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>
+                    {stats.totalScreens} screen
+                    {stats.totalScreens !== 1 ? "s" : ""}
+                  </span>
+                  <span className="text-muted-foreground/40">•</span>
+                  <span>
+                    {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+            </div>
           </Link>
         </div>
         <nav className="flex items-center gap-6">
