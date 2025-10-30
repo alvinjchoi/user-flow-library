@@ -23,6 +23,8 @@ export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
         description: "User onboarding and browsing flow",
         order_index: 0,
         screen_count: 2, // Now has 2 screens: parent + child
+        parent_screen_id: null,
+        parent_flow_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -121,7 +123,8 @@ export async function createFlow(
   projectId: string,
   name: string,
   description?: string,
-  parentScreenId?: string
+  parentScreenId?: string,
+  parentFlowId?: string
 ): Promise<Flow> {
   const { data, error } = await supabase
     .from("flows")
@@ -130,6 +133,7 @@ export async function createFlow(
       name,
       description,
       parent_screen_id: parentScreenId || null,
+      parent_flow_id: parentFlowId || null,
     })
     .select()
     .single();
@@ -259,4 +263,33 @@ export async function deleteFlow(flowId: string): Promise<void> {
   const { error } = await supabase.from("flows").delete().eq("id", flowId);
 
   if (error) throw error;
+}
+
+// Update flow (e.g., to change parent_screen_id when dragging)
+export async function updateFlow(
+  flowId: string,
+  updates: Partial<Flow>
+): Promise<Flow> {
+  console.log("updateFlow called with:", { flowId, updates });
+
+  const { data, error } = await supabase
+    .from("flows")
+    .update(updates)
+    .eq("id", flowId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("updateFlow error:", error);
+    throw new Error(
+      `Failed to update flow: ${error.message || JSON.stringify(error)}`
+    );
+  }
+
+  if (!data) {
+    throw new Error("No data returned from update");
+  }
+
+  console.log("updateFlow success:", data);
+  return data;
 }

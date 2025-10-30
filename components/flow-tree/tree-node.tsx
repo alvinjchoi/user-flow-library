@@ -45,6 +45,11 @@ interface TreeNodeProps {
   onDrop?: (screen: Screen) => void;
   selectedId?: string;
   isDragging?: boolean;
+  draggedFlow?: any; // Flow type
+  isFlowDragTarget?: boolean;
+  onMoveFlowToScreen?: (flowId: string, screenId: string | null) => void;
+  onFlowDragOverScreen?: (screen: Screen) => void;
+  onFlowDragLeaveScreen?: () => void;
 }
 
 export function TreeNode({
@@ -60,12 +65,18 @@ export function TreeNode({
   onDrop,
   selectedId,
   isDragging = false,
+  draggedFlow,
+  isFlowDragTarget = false,
+  onMoveFlowToScreen,
+  onFlowDragOverScreen,
+  onFlowDragLeaveScreen,
 }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(screen.title);
   const [isDragOver, setIsDragOver] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isDraggingNow, setIsDraggingNow] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasChildren = screen.children && screen.children.length > 0;
@@ -105,36 +116,66 @@ export function TreeNode({
         draggable={!isEditing}
         onDragStart={(e) => {
           e.stopPropagation();
+          setIsDraggingNow(true);
           onDragStart?.(screen);
+        }}
+        onDragEnd={() => {
+          setIsDraggingNow(false);
         }}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setIsDragOver(true);
-          onDragOver?.(screen);
+
+          // Check if we're dragging a flow
+          if (draggedFlow) {
+            onFlowDragOverScreen?.(screen);
+          } else {
+            setIsDragOver(true);
+            onDragOver?.(screen);
+          }
         }}
         onDragLeave={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setIsDragOver(false);
+
+          if (draggedFlow) {
+            onFlowDragLeaveScreen?.();
+          } else {
+            setIsDragOver(false);
+          }
         }}
         onDrop={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setIsDragOver(false);
-          onDrop?.(screen);
+
+          // Check if we're dropping a flow
+          if (draggedFlow) {
+            onMoveFlowToScreen?.(draggedFlow.id, screen.id);
+            onFlowDragLeaveScreen?.();
+          } else {
+            onDrop?.(screen);
+          }
         }}
         className={`
-          group flex items-center gap-2 h-9 px-3 hover:bg-muted/50 cursor-pointer transition-all duration-150 relative
+          group flex items-center gap-2 h-9 px-3 relative cursor-pointer transition-all duration-150 border border-transparent hover:bg-primary/10 hover:border-primary/40
           ${
             isSelected
-              ? "bg-primary/10 text-primary font-medium"
+              ? "bg-primary/15 text-primary font-medium border-primary/50"
               : "text-foreground"
           }
-          ${isDragOver ? "bg-primary/20 border-t-2 border-primary" : ""}
+          ${
+            isDragOver || isFlowDragTarget
+              ? "bg-primary/20 border-t-2 border-primary"
+              : ""
+          }
           ${isDragging ? "opacity-50" : ""}
         `}
-        onClick={() => !isEditing && onSelect?.(screen)}
+        onClick={() => {
+          if (!isEditing && !isDraggingNow) {
+            onSelect?.(screen);
+          }
+        }}
       >
         {/* Visual hierarchy lines - show for all screens including level 0 */}
         <div
@@ -318,6 +359,12 @@ export function TreeNode({
               onDragOver={onDragOver}
               onDrop={onDrop}
               selectedId={selectedId}
+              isDragging={false}
+              draggedFlow={draggedFlow}
+              isFlowDragTarget={false}
+              onMoveFlowToScreen={onMoveFlowToScreen}
+              onFlowDragOverScreen={onFlowDragOverScreen}
+              onFlowDragLeaveScreen={onFlowDragLeaveScreen}
             />
           ))}
         </div>

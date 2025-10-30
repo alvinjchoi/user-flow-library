@@ -1,38 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import OpenAI from "openai";
 
-// Conditional OpenAI import to prevent build errors
-let OpenAI: any = null;
-let openai: any = null;
-
-if (process.env.OPENAI_API_KEY) {
-  try {
-    OpenAI = require("openai").default;
-    openai = new OpenAI({
+// Initialize OpenAI client
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-    });
-  } catch (error) {
-    console.warn("OpenAI not available:", error);
-  }
-}
+    })
+  : null;
 
-// Create Supabase client for server-side queries (conditional)
-let supabase: any = null;
-
-if (
+// Create Supabase client for server-side queries
+const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-) {
-  try {
-    supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-  } catch (error) {
-    console.warn("Supabase not available:", error);
-  }
-}
+    ? createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      )
+    : null;
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,27 +63,33 @@ export async function POST(request: NextRequest) {
           .order("order_index");
 
         // Get all screens in this project (across all flows)
-        const { data: allScreens } = await supabase
-          .from("screens")
-          .select(
-            "id, flow_id, title, display_name, notes, parent_id, order_index"
-          )
-          .in("flow_id", flows?.map((f) => f.id) || [])
-          .order("order_index");
+        const flowIds = flows?.map((f: any) => f.id) || [];
+        const { data: allScreens } =
+          flowIds.length > 0
+            ? await supabase
+                .from("screens")
+                .select(
+                  "id, flow_id, title, display_name, notes, parent_id, order_index"
+                )
+                .in("flow_id", flowIds)
+                .order("order_index")
+            : { data: [] };
 
         // Get current flow name if specified
-        const currentFlow = flows?.find((f) => f.id === flowId);
+        const currentFlow = flows?.find((f: any) => f.id === flowId);
 
         // Build rich context
         if (allScreens && allScreens.length > 0) {
           contextPrompt = `\n\n🔍 KNOWLEDGE BASE - Complete context from "${
-            project?.name || "this project"
+            (project as any)?.name || "this project"
           }":
 
 📊 PROJECT STRUCTURE:
-${flows
-  ?.map((f) => {
-    const flowScreens = allScreens.filter((s) => s.flow_id === f.id);
+${(flows as any[])
+  ?.map((f: any) => {
+    const flowScreens = (allScreens as any[]).filter(
+      (s: any) => s.flow_id === f.id
+    );
     return `• ${f.name} (${flowScreens.length} screens)${
       f.id === flowId ? " ← YOU ARE HERE" : ""
     }`;
@@ -105,9 +97,9 @@ ${flows
   .join("\n")}
 
 📱 EXISTING SCREENS (Technical → Sidebar mapping):
-${allScreens
-  .map((s) => {
-    const flow = flows?.find((f) => f.id === s.flow_id);
+${(allScreens as any[])
+  .map((s: any) => {
+    const flow = (flows as any[])?.find((f: any) => f.id === s.flow_id);
     const parentPrefix = s.parent_id ? "  ↳ " : "";
     return `${parentPrefix}[${flow?.name}] "${s.title}" → "${
       s.display_name || s.title
@@ -119,7 +111,7 @@ ${allScreens
 1. **Match existing patterns**: If this screenshot looks similar to an existing screen, use the EXACT SAME names
 2. **Scroll captures**: Multiple screenshots of same screen (e.g., "Home Screen") must have IDENTICAL displayName
 3. **Flow context**: You're adding to "${
-            currentFlow?.name || "the current flow"
+            (currentFlow as any)?.name || "the current flow"
           }" - consider what makes sense in this flow
 4. **Naming consistency**: Look at how similar screens are named across ALL flows, not just current flow
 5. **Duplicate detection**: Check if a screen with similar title already exists - match its naming pattern
@@ -127,11 +119,13 @@ ${allScreens
 
 🎯 PATTERN EXAMPLES FROM THIS PROJECT:
 ${
-  allScreens.filter((s) => s.display_name).length > 0
-    ? allScreens
-        .filter((s) => s.display_name && s.display_name !== s.title)
+  (allScreens as any[]).filter((s: any) => s.display_name).length > 0
+    ? (allScreens as any[])
+        .filter((s: any) => s.display_name && s.display_name !== s.title)
         .slice(0, 5)
-        .map((s) => `- "${s.title}" is called "${s.display_name}" in sidebar`)
+        .map(
+          (s: any) => `- "${s.title}" is called "${s.display_name}" in sidebar`
+        )
         .join("\n")
     : "- No patterns established yet - you're setting the standard!"
 }
@@ -139,7 +133,7 @@ ${
 ⚠️ IMPORTANT: Review the ENTIRE knowledge base above before naming. This ensures consistency across the whole project.`;
         } else {
           contextPrompt = `\n\n🔍 KNOWLEDGE BASE: This is the first screen in "${
-            project?.name || "this project"
+            (project as any)?.name || "this project"
           }". Set a good naming pattern!`;
         }
       } catch (error) {

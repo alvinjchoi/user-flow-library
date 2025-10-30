@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import {
+  getScreenInspirations,
+  addScreenInspiration,
+  removeScreenInspiration,
+} from "@/lib/inspirations";
 
 interface ScreenViewerModalProps {
   screen: Screen | null;
@@ -24,6 +29,9 @@ export function ScreenViewerModal({
   onUploadScreenshot,
 }: ScreenViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [inspirations, setInspirations] = useState<Screen[]>([]);
+  const [isAddingInspiration, setIsAddingInspiration] = useState(false);
+  const [loadingInspirations, setLoadingInspirations] = useState(false);
 
   // Update current index when screen changes
   useEffect(() => {
@@ -34,6 +42,26 @@ export function ScreenViewerModal({
       }
     }
   }, [screen, allScreens]);
+
+  // Load inspirations when current screen changes
+  useEffect(() => {
+    const loadInspirations = async () => {
+      if (!currentScreen) return;
+      
+      setLoadingInspirations(true);
+      try {
+        const inspos = await getScreenInspirations(currentScreen.id);
+        setInspirations(inspos);
+      } catch (error) {
+        console.error("Error loading inspirations:", error);
+        setInspirations([]);
+      } finally {
+        setLoadingInspirations(false);
+      }
+    };
+
+    loadInspirations();
+  }, [currentScreen?.id]);
 
   const currentScreen = allScreens[currentIndex] || screen;
   const hasPrevious = currentIndex > 0;
@@ -55,6 +83,32 @@ export function ScreenViewerModal({
     }
   }, [hasNext, currentIndex, allScreens, onNavigate]);
 
+  const handleAddInspiration = async (relatedScreenId: string) => {
+    if (!currentScreen) return;
+
+    try {
+      await addScreenInspiration(currentScreen.id, relatedScreenId);
+      const inspos = await getScreenInspirations(currentScreen.id);
+      setInspirations(inspos);
+      setIsAddingInspiration(false);
+    } catch (error) {
+      console.error("Error adding inspiration:", error);
+      alert("Failed to add inspiration");
+    }
+  };
+
+  const handleRemoveInspiration = async (relatedScreenId: string) => {
+    if (!currentScreen) return;
+
+    try {
+      await removeScreenInspiration(currentScreen.id, relatedScreenId);
+      setInspirations(inspirations.filter((s) => s.id !== relatedScreenId));
+    } catch (error) {
+      console.error("Error removing inspiration:", error);
+      alert("Failed to remove inspiration");
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,8 +127,24 @@ export function ScreenViewerModal({
 
   if (!screen || !currentScreen) return null;
 
+  // Get suggested screens (same flow, excluding current screen and already added inspirations)
+  const inspirationIds = new Set(inspirations.map((s) => s.id));
+  const suggestedScreens = allScreens
+    .filter(
+      (s) =>
+        s.flow_id === currentScreen.flow_id &&
+        s.id !== currentScreen.id &&
+        !inspirationIds.has(s.id)
+    )
+    .slice(0, 4); // Limit suggestions
+
+  // Available screens for adding (excluding current screen and already added)
+  const availableScreens = allScreens.filter(
+    (s) => s.id !== currentScreen.id && !inspirationIds.has(s.id)
+  );
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-black/95 flex">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-6 bg-gradient-to-b from-black/60 to-transparent z-10">
         <div className="flex items-center gap-4">
@@ -124,48 +194,231 @@ export function ScreenViewerModal({
         </div>
       </div>
 
-      {/* Previous Button */}
-      {hasPrevious && (
-        <button
-          onClick={handlePrevious}
-          className="absolute left-8 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all"
-        >
-          <ChevronLeft className="h-8 w-8 text-white" />
-        </button>
-      )}
+      {/* Main Content Area */}
+      <div className="flex flex-1 pt-24 pb-16">
+        {/* Left Side - Image Viewer */}
+        <div className="flex-1 relative flex items-center justify-center px-20">
+          {/* Previous Button */}
+          {hasPrevious && (
+            <button
+              onClick={handlePrevious}
+              className="absolute left-8 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all"
+            >
+              <ChevronLeft className="h-8 w-8 text-white" />
+            </button>
+          )}
 
-      {/* Next Button */}
-      {hasNext && (
-        <button
-          onClick={handleNext}
-          className="absolute right-8 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all"
-        >
-          <ChevronRight className="h-8 w-8 text-white" />
-        </button>
-      )}
-
-      {/* Main Content */}
-      <div className="relative w-full h-full flex items-center justify-center p-20">
-        {currentScreen.screenshot_url ? (
-          <div className="relative max-w-[600px] max-h-full aspect-[9/19.5]">
-            <img
-              src={currentScreen.screenshot_url}
-              alt={currentScreen.title}
-              className="w-full h-full object-contain rounded-[27px] shadow-2xl"
-              style={{
-                boxShadow:
-                  "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
-              }}
-            />
-          </div>
-        ) : (
-          <div className="relative max-w-[600px] aspect-[9/19.5] bg-muted rounded-[27px] flex items-center justify-center">
-            <div className="text-center">
-              <Upload className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">No screenshot</p>
+          {/* Image */}
+          {currentScreen.screenshot_url ? (
+            <div className="relative max-w-[600px] max-h-full aspect-[9/19.5]">
+              <img
+                src={currentScreen.screenshot_url}
+                alt={currentScreen.title}
+                className="w-full h-full object-contain rounded-[27px] shadow-2xl"
+                style={{
+                  boxShadow:
+                    "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                }}
+              />
             </div>
+          ) : (
+            <div className="relative max-w-[600px] aspect-[9/19.5] bg-muted rounded-[27px] flex items-center justify-center">
+              <div className="text-center">
+                <Upload className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">No screenshot</p>
+              </div>
+            </div>
+          )}
+
+          {/* Next Button */}
+          {hasNext && (
+            <button
+              onClick={handleNext}
+              className="absolute right-8 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all"
+            >
+              <ChevronRight className="h-8 w-8 text-white" />
+            </button>
+          )}
+        </div>
+
+        {/* Right Sidebar - Other Inspos */}
+        <div className="w-80 border-l border-white/10 bg-black/40 backdrop-blur-sm overflow-y-auto flex-shrink-0">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold text-sm">Other Inspos</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAddingInspiration(!isAddingInspiration)}
+                className="h-7 text-white/80 hover:text-white hover:bg-white/10"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
+
+            {/* Add Inspiration Mode */}
+            {isAddingInspiration && (
+              <div className="mb-4 p-3 bg-white/5 rounded-lg">
+                <p className="text-white/70 text-xs mb-2">
+                  Select a screen to add as inspiration:
+                </p>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {availableScreens.length === 0 ? (
+                    <p className="text-white/50 text-xs text-center py-4">
+                      No screens available
+                    </p>
+                  ) : (
+                    availableScreens.map((availableScreen) => (
+                      <button
+                        key={availableScreen.id}
+                        onClick={() => handleAddInspiration(availableScreen.id)}
+                        className="w-full text-left px-2 py-1.5 text-xs text-white/80 hover:bg-white/10 rounded transition-colors"
+                      >
+                        {availableScreen.display_name || availableScreen.title}
+                      </button>
+                    ))
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAddingInspiration(false)}
+                  className="mt-2 w-full h-7 text-xs text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+
+            {loadingInspirations ? (
+              <p className="text-white/60 text-xs text-center py-8">
+                Loading...
+              </p>
+            ) : (
+              <>
+                {/* Manual Inspirations */}
+                {inspirations.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {inspirations.map((inspiration) => (
+                      <div
+                        key={inspiration.id}
+                        className="relative bg-white/5 hover:bg-white/10 rounded-lg p-3 transition-all group"
+                      >
+                        <button
+                          onClick={() => {
+                            const index = allScreens.findIndex(
+                              (s) => s.id === inspiration.id
+                            );
+                            if (index !== -1) {
+                              setCurrentIndex(index);
+                              onNavigate?.(inspiration);
+                            }
+                          }}
+                          className="w-full text-left"
+                        >
+                          <div className="flex gap-3">
+                            {/* Thumbnail */}
+                            <div className="w-16 h-28 bg-white/5 rounded-md flex-shrink-0 overflow-hidden">
+                              {inspiration.screenshot_url ? (
+                                <img
+                                  src={inspiration.screenshot_url}
+                                  alt={inspiration.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageIcon className="h-6 w-6 text-white/30" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {inspiration.display_name || inspiration.title}
+                              </p>
+                              {inspiration.notes && (
+                                <p className="text-white/50 text-xs mt-1 line-clamp-2">
+                                  {inspiration.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Remove button */}
+                        <button
+                          onClick={() => handleRemoveInspiration(inspiration.id)}
+                          className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-red-500/80 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove inspiration"
+                        >
+                          <Trash2 className="h-3 w-3 text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Suggested Screens */}
+                {suggestedScreens.length > 0 && (
+                  <div>
+                    <h4 className="text-white/60 text-xs font-medium mb-2 mt-4">
+                      Suggested (Same Flow)
+                    </h4>
+                    <div className="space-y-2">
+                      {suggestedScreens.map((suggested) => (
+                        <button
+                          key={suggested.id}
+                          onClick={() => {
+                            const index = allScreens.findIndex(
+                              (s) => s.id === suggested.id
+                            );
+                            if (index !== -1) {
+                              setCurrentIndex(index);
+                              onNavigate?.(suggested);
+                            }
+                          }}
+                          className="w-full bg-white/5 hover:bg-white/10 rounded-lg p-2 transition-all text-left group"
+                        >
+                          <div className="flex gap-2">
+                            {/* Smaller Thumbnail */}
+                            <div className="w-12 h-20 bg-white/5 rounded-md flex-shrink-0 overflow-hidden">
+                              {suggested.screenshot_url ? (
+                                <img
+                                  src={suggested.screenshot_url}
+                                  alt={suggested.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-white/30" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-xs font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {suggested.display_name || suggested.title}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {inspirations.length === 0 && suggestedScreens.length === 0 && (
+                  <p className="text-white/60 text-xs text-center py-8">
+                    No inspirations yet. Click "Add" to add some!
+                  </p>
+                )}
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Footer - Screen counter */}
@@ -175,7 +428,7 @@ export function ScreenViewerModal({
         </p>
       </div>
 
-      {/* Click outside to close */}
+      {/* Click outside to close - only on the main area, not on sidebar */}
       <div
         className="absolute inset-0 -z-10"
         onClick={onClose}
@@ -184,4 +437,6 @@ export function ScreenViewerModal({
     </div>
   );
 }
+
+
 

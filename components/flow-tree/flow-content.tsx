@@ -47,6 +47,8 @@ interface FlowContentProps {
   selectedScreenId?: string;
   selectedFlowId?: string;
   draggedScreen?: Screen | null;
+  draggedFlow?: Flow | null;
+  dragTargetScreenForFlow?: Screen | null;
   onAddScreen: (flowId: string, parentId?: string) => void;
   onSelectScreen: (screen: Screen) => void;
   onSelectFlow: (flow: Flow) => void;
@@ -58,6 +60,16 @@ interface FlowContentProps {
   onDragOver: (screen: Screen) => void;
   onDrop: (screen: Screen) => void;
   onToggleFlow: (flowId: string) => void;
+  onMoveFlowToScreen: (flowId: string, screenId: string | null) => void;
+  onFlowDragOverScreen: (screen: Screen) => void;
+  onFlowDragLeaveScreen: () => void;
+  allScreens?: Screen[];
+  allFlows?: Flow[];
+  onMoveFlow?: (
+    flowId: string,
+    targetId: string | null,
+    targetType: "screen" | "flow" | "top-level"
+  ) => void;
 }
 
 export function FlowContent({
@@ -70,6 +82,8 @@ export function FlowContent({
   selectedScreenId,
   selectedFlowId,
   draggedScreen,
+  draggedFlow,
+  dragTargetScreenForFlow,
   onAddScreen,
   onSelectScreen,
   onSelectFlow,
@@ -81,6 +95,12 @@ export function FlowContent({
   onDragOver,
   onDrop,
   onToggleFlow,
+  onMoveFlowToScreen,
+  onFlowDragOverScreen,
+  onFlowDragLeaveScreen,
+  allScreens,
+  allFlows,
+  onMoveFlow,
 }: FlowContentProps) {
   const tree = buildScreenTree(screens);
 
@@ -108,65 +128,78 @@ export function FlowContent({
             </div>
           ) : (
             finalTree.map((screen) => (
-              <div key={screen.id}>
-                <TreeNode
-                  screen={screen}
-                  level={0}
-                  onAddChild={(parentId) => onAddScreen(flow.id, parentId)}
-                  onSelect={onSelectScreen}
-                  onUpdateTitle={onUpdateScreenTitle}
-                  onAddFlowFromScreen={onAddFlowFromScreen}
-                  onDelete={onDeleteScreen}
-                  onDragStart={onDragStart}
-                  onDragOver={onDragOver}
-                  onDrop={onDrop}
-                  selectedId={selectedScreenId}
-                  isDragging={draggedScreen?.id === screen.id}
-                />
+                <div key={screen.id}>
+                  <TreeNode
+                    screen={screen}
+                    level={0}
+                    onAddChild={(parentId) => onAddScreen(flow.id, parentId)}
+                    onSelect={onSelectScreen}
+                    onUpdateTitle={onUpdateScreenTitle}
+                    onAddFlowFromScreen={onAddFlowFromScreen}
+                    onDelete={onDeleteScreen}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                    selectedId={selectedScreenId}
+                    isDragging={draggedScreen?.id === screen.id}
+                    draggedFlow={draggedFlow}
+                    isFlowDragTarget={dragTargetScreenForFlow?.id === screen.id}
+                    onMoveFlowToScreen={onMoveFlowToScreen}
+                    onFlowDragOverScreen={onFlowDragOverScreen}
+                    onFlowDragLeaveScreen={onFlowDragLeaveScreen}
+                  />
 
-                {/* Show branched flows under this screen */}
-                {branchedFlowsByParent.has(screen.id) && (
-                  <div>
-                    {branchedFlowsByParent
-                      .get(screen.id)!
-                      .map((branchedFlow) => {
-                        const branchedScreens =
-                          screensByFlow.get(branchedFlow.id) || [];
-                        const isBranchedExpanded = expandedFlows.has(
-                          branchedFlow.id
-                        );
-                        const isBranchedSelected =
-                          selectedFlowId === branchedFlow.id;
+                  {/* Show branched flows under this screen */}
+                  {branchedFlowsByParent.has(screen.id) && (
+                    <div>
+                      {branchedFlowsByParent
+                        .get(screen.id)!
+                        .map((branchedFlow) => {
+                          const branchedScreens =
+                            screensByFlow.get(branchedFlow.id) || [];
+                          const isBranchedExpanded = expandedFlows.has(
+                            branchedFlow.id
+                          );
+                          const isBranchedSelected =
+                            selectedFlowId === branchedFlow.id;
 
-                        return (
-                          <BranchedFlowItem
-                            key={branchedFlow.id}
-                            flow={branchedFlow}
-                            screens={branchedScreens}
-                            level={screen.level + 1} // Branched flows are one level deeper than their parent screen
-                            isExpanded={isBranchedExpanded}
-                            isSelected={isBranchedSelected}
-                            onToggle={() => onToggleFlow(branchedFlow.id)}
-                            onSelect={() => onSelectFlow(branchedFlow)}
-                            onAddScreen={(parentId) =>
-                              onAddScreen(branchedFlow.id, parentId)
-                            }
-                            onSelectScreen={onSelectScreen}
-                            onUpdateScreenTitle={onUpdateScreenTitle}
-                            onAddFlowFromScreen={onAddFlowFromScreen}
-                            onDeleteScreen={onDeleteScreen}
-                            onDeleteFlow={onDeleteFlow}
-                            onDragStart={onDragStart}
-                            onDragOver={onDragOver}
-                            onDrop={onDrop}
-                            selectedScreenId={selectedScreenId}
-                            draggedScreen={draggedScreen}
-                          />
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
+                          return (
+                            <BranchedFlowItem
+                              key={branchedFlow.id}
+                              flow={branchedFlow}
+                              screens={branchedScreens}
+                              level={screen.level + 1} // Branched flows are one level deeper than their parent screen
+                              isExpanded={isBranchedExpanded}
+                              isSelected={isBranchedSelected}
+                              onToggle={() => onToggleFlow(branchedFlow.id)}
+                              onSelect={() => onSelectFlow(branchedFlow)}
+                              onAddScreen={(parentId) =>
+                                onAddScreen(branchedFlow.id, parentId)
+                              }
+                              onSelectScreen={onSelectScreen}
+                              onUpdateScreenTitle={onUpdateScreenTitle}
+                              onAddFlowFromScreen={onAddFlowFromScreen}
+                              onDeleteScreen={onDeleteScreen}
+                              onDeleteFlow={onDeleteFlow}
+                              onDragStart={onDragStart}
+                              onDragOver={onDragOver}
+                              onDrop={onDrop}
+                              selectedScreenId={selectedScreenId}
+                              draggedScreen={draggedScreen}
+                              draggedFlow={draggedFlow}
+                              dragTargetScreenForFlow={dragTargetScreenForFlow}
+                              onMoveFlowToScreen={onMoveFlowToScreen}
+                              onFlowDragOverScreen={onFlowDragOverScreen}
+                              onFlowDragLeaveScreen={onFlowDragLeaveScreen}
+                              allScreens={allScreens}
+                              allFlows={allFlows}
+                              onMoveFlow={onMoveFlow}
+                            />
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
             ))
           )}
         </div>
