@@ -502,7 +502,7 @@ export function ScreenViewerModal({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsCommentMode(true)}
-                  className="w-full text-white/80 hover:text-white border-white/20 hover:bg-white/10"
+                  className="w-full bg-white/10 text-white hover:bg-white/20 hover:text-white border-white/20"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Add Comment
