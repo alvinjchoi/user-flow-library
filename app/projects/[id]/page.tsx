@@ -47,6 +47,13 @@ export default function ProjectPage() {
   >(undefined);
   const [loading, setLoading] = useState(true);
 
+  // Set page title based on project name
+  useEffect(() => {
+    if (project) {
+      document.title = `User Flow Library | ${project.name}`;
+    }
+  }, [project]);
+
   useEffect(() => {
     initializeStorage();
     loadProjectData();

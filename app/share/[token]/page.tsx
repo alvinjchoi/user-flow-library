@@ -36,6 +36,13 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Set page title based on project name
+  useEffect(() => {
+    if (project) {
+      document.title = `User Flow Library | ${project.name}`;
+    }
+  }, [project]);
+
   useEffect(() => {
     loadSharedProject();
   }, [shareToken]);

@@ -39,6 +39,11 @@ export default function HomePage() {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Set page title
+  useEffect(() => {
+    document.title = "User Flow Library | Home";
+  }, []);
+
   useEffect(() => {
     loadProjects();
   }, []);
