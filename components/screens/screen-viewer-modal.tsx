@@ -43,6 +43,9 @@ export function ScreenViewerModal({
     }
   }, [screen, allScreens]);
 
+  // Calculate current screen - must be before useEffect that uses it
+  const currentScreen = allScreens[currentIndex] || screen;
+
   // Load inspirations when current screen changes
   useEffect(() => {
     const loadInspirations = async () => {
@@ -62,8 +65,6 @@ export function ScreenViewerModal({
 
     loadInspirations();
   }, [currentScreen?.id]);
-
-  const currentScreen = allScreens[currentIndex] || screen;
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allScreens.length - 1;
 
