@@ -47,7 +47,18 @@ export async function PATCH(
 
     const updates: any = { updated_at: new Date().toISOString() };
     if (comment_text !== undefined) updates.comment_text = comment_text;
-    if (is_resolved !== undefined) updates.is_resolved = is_resolved;
+    if (is_resolved !== undefined) {
+      updates.is_resolved = is_resolved;
+      // Track resolution timestamp and user
+      if (is_resolved) {
+        updates.resolved_at = new Date().toISOString();
+        updates.resolved_by = userId;
+      } else {
+        // If unresolving, clear the resolution tracking
+        updates.resolved_at = null;
+        updates.resolved_by = null;
+      }
+    }
 
     const { data: comment, error } = await supabase
       .from("screen_comments")

@@ -93,6 +93,8 @@ export interface Database {
           y_position: number;
           comment_text: string;
           is_resolved: boolean;
+          resolved_at: string | null;
+          resolved_by: string | null;
           parent_comment_id: string | null;
           created_at: string;
           updated_at: string;
@@ -107,6 +109,8 @@ export interface Database {
           y_position: number;
           comment_text: string;
           is_resolved?: boolean;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
           parent_comment_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -121,6 +125,8 @@ export interface Database {
           y_position?: number;
           comment_text?: string;
           is_resolved?: boolean;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
           parent_comment_id?: string | null;
           created_at?: string;
           updated_at?: string;
