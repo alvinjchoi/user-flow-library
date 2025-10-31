@@ -9,6 +9,7 @@ import {
   createProject,
   deleteProject,
   uploadProjectAvatar,
+  updateProject,
 } from "@/lib/projects";
 import type { Project } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingProjectName, setEditingProjectName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Set page title
@@ -90,6 +93,39 @@ export default function HomePage() {
     event.stopPropagation(); // Prevent card click
     setProjectToDelete(project);
     setDeleteDialogOpen(true);
+  }
+
+  function handleProjectNameClick(project: Project, event: React.MouseEvent) {
+    event.stopPropagation(); // Prevent card click
+    setEditingProjectId(project.id);
+    setEditingProjectName(project.name);
+  }
+
+  async function handleProjectNameSave(projectId: string) {
+    if (!editingProjectName.trim()) {
+      setEditingProjectId(null);
+      return;
+    }
+
+    try {
+      await updateProject(projectId, { name: editingProjectName.trim() });
+      setProjects(projects.map(p => 
+        p.id === projectId ? { ...p, name: editingProjectName.trim() } : p
+      ));
+      setEditingProjectId(null);
+    } catch (error) {
+      console.error("Error updating project name:", error);
+      alert("Failed to update project name");
+      setEditingProjectId(null);
+    }
+  }
+
+  function handleProjectNameKeyDown(projectId: string, e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      handleProjectNameSave(projectId);
+    } else if (e.key === "Escape") {
+      setEditingProjectId(null);
+    }
   }
 
   const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(
@@ -235,9 +271,25 @@ export default function HomePage() {
                             <Edit2 className="h-3 w-3" />
                           </Button>
                         </div>
-                        <CardTitle className="text-lg truncate">
-                          {project.name}
-                        </CardTitle>
+                        {editingProjectId === project.id ? (
+                          <input
+                            type="text"
+                            value={editingProjectName}
+                            onChange={(e) => setEditingProjectName(e.target.value)}
+                            onBlur={() => handleProjectNameSave(project.id)}
+                            onKeyDown={(e) => handleProjectNameKeyDown(project.id, e)}
+                            className="text-lg font-semibold bg-transparent border-b-2 border-primary outline-none px-1 py-0.5 w-full"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <CardTitle 
+                            className="text-lg truncate cursor-text hover:underline decoration-2 underline-offset-4"
+                            onClick={(e) => handleProjectNameClick(project, e)}
+                          >
+                            {project.name}
+                          </CardTitle>
+                        )}
                       </div>
                       {project.description && (
                         <CardDescription className="line-clamp-2">
