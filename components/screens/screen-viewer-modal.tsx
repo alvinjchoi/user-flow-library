@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check } from "lucide-react";
 import Image from "next/image";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
