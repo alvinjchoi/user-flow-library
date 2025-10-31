@@ -40,6 +40,11 @@ export function ScreenViewerModal({
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [newCommentPosition, setNewCommentPosition] = useState<{ x: number; y: number } | null>(null);
 
+  // Debug: Track comments state changes
+  useEffect(() => {
+    console.log("📝 Comments state changed:", comments.length, "comments");
+  }, [comments]);
+
   // Update current index when screen changes
   useEffect(() => {
     if (screen) {
@@ -75,6 +80,8 @@ export function ScreenViewerModal({
 
   // Load comments when current screen changes
   useEffect(() => {
+    console.log("🔄 Comment useEffect triggered, currentScreen:", currentScreen?.id, currentScreen?.title);
+    
     // Reset comment UI state when screen changes (but not comments themselves until loaded)
     setActiveCommentId(null);
     setIsCommentMode(false);
@@ -82,21 +89,31 @@ export function ScreenViewerModal({
 
     const loadComments = async () => {
       if (!currentScreen) {
+        console.log("❌ No current screen, clearing comments");
         setComments([]);
         return;
       }
       
+      console.log("🔍 Fetching comments for screen:", currentScreen.id);
+      
       try {
         const response = await fetch(`/api/screens/${currentScreen.id}/comments`);
+        console.log("📡 Response status:", response.status, response.ok);
+        
         if (!response.ok) {
-          console.error("Failed to load comments:", response.statusText);
+          console.error("❌ Failed to load comments:", response.statusText);
           setComments([]);
           return;
         }
+        
         const data = await response.json();
+        console.log("📦 Comments data received:", data);
+        console.log("💬 Comments count:", data.comments?.length || 0);
+        
         setComments(data.comments || []);
+        console.log("✅ Comments set in state");
       } catch (error) {
-        console.error("Error loading comments:", error);
+        console.error("💥 Error loading comments:", error);
         setComments([]);
       }
     };
@@ -255,6 +272,8 @@ export function ScreenViewerModal({
   const rootComments = comments.filter((c) => !c.parent_comment_id);
   const getCommentReplies = (commentId: string) =>
     comments.filter((c) => c.parent_comment_id === commentId);
+  
+  console.log("🎨 Rendering with comments:", comments.length, "rootComments:", rootComments.length);
 
   // Keyboard navigation
   useEffect(() => {
@@ -434,6 +453,10 @@ export function ScreenViewerModal({
         <div className="w-80 border-l border-white/10 bg-black/40 backdrop-blur-sm overflow-y-auto flex-shrink-0">
           <div className="p-4">
             {/* Comments Section */}
+            {(() => {
+              console.log("🔍 Sidebar check: comments.length =", comments.length, "Should show comments section:", comments.length > 0);
+              return null;
+            })()}
             {comments.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
