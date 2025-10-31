@@ -417,9 +417,99 @@ export function ScreenViewerModal({
           )}
         </div>
 
-        {/* Right Sidebar - Other Inspos */}
+        {/* Right Sidebar - Comments & Inspos */}
         <div className="w-80 border-l border-white/10 bg-black/40 backdrop-blur-sm overflow-y-auto flex-shrink-0">
           <div className="p-4">
+            {/* Comments Section */}
+            {comments.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white font-semibold text-sm">
+                    Comments ({comments.filter((c) => !c.parent_comment_id).length})
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsCommentMode(true)}
+                    className="h-7 text-white/80 hover:text-white hover:bg-white/10 text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {rootComments.map((comment) => {
+                    const replies = getCommentReplies(comment.id);
+                    const totalComments = 1 + replies.length;
+                    const isActive = activeCommentId === comment.id;
+                    
+                    return (
+                      <button
+                        key={comment.id}
+                        onClick={() => setActiveCommentId(comment.id)}
+                        className={`w-full text-left p-3 rounded-lg transition-all ${
+                          isActive
+                            ? "bg-blue-500/20 border border-blue-500/50"
+                            : comment.is_resolved
+                            ? "bg-green-500/10 border border-green-500/30 hover:bg-green-500/20"
+                            : "bg-white/5 border border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {comment.user_avatar ? (
+                            <img
+                              src={comment.user_avatar}
+                              alt={comment.user_name || "User"}
+                              className="w-6 h-6 rounded-full flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+                              {(comment.user_name || "?")[0].toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-white/90 text-xs font-medium truncate">
+                                {comment.user_name || "Anonymous"}
+                              </span>
+                              {comment.is_resolved && (
+                                <span className="flex items-center gap-1 text-green-400 text-xs">
+                                  <Check className="w-3 h-3" />
+                                </span>
+                              )}
+                              {totalComments > 1 && (
+                                <span className="text-white/50 text-xs">
+                                  {totalComments}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-white/70 text-xs line-clamp-2">
+                              {comment.comment_text}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Add Comment Button (if no comments exist) */}
+            {comments.length === 0 && (
+              <div className="mb-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCommentMode(true)}
+                  className="w-full text-white/80 hover:text-white border-white/20 hover:bg-white/10"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Add Comment
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-semibold text-sm">Other Inspos</h3>
               <Button
