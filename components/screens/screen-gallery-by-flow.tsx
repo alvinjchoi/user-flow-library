@@ -734,6 +734,7 @@ export function ScreenGalleryByFlow({
           onNavigate={handleScreenClick}
           onEdit={onEditScreen}
           onUploadScreenshot={onUploadScreenshot}
+          readOnly={readOnly}
         />
       )}
     </div>

@@ -19,6 +19,7 @@ interface ScreenViewerModalProps {
   onNavigate?: (screen: Screen) => void;
   onEdit?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
+  readOnly?: boolean;
 }
 
 export function ScreenViewerModal({
@@ -28,6 +29,7 @@ export function ScreenViewerModal({
   onNavigate,
   onEdit,
   onUploadScreenshot,
+  readOnly = false,
 }: ScreenViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inspirations, setInspirations] = useState<Screen[]>([]);
@@ -186,7 +188,7 @@ export function ScreenViewerModal({
 
   // Comment handling functions
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isCommentMode || !currentScreen) return;
+    if (readOnly || !isCommentMode || !currentScreen) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -345,20 +347,22 @@ export function ScreenViewerModal({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsCommentMode(!isCommentMode)}
-            className={`${
-              isCommentMode
-                ? "bg-blue-500 hover:bg-blue-600"
-                : "bg-white/10 hover:bg-white/20"
-            } text-white border-white/20`}
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            {isCommentMode ? "Click to add" : "Comment"}
-          </Button>
-          {onEdit && (
+          {!readOnly && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsCommentMode(!isCommentMode)}
+              className={`${
+                isCommentMode
+                  ? "bg-blue-500 hover:bg-blue-600"
+                  : "bg-white/10 hover:bg-white/20"
+              } text-white border-white/20`}
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              {isCommentMode ? "Click to add" : "Comment"}
+            </Button>
+          )}
+          {!readOnly && onEdit && (
             <Button
               variant="secondary"
               size="sm"
@@ -369,7 +373,7 @@ export function ScreenViewerModal({
               Edit
             </Button>
           )}
-          {onUploadScreenshot && (
+          {!readOnly && onUploadScreenshot && (
             <Button
               variant="secondary"
               size="sm"
@@ -422,8 +426,8 @@ export function ScreenViewerModal({
                 }}
               />
               
-              {/* Comment pins */}
-              {rootComments.map((comment) => (
+              {/* Comment pins (hidden in read-only mode) */}
+              {!readOnly && rootComments.map((comment) => (
                 <CommentPin
                   key={comment.id}
                   comment={comment}
@@ -437,8 +441,8 @@ export function ScreenViewerModal({
                 />
               ))}
               
-              {/* New comment creation */}
-              {newCommentPosition && (
+              {/* New comment creation (hidden in read-only mode) */}
+              {!readOnly && newCommentPosition && (
                 <NewCommentPin
                   x={newCommentPosition.x}
                   y={newCommentPosition.y}
@@ -470,12 +474,12 @@ export function ScreenViewerModal({
         {/* Right Sidebar - Comments & Inspos */}
         <div className="w-80 border-l border-white/10 bg-black/40 backdrop-blur-sm overflow-y-auto flex-shrink-0">
           <div className="p-4">
-            {/* Comments Section */}
+            {/* Comments Section (hidden in read-only mode) */}
             {(() => {
-              console.log("🔍 Sidebar check: comments.length =", comments.length, "Should show comments section:", comments.length > 0);
+              console.log("🔍 Sidebar check: comments.length =", comments.length, "readOnly =", readOnly, "Should show comments section:", !readOnly && comments.length > 0);
               return null;
             })()}
-            {comments.length > 0 && (
+            {!readOnly && comments.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-white font-semibold text-sm">
@@ -549,8 +553,8 @@ export function ScreenViewerModal({
               </div>
             )}
 
-            {/* Add Comment Button (if no comments exist) */}
-            {comments.length === 0 && (
+            {/* Add Comment Button (if no comments exist, hidden in read-only mode) */}
+            {!readOnly && comments.length === 0 && (
               <div className="mb-6">
                 <Button
                   variant="outline"
