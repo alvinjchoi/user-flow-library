@@ -82,6 +82,50 @@ export interface Database {
           updated_at?: string;
         };
       };
+      screen_comments: {
+        Row: {
+          id: string;
+          screen_id: string;
+          user_id: string;
+          user_name: string | null;
+          user_avatar: string | null;
+          x_position: number;
+          y_position: number;
+          comment_text: string;
+          is_resolved: boolean;
+          parent_comment_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          screen_id: string;
+          user_id: string;
+          user_name?: string | null;
+          user_avatar?: string | null;
+          x_position: number;
+          y_position: number;
+          comment_text: string;
+          is_resolved?: boolean;
+          parent_comment_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          screen_id?: string;
+          user_id?: string;
+          user_name?: string | null;
+          user_avatar?: string | null;
+          x_position?: number;
+          y_position?: number;
+          comment_text?: string;
+          is_resolved?: boolean;
+          parent_comment_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       screens: {
         Row: {
           id: string;

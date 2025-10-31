@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   addScreenInspiration,
   removeScreenInspiration,
 } from "@/lib/inspirations";
+import { CommentPin, NewCommentPin, type ScreenComment } from "./comment-pin";
 
 interface ScreenViewerModalProps {
   screen: Screen | null;
@@ -18,6 +19,7 @@ interface ScreenViewerModalProps {
   onNavigate?: (screen: Screen) => void;
   onEdit?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
+  readOnly?: boolean;
 }
 
 export function ScreenViewerModal({
@@ -27,11 +29,19 @@ export function ScreenViewerModal({
   onNavigate,
   onEdit,
   onUploadScreenshot,
+  readOnly = false,
 }: ScreenViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inspirations, setInspirations] = useState<Screen[]>([]);
   const [isAddingInspiration, setIsAddingInspiration] = useState(false);
   const [loadingInspirations, setLoadingInspirations] = useState(false);
+  
+  // Comment state
+  const [comments, setComments] = useState<ScreenComment[]>([]);
+  const [isCommentMode, setIsCommentMode] = useState(false);
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
+  const [newCommentPosition, setNewCommentPosition] = useState<{ x: number; y: number } | null>(null);
+
 
   // Update current index when screen changes
   useEffect(() => {
@@ -42,6 +52,11 @@ export function ScreenViewerModal({
       }
     }
   }, [screen, allScreens]);
+
+  // Calculate current screen - stabilized with useMemo to prevent unnecessary re-renders
+  const currentScreen = useMemo(() => {
+    return allScreens[currentIndex] || screen;
+  }, [allScreens, currentIndex, screen?.id]); // Only change when ID actually changes
 
   // Load inspirations when current screen changes
   useEffect(() => {
@@ -63,7 +78,53 @@ export function ScreenViewerModal({
     loadInspirations();
   }, [currentScreen?.id]);
 
-  const currentScreen = allScreens[currentIndex] || screen;
+  // Load comments when current screen changes
+  useEffect(() => {
+    // Reset comment UI state when screen changes (but not comments themselves until loaded)
+    setActiveCommentId(null);
+    setIsCommentMode(false);
+    setNewCommentPosition(null);
+
+    // Create abort controller to cancel in-flight requests
+    const abortController = new AbortController();
+
+    const loadComments = async () => {
+      if (!currentScreen) {
+        setComments([]);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
+          signal: abortController.signal,
+        });
+        
+        if (!response.ok) {
+          console.error("Failed to load comments:", response.statusText);
+          setComments([]);
+          return;
+        }
+        
+        const data = await response.json();
+        setComments(data.comments || []);
+      } catch (error) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        console.error("Error loading comments:", error);
+        setComments([]);
+      }
+    };
+
+    loadComments();
+
+    // Cleanup: abort fetch if screen changes before it completes
+    return () => {
+      abortController.abort();
+    };
+  }, [currentScreen?.id]);
+
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allScreens.length - 1;
 
@@ -108,6 +169,113 @@ export function ScreenViewerModal({
       alert("Failed to remove inspiration");
     }
   };
+
+  // Comment handling functions
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (readOnly || !isCommentMode || !currentScreen) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setNewCommentPosition({ x, y });
+    setIsCommentMode(false);
+  };
+
+  const handleCreateComment = async (commentText: string) => {
+    if (!currentScreen || !newCommentPosition) return;
+
+    try {
+      const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_position: newCommentPosition.x,
+          y_position: newCommentPosition.y,
+          comment_text: commentText,
+        }),
+      });
+
+      if (response.ok) {
+        const { comment } = await response.json();
+        setComments((prev) => [...prev, comment]);
+        setNewCommentPosition(null);
+        setActiveCommentId(comment.id);
+      }
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      alert("Failed to create comment");
+    }
+  };
+
+  const handleReplyToComment = async (parentId: string, replyText: string) => {
+    if (!currentScreen) return;
+
+    try {
+      const parentComment = comments.find((c) => c.id === parentId);
+      if (!parentComment) return;
+
+      const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_position: parentComment.x_position,
+          y_position: parentComment.y_position,
+          comment_text: replyText,
+          parent_comment_id: parentId,
+        }),
+      });
+
+      if (response.ok) {
+        const { comment } = await response.json();
+        setComments((prev) => [...prev, comment]);
+      }
+    } catch (error) {
+      console.error("Error replying to comment:", error);
+      throw error;
+    }
+  };
+
+  const handleResolveComment = async (commentId: string) => {
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_resolved: true }),
+      });
+
+      if (response.ok) {
+        setComments((prev) =>
+          prev.map((c) => (c.id === commentId ? { ...c, is_resolved: true } : c))
+        );
+        setActiveCommentId(null);
+      }
+    } catch (error) {
+      console.error("Error resolving comment:", error);
+      alert("Failed to resolve comment");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setActiveCommentId(null);
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Failed to delete comment");
+    }
+  };
+
+  // Group comments by parent
+  const rootComments = comments.filter((c) => !c.parent_comment_id);
+  const getCommentReplies = (commentId: string) =>
+    comments.filter((c) => c.parent_comment_id === commentId);
 
   // Keyboard navigation
   useEffect(() => {
@@ -161,7 +329,22 @@ export function ScreenViewerModal({
         </div>
 
         <div className="flex items-center gap-2">
-          {onEdit && (
+          {!readOnly && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsCommentMode(!isCommentMode)}
+              className={`${
+                isCommentMode
+                  ? "bg-blue-500 hover:bg-blue-600"
+                  : "bg-white/10 hover:bg-white/20"
+              } text-white border-white/20`}
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              {isCommentMode ? "Click to add" : "Comment"}
+            </Button>
+          )}
+          {!readOnly && onEdit && (
             <Button
               variant="secondary"
               size="sm"
@@ -172,7 +355,7 @@ export function ScreenViewerModal({
               Edit
             </Button>
           )}
-          {onUploadScreenshot && (
+          {!readOnly && onUploadScreenshot && (
             <Button
               variant="secondary"
               size="sm"
@@ -210,7 +393,11 @@ export function ScreenViewerModal({
 
           {/* Image */}
           {currentScreen.screenshot_url ? (
-            <div className="relative max-w-[600px] max-h-full aspect-[9/19.5]">
+            <div 
+              className="relative max-w-[600px] max-h-full aspect-[9/19.5]"
+              onClick={handleImageClick}
+              style={{ cursor: isCommentMode ? "crosshair" : "default" }}
+            >
               <img
                 src={currentScreen.screenshot_url}
                 alt={currentScreen.title}
@@ -220,6 +407,31 @@ export function ScreenViewerModal({
                     "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
                 }}
               />
+              
+              {/* Comment pins (hidden in read-only mode) */}
+              {!readOnly && rootComments.map((comment) => (
+                <CommentPin
+                  key={comment.id}
+                  comment={comment}
+                  replies={getCommentReplies(comment.id)}
+                  isActive={activeCommentId === comment.id}
+                  onClick={() => setActiveCommentId(comment.id)}
+                  onClose={() => setActiveCommentId(null)}
+                  onReply={(text) => handleReplyToComment(comment.id, text)}
+                  onResolve={() => handleResolveComment(comment.id)}
+                  onDelete={() => handleDeleteComment(comment.id)}
+                />
+              ))}
+              
+              {/* New comment creation (hidden in read-only mode) */}
+              {!readOnly && newCommentPosition && (
+                <NewCommentPin
+                  x={newCommentPosition.x}
+                  y={newCommentPosition.y}
+                  onSubmit={handleCreateComment}
+                  onCancel={() => setNewCommentPosition(null)}
+                />
+              )}
             </div>
           ) : (
             <div className="relative max-w-[600px] aspect-[9/19.5] bg-muted rounded-[27px] flex items-center justify-center">
@@ -241,9 +453,99 @@ export function ScreenViewerModal({
           )}
         </div>
 
-        {/* Right Sidebar - Other Inspos */}
+        {/* Right Sidebar - Comments & Inspos */}
         <div className="w-80 border-l border-white/10 bg-black/40 backdrop-blur-sm overflow-y-auto flex-shrink-0">
           <div className="p-4">
+            {/* Comments Section (hidden in read-only mode) */}
+            {!readOnly && comments.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white font-semibold text-sm">
+                    Comments ({comments.filter((c) => !c.parent_comment_id).length})
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsCommentMode(true)}
+                    className="h-7 text-white/80 hover:text-white hover:bg-white/10 text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {rootComments.map((comment) => {
+                    const replies = getCommentReplies(comment.id);
+                    const totalComments = 1 + replies.length;
+                    const isActive = activeCommentId === comment.id;
+                    
+                    return (
+                      <button
+                        key={comment.id}
+                        onClick={() => setActiveCommentId(comment.id)}
+                        className={`w-full text-left p-3 rounded-lg transition-all ${
+                          isActive
+                            ? "bg-blue-500/20 border border-blue-500/50"
+                            : comment.is_resolved
+                            ? "bg-green-500/10 border border-green-500/30 hover:bg-green-500/20"
+                            : "bg-white/5 border border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {comment.user_avatar ? (
+                            <img
+                              src={comment.user_avatar}
+                              alt={comment.user_name || "User"}
+                              className="w-6 h-6 rounded-full flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+                              {(comment.user_name || "?")[0].toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-white/90 text-xs font-medium truncate">
+                                {comment.user_name || "Anonymous"}
+                              </span>
+                              {comment.is_resolved && (
+                                <span className="flex items-center gap-1 text-green-400 text-xs">
+                                  <Check className="w-3 h-3" />
+                                </span>
+                              )}
+                              {totalComments > 1 && (
+                                <span className="text-white/50 text-xs">
+                                  {totalComments}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-white/70 text-xs line-clamp-2">
+                              {comment.comment_text}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Add Comment Button (if no comments exist, hidden in read-only mode) */}
+            {!readOnly && comments.length === 0 && (
+              <div className="mb-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCommentMode(true)}
+                  className="w-full bg-white/10 text-white hover:bg-white/20 hover:text-white border-white/20"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Add Comment
+                </Button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-semibold text-sm">Other Inspos</h3>
               <Button
