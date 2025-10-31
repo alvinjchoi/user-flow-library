@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import type { Screen } from "@/lib/database.types";
@@ -55,8 +55,10 @@ export function ScreenViewerModal({
     }
   }, [screen, allScreens]);
 
-  // Calculate current screen - must be before useEffect that uses it
-  const currentScreen = allScreens[currentIndex] || screen;
+  // Calculate current screen - stabilized with useMemo to prevent unnecessary re-renders
+  const currentScreen = useMemo(() => {
+    return allScreens[currentIndex] || screen;
+  }, [allScreens, currentIndex, screen?.id]); // Only change when ID actually changes
 
   // Load inspirations when current screen changes
   useEffect(() => {
@@ -87,6 +89,9 @@ export function ScreenViewerModal({
     setIsCommentMode(false);
     setNewCommentPosition(null);
 
+    // Create abort controller to cancel in-flight requests
+    const abortController = new AbortController();
+
     const loadComments = async () => {
       if (!currentScreen) {
         console.log("❌ No current screen, clearing comments");
@@ -97,7 +102,9 @@ export function ScreenViewerModal({
       console.log("🔍 Fetching comments for screen:", currentScreen.id);
       
       try {
-        const response = await fetch(`/api/screens/${currentScreen.id}/comments`);
+        const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
+          signal: abortController.signal,
+        });
         console.log("📡 Response status:", response.status, response.ok);
         
         if (!response.ok) {
@@ -113,12 +120,23 @@ export function ScreenViewerModal({
         setComments(data.comments || []);
         console.log("✅ Comments set in state");
       } catch (error) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log("🚫 Comment fetch aborted (screen changed)");
+          return;
+        }
         console.error("💥 Error loading comments:", error);
         setComments([]);
       }
     };
 
     loadComments();
+
+    // Cleanup: abort fetch if screen changes before it completes
+    return () => {
+      console.log("🧹 Cleaning up comment fetch");
+      abortController.abort();
+    };
   }, [currentScreen?.id]);
 
   const hasPrevious = currentIndex > 0;
