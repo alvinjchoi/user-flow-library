@@ -245,10 +245,15 @@ export function ScreenViewerModal({
       });
 
       if (response.ok) {
+        const { comment: updatedComment } = await response.json();
         setComments((prev) =>
-          prev.map((c) => (c.id === commentId ? { ...c, is_resolved: true } : c))
+          prev.map((c) => (c.id === commentId ? updatedComment : c))
         );
         setActiveCommentId(null);
+      } else {
+        const errorData = await response.json();
+        console.error("Error resolving comment:", errorData);
+        alert("Failed to resolve comment: " + (errorData.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error resolving comment:", error);
