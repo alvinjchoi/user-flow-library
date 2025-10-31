@@ -135,7 +135,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-center max-w-md">
               <h2 className="text-2xl font-bold mb-2">
-                Welcome to User Flow Organizer!
+                Welcome to User Flow Library!
               </h2>
               <p className="text-muted-foreground mb-6">
                 Sign in to start organizing user flows and uploading screenshots

@@ -119,7 +119,7 @@ export function Header({ project, stats }: HeaderProps) {
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold">
-                {project ? project.name : "User Flow Organizer"}
+                {project ? project.name : "User Flow Library"}
               </span>
               {stats && (
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">

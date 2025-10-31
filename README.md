@@ -1,4 +1,4 @@
-# User Flow Organizer
+# User Flow Library
 
 A Mobbin-style tool for organizing and managing user flows for your projects with hierarchical screen organization.
 
