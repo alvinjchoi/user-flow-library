@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   addScreenInspiration,
   removeScreenInspiration,
 } from "@/lib/inspirations";
+import { CommentPin, NewCommentPin, type ScreenComment } from "./comment-pin";
 
 interface ScreenViewerModalProps {
   screen: Screen | null;
@@ -32,6 +33,12 @@ export function ScreenViewerModal({
   const [inspirations, setInspirations] = useState<Screen[]>([]);
   const [isAddingInspiration, setIsAddingInspiration] = useState(false);
   const [loadingInspirations, setLoadingInspirations] = useState(false);
+  
+  // Comment state
+  const [comments, setComments] = useState<ScreenComment[]>([]);
+  const [isCommentMode, setIsCommentMode] = useState(false);
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
+  const [newCommentPosition, setNewCommentPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Update current index when screen changes
   useEffect(() => {
@@ -65,6 +72,25 @@ export function ScreenViewerModal({
 
     loadInspirations();
   }, [currentScreen?.id]);
+
+  // Load comments when current screen changes
+  useEffect(() => {
+    const loadComments = async () => {
+      if (!currentScreen) return;
+      
+      try {
+        const response = await fetch(`/api/screens/${currentScreen.id}/comments`);
+        const data = await response.json();
+        setComments(data.comments || []);
+      } catch (error) {
+        console.error("Error loading comments:", error);
+        setComments([]);
+      }
+    };
+
+    loadComments();
+  }, [currentScreen?.id]);
+
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allScreens.length - 1;
 
@@ -109,6 +135,113 @@ export function ScreenViewerModal({
       alert("Failed to remove inspiration");
     }
   };
+
+  // Comment handling functions
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isCommentMode || !currentScreen) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setNewCommentPosition({ x, y });
+    setIsCommentMode(false);
+  };
+
+  const handleCreateComment = async (commentText: string) => {
+    if (!currentScreen || !newCommentPosition) return;
+
+    try {
+      const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_position: newCommentPosition.x,
+          y_position: newCommentPosition.y,
+          comment_text: commentText,
+        }),
+      });
+
+      if (response.ok) {
+        const { comment } = await response.json();
+        setComments((prev) => [...prev, comment]);
+        setNewCommentPosition(null);
+        setActiveCommentId(comment.id);
+      }
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      alert("Failed to create comment");
+    }
+  };
+
+  const handleReplyToComment = async (parentId: string, replyText: string) => {
+    if (!currentScreen) return;
+
+    try {
+      const parentComment = comments.find((c) => c.id === parentId);
+      if (!parentComment) return;
+
+      const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x_position: parentComment.x_position,
+          y_position: parentComment.y_position,
+          comment_text: replyText,
+          parent_comment_id: parentId,
+        }),
+      });
+
+      if (response.ok) {
+        const { comment } = await response.json();
+        setComments((prev) => [...prev, comment]);
+      }
+    } catch (error) {
+      console.error("Error replying to comment:", error);
+      throw error;
+    }
+  };
+
+  const handleResolveComment = async (commentId: string) => {
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_resolved: true }),
+      });
+
+      if (response.ok) {
+        setComments((prev) =>
+          prev.map((c) => (c.id === commentId ? { ...c, is_resolved: true } : c))
+        );
+        setActiveCommentId(null);
+      }
+    } catch (error) {
+      console.error("Error resolving comment:", error);
+      alert("Failed to resolve comment");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setActiveCommentId(null);
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Failed to delete comment");
+    }
+  };
+
+  // Group comments by parent
+  const rootComments = comments.filter((c) => !c.parent_comment_id);
+  const getCommentReplies = (commentId: string) =>
+    comments.filter((c) => c.parent_comment_id === commentId);
 
   // Keyboard navigation
   useEffect(() => {
@@ -162,6 +295,19 @@ export function ScreenViewerModal({
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsCommentMode(!isCommentMode)}
+            className={`${
+              isCommentMode
+                ? "bg-blue-500 hover:bg-blue-600"
+                : "bg-white/10 hover:bg-white/20"
+            } text-white border-white/20`}
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            {isCommentMode ? "Click to add" : "Comment"}
+          </Button>
           {onEdit && (
             <Button
               variant="secondary"
@@ -211,7 +357,11 @@ export function ScreenViewerModal({
 
           {/* Image */}
           {currentScreen.screenshot_url ? (
-            <div className="relative max-w-[600px] max-h-full aspect-[9/19.5]">
+            <div 
+              className="relative max-w-[600px] max-h-full aspect-[9/19.5]"
+              onClick={handleImageClick}
+              style={{ cursor: isCommentMode ? "crosshair" : "default" }}
+            >
               <img
                 src={currentScreen.screenshot_url}
                 alt={currentScreen.title}
@@ -221,6 +371,31 @@ export function ScreenViewerModal({
                     "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
                 }}
               />
+              
+              {/* Comment pins */}
+              {rootComments.map((comment) => (
+                <CommentPin
+                  key={comment.id}
+                  comment={comment}
+                  replies={getCommentReplies(comment.id)}
+                  isActive={activeCommentId === comment.id}
+                  onClick={() => setActiveCommentId(comment.id)}
+                  onClose={() => setActiveCommentId(null)}
+                  onReply={(text) => handleReplyToComment(comment.id, text)}
+                  onResolve={() => handleResolveComment(comment.id)}
+                  onDelete={() => handleDeleteComment(comment.id)}
+                />
+              ))}
+              
+              {/* New comment creation */}
+              {newCommentPosition && (
+                <NewCommentPin
+                  x={newCommentPosition.x}
+                  y={newCommentPosition.y}
+                  onSubmit={handleCreateComment}
+                  onCancel={() => setNewCommentPosition(null)}
+                />
+              )}
             </div>
           ) : (
             <div className="relative max-w-[600px] aspect-[9/19.5] bg-muted rounded-[27px] flex items-center justify-center">
