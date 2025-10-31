@@ -478,8 +478,6 @@ export default function ProjectPage() {
     targetType: "screen" | "flow" | "top-level"
   ) {
     try {
-      console.log("Moving flow:", { flowId, targetId, targetType });
-
       let updatedFlow: Flow;
       if (targetType === "top-level") {
         // Make it a top-level flow
@@ -507,15 +505,8 @@ export default function ProjectPage() {
       setFlows((prevFlows) =>
         prevFlows.map((flow) => (flow.id === flowId ? updatedFlow : flow))
       );
-
-      console.log("Update result:", updatedFlow);
     } catch (error) {
       console.error("Error moving flow:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-      if (error instanceof Error) {
-        console.error("Error message:", error.message);
-        console.error("Error stack:", error.stack);
-      }
       alert(
         `Failed to move flow: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -527,14 +518,8 @@ export default function ProjectPage() {
     }
   }
 
-  // Handler for screen selection with logging
+  // Handler for screen selection
   function handleSelectScreen(screen: Screen) {
-    console.log("handleSelectScreen called:", {
-      screenId: screen?.id,
-      screenTitle: screen?.title,
-      flowId: screen?.flow_id,
-      parentId: screen?.parent_id,
-    });
     setSelectedScreen(screen);
     setSelectedFlow(null);
   }
@@ -611,10 +596,6 @@ export default function ProjectPage() {
             onAddScreen={openAddScreenDialog}
             onSelectScreen={handleSelectScreen}
             onSelectFlow={(flow) => {
-              console.log("onSelectFlow called:", {
-                flowId: flow?.id,
-                flowName: flow?.name,
-              });
               setSelectedFlow(flow);
               setSelectedScreen(null);
             }}
