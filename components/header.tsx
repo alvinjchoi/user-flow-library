@@ -89,8 +89,10 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
     }
   };
 
-  const handleProjectNameClick = () => {
+  const handleProjectNameClick = (e: React.MouseEvent) => {
     if (!project) return;
+    e.preventDefault();
+    e.stopPropagation();
     setIsEditingName(true);
     setEditingName(project.name);
   };
@@ -162,6 +164,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                   onChange={(e) => setEditingName(e.target.value)}
                   onBlur={handleProjectNameSave}
                   onKeyDown={handleProjectNameKeyDown}
+                  onClick={(e) => e.stopPropagation()}
                   className="text-xl font-bold bg-transparent border-b-2 border-primary outline-none px-1 py-0.5"
                   autoFocus
                 />
