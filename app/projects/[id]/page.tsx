@@ -590,7 +590,11 @@ export default function ProjectPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header with project avatar */}
-      <Header project={project} stats={projectStats} />
+      <Header 
+        project={project} 
+        stats={projectStats}
+        onProjectUpdate={(updatedProject) => setProject(updatedProject)}
+      />
 
       {/* Main content with sidebar */}
       <div className="flex flex-1 overflow-hidden">

@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { updateProject } from "@/lib/projects";
 
 interface HeaderProps {
   project?: {
@@ -26,14 +27,17 @@ interface HeaderProps {
     totalScreens: number;
     totalFlows: number;
   };
+  onProjectUpdate?: (updatedProject: { id: string; name: string; avatar_url?: string | null }) => void;
 }
 
-export function Header({ project, stats }: HeaderProps) {
+export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editingName, setEditingName] = useState("");
 
   const handleGenerateShareLink = async () => {
     if (!project) return;
@@ -85,6 +89,39 @@ export function Header({ project, stats }: HeaderProps) {
     }
   };
 
+  const handleProjectNameClick = () => {
+    if (!project) return;
+    setIsEditingName(true);
+    setEditingName(project.name);
+  };
+
+  const handleProjectNameSave = async () => {
+    if (!project || !editingName.trim()) {
+      setIsEditingName(false);
+      return;
+    }
+
+    try {
+      await updateProject(project.id, { name: editingName.trim() });
+      if (onProjectUpdate) {
+        onProjectUpdate({ ...project, name: editingName.trim() });
+      }
+      setIsEditingName(false);
+    } catch (error) {
+      console.error("Error updating project name:", error);
+      alert("Failed to update project name");
+      setIsEditingName(false);
+    }
+  };
+
+  const handleProjectNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleProjectNameSave();
+    } else if (e.key === "Escape") {
+      setIsEditingName(false);
+    }
+  };
+
   return (
     <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -118,9 +155,26 @@ export function Header({ project, stats }: HeaderProps) {
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold">
-                {project ? project.name : "User Flow Library"}
-              </span>
+              {project && isEditingName ? (
+                <input
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={handleProjectNameSave}
+                  onKeyDown={handleProjectNameKeyDown}
+                  className="text-xl font-bold bg-transparent border-b-2 border-primary outline-none px-1 py-0.5"
+                  autoFocus
+                />
+              ) : (
+                <span
+                  className={`text-xl font-bold ${
+                    project ? "cursor-text hover:underline decoration-2 underline-offset-4" : ""
+                  }`}
+                  onClick={project ? handleProjectNameClick : undefined}
+                >
+                  {project ? project.name : "User Flow Library"}
+                </span>
+              )}
               {stats && (
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span>
