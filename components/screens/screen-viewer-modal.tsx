@@ -75,11 +75,24 @@ export function ScreenViewerModal({
 
   // Load comments when current screen changes
   useEffect(() => {
+    // Reset comment UI state when screen changes (but not comments themselves until loaded)
+    setActiveCommentId(null);
+    setIsCommentMode(false);
+    setNewCommentPosition(null);
+
     const loadComments = async () => {
-      if (!currentScreen) return;
+      if (!currentScreen) {
+        setComments([]);
+        return;
+      }
       
       try {
         const response = await fetch(`/api/screens/${currentScreen.id}/comments`);
+        if (!response.ok) {
+          console.error("Failed to load comments:", response.statusText);
+          setComments([]);
+          return;
+        }
         const data = await response.json();
         setComments(data.comments || []);
       } catch (error) {
