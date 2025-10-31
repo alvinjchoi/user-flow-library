@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScreenViewerModal } from "./screen-viewer-modal";
 
-interface ScreenGalleryByFlowProps {
+interface ScreenGalleryByFlowProps {   
   flows: Flow[];
   screensByFlow: Map<string, Screen[]>;
   onSelectScreen?: (screen: Screen) => void;
@@ -204,8 +204,7 @@ export function ScreenGalleryByFlow({
       screens.push(...flowScreens);
     });
     return screens;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flows]);
+  }, [flows, screensByFlow]);
 
   // Scroll to selected screen when selectedScreenId changes
   useEffect(() => {
