@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check, Download } from "lucide-react";
 import Image from "next/image";
 import type { Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
@@ -282,6 +282,27 @@ export function ScreenViewerModal({
   const getCommentReplies = (commentId: string) =>
     comments.filter((c) => c.parent_comment_id === commentId);
 
+  // Download handler
+  const handleDownload = async () => {
+    if (!currentScreen.screenshot_url) return;
+
+    try {
+      const response = await fetch(currentScreen.screenshot_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${currentScreen.display_name || currentScreen.title}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading screenshot:", error);
+      alert("Failed to download screenshot");
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -369,6 +390,17 @@ export function ScreenViewerModal({
             >
               <Upload className="h-4 w-4 mr-2" />
               {currentScreen.screenshot_url ? "Replace" : "Upload"}
+            </Button>
+          )}
+          {currentScreen.screenshot_url && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleDownload}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
             </Button>
           )}
           <Button
