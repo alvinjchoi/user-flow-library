@@ -241,13 +241,6 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               afterCreateOrganizationUrl="/"
               afterSelectOrganizationUrl="/"
               afterSelectPersonalUrl="/"
-              appearance={{
-                elements: {
-                  rootBox: "flex items-center",
-                  organizationSwitcherTrigger:
-                    "border border-border rounded-md px-3 py-2 hover:bg-accent",
-                },
-              }}
             />
           </SignedIn>
           <UserNav />

@@ -464,20 +464,20 @@ export function ScreenGalleryByFlow({
 
                             {/* Add child screen card */}
                             {!readOnly && (
-                              <div className="flex-shrink-0 w-64">
-                                <Card
-                                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onAddScreen?.(flow.id, parent.id);
-                                  }}
-                                >
-                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                    <Plus className="h-6 w-6" />
-                                    <span className="text-xs">Add child</span>
-                                  </div>
-                                </Card>
-                              </div>
+                            <div className="flex-shrink-0 w-64">
+                              <Card
+                                className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAddScreen?.(flow.id, parent.id);
+                                }}
+                              >
+                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                  <Plus className="h-6 w-6" />
+                                  <span className="text-xs">Add child</span>
+                                </div>
+                              </Card>
+                            </div>
                             )}
                           </div>
                         </div>
@@ -527,22 +527,22 @@ export function ScreenGalleryByFlow({
                                 {/* Add screen card */}
                                 {!readOnly &&
                                   flow.name.toLowerCase() !== "account" && (
-                                    <div className="flex-shrink-0 w-64">
-                                      <Card
-                                        className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                                        onClick={() =>
-                                          onAddScreen?.(branchedFlow.id)
-                                        }
-                                      >
-                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                          <Plus className="h-8 w-8" />
-                                          <span className="text-sm">
-                                            Add screen
-                                          </span>
-                                        </div>
-                                      </Card>
-                                    </div>
-                                  )}
+                                  <div className="flex-shrink-0 w-64">
+                                    <Card
+                                      className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                      onClick={() =>
+                                        onAddScreen?.(branchedFlow.id)
+                                      }
+                                    >
+                                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <Plus className="h-8 w-8" />
+                                        <span className="text-sm">
+                                          Add screen
+                                        </span>
+                                      </div>
+                                    </Card>
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <>
@@ -569,22 +569,22 @@ export function ScreenGalleryByFlow({
                                   {/* Add screen card */}
                                   {!readOnly &&
                                     flow.name.toLowerCase() !== "account" && (
-                                      <div className="flex-shrink-0 w-64">
-                                        <Card
-                                          className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                                          onClick={() =>
-                                            onAddScreen?.(branchedFlow.id)
-                                          }
-                                        >
-                                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                            <Plus className="h-8 w-8" />
-                                            <span className="text-sm">
-                                              Add screen
-                                            </span>
-                                          </div>
-                                        </Card>
-                                      </div>
-                                    )}
+                                    <div className="flex-shrink-0 w-64">
+                                      <Card
+                                        className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                        onClick={() =>
+                                          onAddScreen?.(branchedFlow.id)
+                                        }
+                                      >
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                          <Plus className="h-8 w-8" />
+                                          <span className="text-sm">
+                                            Add screen
+                                          </span>
+                                        </div>
+                                      </Card>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* Child screens within branched flow */}
@@ -643,25 +643,25 @@ export function ScreenGalleryByFlow({
 
                                             {/* Add child screen card */}
                                             {!readOnly && (
-                                              <div className="flex-shrink-0 w-64">
-                                                <Card
-                                                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onAddScreen?.(
-                                                      branchedFlow.id,
-                                                      branchedParent.id
-                                                    );
-                                                  }}
-                                                >
-                                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                                    <Plus className="h-6 w-6" />
-                                                    <span className="text-xs">
-                                                      Add child
-                                                    </span>
-                                                  </div>
-                                                </Card>
-                                              </div>
+                                            <div className="flex-shrink-0 w-64">
+                                              <Card
+                                                className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  onAddScreen?.(
+                                                    branchedFlow.id,
+                                                    branchedParent.id
+                                                  );
+                                                }}
+                                              >
+                                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                  <Plus className="h-6 w-6" />
+                                                  <span className="text-xs">
+                                                    Add child
+                                                  </span>
+                                                </div>
+                                              </Card>
+                                            </div>
                                             )}
                                           </div>
                                         </div>

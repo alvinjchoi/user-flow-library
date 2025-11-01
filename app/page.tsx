@@ -296,8 +296,8 @@ export default function HomePage() {
                             className="text-lg truncate cursor-text hover:underline decoration-2 underline-offset-4"
                             onClick={(e) => handleProjectNameClick(project, e)}
                           >
-                            {project.name}
-                          </CardTitle>
+                          {project.name}
+                        </CardTitle>
                         )}
                       </div>
                       {project.description && (
