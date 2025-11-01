@@ -1,6 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/projects(.*)", "/admin(.*)"]);
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)", 
+  "/projects(.*)", 
+  "/admin(.*)",
+  "/organization(.*)", // Organization management
+]);
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -22,7 +27,12 @@ export default clerkMiddleware(async (auth, req) => {
   } catch (error) {
     console.error("Middleware error:", error);
     // If Clerk is not properly configured, redirect to home
-    if (req.nextUrl.pathname.startsWith("/projects") || req.nextUrl.pathname.startsWith("/admin")) {
+    if (
+      req.nextUrl.pathname.startsWith("/projects") || 
+      req.nextUrl.pathname.startsWith("/admin") ||
+      req.nextUrl.pathname.startsWith("/dashboard") ||
+      req.nextUrl.pathname.startsWith("/organization")
+    ) {
       return Response.redirect(new URL("/", req.url));
     }
   }
