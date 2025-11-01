@@ -215,27 +215,11 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               </Button>
             )}
             <Link
-              href="/"
+              href="/dashboard"
               className="text-sm hover:text-primary transition-colors"
             >
-              Browse
+              Dashboard
             </Link>
-            <Link
-              href="/admin/upload"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              Admin
-            </Link>
-          </SignedIn>
-          <SignedOut>
-            <Link
-              href="/"
-              className="text-sm hover:text-primary transition-colors"
-            >
-              Home
-            </Link>
-          </SignedOut>
-          <SignedIn>
             <OrganizationSwitcher
               hidePersonal={true}
               afterCreateOrganizationUrl="/dashboard"
