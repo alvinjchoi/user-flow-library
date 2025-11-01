@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Search, ArrowLeft, Share2, Copy, Check, X } from "lucide-react";
 import { SignedIn, SignedOut, OrganizationSwitcher } from "@clerk/nextjs";
 import { UserNav } from "@/components/auth/user-nav";
@@ -35,6 +36,7 @@ interface HeaderProps {
 }
 
 export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
+  const pathname = usePathname();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,6 +44,9 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
   const [isPublic, setIsPublic] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState("");
+  
+  // Show OrganizationSwitcher only on dashboard and project pages
+  const showOrgSwitcher = pathname?.startsWith('/dashboard') || pathname?.startsWith('/projects/');
 
   const handleGenerateShareLink = async () => {
     if (!project) return;
@@ -220,11 +225,13 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
             >
               Dashboard
             </Link>
-            <OrganizationSwitcher
-              hidePersonal={true}
-              afterCreateOrganizationUrl="/dashboard"
-              afterSelectOrganizationUrl="/dashboard"
-            />
+            {showOrgSwitcher && (
+              <OrganizationSwitcher
+                hidePersonal={true}
+                afterCreateOrganizationUrl="/dashboard"
+                afterSelectOrganizationUrl="/dashboard"
+              />
+            )}
           </SignedIn>
           <UserNav />
         </nav>
