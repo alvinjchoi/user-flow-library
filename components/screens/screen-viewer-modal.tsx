@@ -1,10 +1,27 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check, Download, Shapes, Play } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check, Download, Shapes, Play, MoreVertical, Archive } from "lucide-react";
 import Image from "next/image";
 import type { Screen, Hotspot } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   getScreenInspirations,
   addScreenInspiration,
@@ -21,6 +38,8 @@ interface ScreenViewerModalProps {
   onNavigate?: (screen: Screen) => void;
   onEdit?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
+  onDeleteScreenshot?: (screenId: string) => Promise<void>;
+  onArchiveScreen?: (screenId: string) => Promise<void>;
   readOnly?: boolean;
 }
 
@@ -31,6 +50,8 @@ export function ScreenViewerModal({
   onNavigate,
   onEdit,
   onUploadScreenshot,
+  onDeleteScreenshot,
+  onArchiveScreen,
   readOnly = false,
 }: ScreenViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,6 +70,10 @@ export function ScreenViewerModal({
   const [isHotspotEditorOpen, setIsHotspotEditorOpen] = useState(false);
   const [isPrototypePlayerOpen, setIsPrototypePlayerOpen] = useState(false);
   const [hotspotsByScreen, setHotspotsByScreen] = useState<Map<string, Hotspot[]>>(new Map());
+
+  // Delete/Archive state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
 
 
   // Update current index when screen changes
@@ -416,6 +441,36 @@ export function ScreenViewerModal({
     }
   };
 
+  // Delete screenshot handler
+  const handleDeleteScreenshot = async () => {
+    if (!onDeleteScreenshot || !currentScreen) return;
+
+    try {
+      await onDeleteScreenshot(currentScreen.id);
+      setDeleteDialogOpen(false);
+      // Close modal after deletion
+      onClose();
+    } catch (error) {
+      console.error("Error deleting screenshot:", error);
+      alert("Failed to delete screenshot");
+    }
+  };
+
+  // Archive screen handler
+  const handleArchiveScreen = async () => {
+    if (!onArchiveScreen || !currentScreen) return;
+
+    try {
+      await onArchiveScreen(currentScreen.id);
+      setArchiveDialogOpen(false);
+      // Close modal after archiving
+      onClose();
+    } catch (error) {
+      console.error("Error archiving screen:", error);
+      alert("Failed to archive screen");
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -537,6 +592,44 @@ export function ScreenViewerModal({
                 Play
               </Button>
             </>
+          )}
+          {!readOnly && (onDeleteScreenshot || onArchiveScreen) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {onDeleteScreenshot && currentScreen.screenshot_url && (
+                  <DropdownMenuItem
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Screenshot
+                  </DropdownMenuItem>
+                )}
+                {onArchiveScreen && (
+                  <>
+                    {onDeleteScreenshot && currentScreen.screenshot_url && (
+                      <DropdownMenuSeparator />
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => setArchiveDialogOpen(true)}
+                      className="text-orange-600 focus:text-orange-600"
+                    >
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archive Screen
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <Button
             variant="ghost"
@@ -931,6 +1024,50 @@ export function ScreenViewerModal({
           onClose={() => setIsPrototypePlayerOpen(false)}
         />
       )}
+
+      {/* Delete Screenshot Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Screenshot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the screenshot file. The screen entry will remain, but the image will be removed.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteScreenshot}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Screenshot
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Archive Screen Confirmation Dialog */}
+      <AlertDialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Screen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will archive the entire screen including its screenshot, comments, and hotspots.
+              You can restore archived screens later from the settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleArchiveScreen}
+              className="bg-orange-600 text-white hover:bg-orange-700"
+            >
+              Archive Screen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
