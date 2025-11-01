@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check, Download } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check, Download, Shapes, Play } from "lucide-react";
 import Image from "next/image";
-import type { Screen } from "@/lib/database.types";
+import type { Screen, Hotspot } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import {
   getScreenInspirations,
@@ -11,6 +11,8 @@ import {
   removeScreenInspiration,
 } from "@/lib/inspirations";
 import { CommentPin, NewCommentPin, type ScreenComment } from "./comment-pin";
+import { HotspotEditor } from "@/components/hotspots/hotspot-editor";
+import { PrototypePlayer } from "@/components/hotspots/prototype-player";
 
 interface ScreenViewerModalProps {
   screen: Screen | null;
@@ -41,6 +43,12 @@ export function ScreenViewerModal({
   const [isCommentMode, setIsCommentMode] = useState(false);
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [newCommentPosition, setNewCommentPosition] = useState<{ x: number; y: number } | null>(null);
+
+  // Hotspot state
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  const [isHotspotEditorOpen, setIsHotspotEditorOpen] = useState(false);
+  const [isPrototypePlayerOpen, setIsPrototypePlayerOpen] = useState(false);
+  const [hotspotsByScreen, setHotspotsByScreen] = useState<Map<string, Hotspot[]>>(new Map());
 
 
   // Update current index when screen changes
@@ -124,6 +132,57 @@ export function ScreenViewerModal({
       abortController.abort();
     };
   }, [currentScreen?.id]);
+
+  // Load hotspots when current screen changes
+  useEffect(() => {
+    const loadHotspots = async () => {
+      if (!currentScreen) {
+        setHotspots([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/screens/${currentScreen.id}/hotspots`);
+        if (!response.ok) {
+          console.error("Failed to load hotspots:", response.statusText);
+          setHotspots([]);
+          return;
+        }
+
+        const data = await response.json();
+        setHotspots(data);
+      } catch (error) {
+        console.error("Error loading hotspots:", error);
+        setHotspots([]);
+      }
+    };
+
+    loadHotspots();
+  }, [currentScreen?.id]);
+
+  // Load all hotspots for prototype mode
+  useEffect(() => {
+    const loadAllHotspots = async () => {
+      const hotspotMap = new Map<string, Hotspot[]>();
+      
+      try {
+        await Promise.all(
+          allScreens.map(async (s) => {
+            const response = await fetch(`/api/screens/${s.id}/hotspots`);
+            if (response.ok) {
+              const data = await response.json();
+              hotspotMap.set(s.id, data);
+            }
+          })
+        );
+        setHotspotsByScreen(hotspotMap);
+      } catch (error) {
+        console.error("Error loading all hotspots:", error);
+      }
+    };
+
+    loadAllHotspots();
+  }, [allScreens]);
 
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allScreens.length - 1;
@@ -277,6 +336,60 @@ export function ScreenViewerModal({
     }
   };
 
+  // Hotspot handlers
+  const handleAddHotspot = async (hotspot: Omit<Hotspot, "id" | "created_at" | "updated_at">) => {
+    try {
+      const response = await fetch(`/api/screens/${currentScreen.id}/hotspots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(hotspot),
+      });
+
+      if (response.ok) {
+        const newHotspot = await response.json();
+        setHotspots((prev) => [...prev, newHotspot]);
+      }
+    } catch (error) {
+      console.error("Error adding hotspot:", error);
+      throw error;
+    }
+  };
+
+  const handleUpdateHotspot = async (id: string, updates: Partial<Hotspot>) => {
+    try {
+      const response = await fetch(`/api/hotspots/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (response.ok) {
+        const updatedHotspot = await response.json();
+        setHotspots((prev) =>
+          prev.map((h) => (h.id === id ? updatedHotspot : h))
+        );
+      }
+    } catch (error) {
+      console.error("Error updating hotspot:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteHotspot = async (id: string) => {
+    try {
+      const response = await fetch(`/api/hotspots/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setHotspots((prev) => prev.filter((h) => h.id !== id));
+      }
+    } catch (error) {
+      console.error("Error deleting hotspot:", error);
+      throw error;
+    }
+  };
+
   // Group comments by parent
   const rootComments = comments.filter((c) => !c.parent_comment_id);
   const getCommentReplies = (commentId: string) =>
@@ -402,6 +515,28 @@ export function ScreenViewerModal({
               <Download className="h-4 w-4 mr-2" />
               Download
             </Button>
+          )}
+          {!readOnly && currentScreen.screenshot_url && (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsHotspotEditorOpen(true)}
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
+                <Shapes className="h-4 w-4 mr-2" />
+                Edit Hotspots
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsPrototypePlayerOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Play
+              </Button>
+            </>
           )}
           <Button
             variant="ghost"
@@ -773,6 +908,29 @@ export function ScreenViewerModal({
         onClick={onClose}
         aria-label="Close modal"
       />
+
+      {/* Hotspot Editor Modal */}
+      {isHotspotEditorOpen && currentScreen && (
+        <HotspotEditor
+          screen={currentScreen}
+          hotspots={hotspots}
+          availableScreens={allScreens}
+          onAddHotspot={handleAddHotspot}
+          onUpdateHotspot={handleUpdateHotspot}
+          onDeleteHotspot={handleDeleteHotspot}
+          onClose={() => setIsHotspotEditorOpen(false)}
+        />
+      )}
+
+      {/* Prototype Player Modal */}
+      {isPrototypePlayerOpen && currentScreen && (
+        <PrototypePlayer
+          startScreen={currentScreen}
+          allScreens={allScreens}
+          hotspotsByScreen={hotspotsByScreen}
+          onClose={() => setIsPrototypePlayerOpen(false)}
+        />
+      )}
     </div>
   );
 }
