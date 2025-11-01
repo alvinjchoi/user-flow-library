@@ -244,7 +244,8 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               appearance={{
                 elements: {
                   rootBox: "flex items-center",
-                  organizationSwitcherTrigger: "border border-border rounded-md px-3 py-2 hover:bg-accent",
+                  organizationSwitcherTrigger:
+                    "border border-border rounded-md px-3 py-2 hover:bg-accent",
                 },
               }}
             />
