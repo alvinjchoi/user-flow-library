@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Edit2 } from "lucide-react";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import {
   getProjects,
   createProject,
@@ -34,6 +34,7 @@ import {
 
 export default function HomePage() {
   const router = useRouter();
+  const { user } = useUser();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -63,11 +64,16 @@ export default function HomePage() {
   }
 
   async function handleCreateProject() {
+    if (!user) {
+      alert("You must be signed in to create a project");
+      return;
+    }
+
     const name = prompt("Project name:");
     if (!name) return;
 
     try {
-      const project = await createProject(name);
+      const project = await createProject(name, user.id);
       router.push(`/projects/${project.id}`);
     } catch (error) {
       console.error("Error creating project:", error);

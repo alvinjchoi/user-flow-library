@@ -27,7 +27,11 @@ interface HeaderProps {
     totalScreens: number;
     totalFlows: number;
   };
-  onProjectUpdate?: (updatedProject: { id: string; name: string; avatar_url?: string | null }) => void;
+  onProjectUpdate?: (updatedProject: {
+    id: string;
+    name: string;
+    avatar_url?: string | null;
+  }) => void;
 }
 
 export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
@@ -171,7 +175,9 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               ) : (
                 <span
                   className={`text-xl font-bold ${
-                    project ? "cursor-text hover:underline decoration-2 underline-offset-4" : ""
+                    project
+                      ? "cursor-text hover:underline decoration-2 underline-offset-4"
+                      : ""
                   }`}
                   onClick={project ? handleProjectNameClick : undefined}
                 >
@@ -244,12 +250,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
           </DialogHeader>
           <div className="flex items-center space-x-2">
             <div className="grid flex-1 gap-2">
-              <Input
-                id="link"
-                value={shareUrl}
-                readOnly
-                className="h-9"
-              />
+              <Input id="link" value={shareUrl} readOnly className="h-9" />
             </div>
             <Button
               type="button"

@@ -32,6 +32,7 @@ export async function getProject(id: string): Promise<Project | null> {
 // Create project
 export async function createProject(
   name: string,
+  userId: string,
   description?: string,
   color?: string
 ): Promise<Project> {
@@ -39,6 +40,7 @@ export async function createProject(
     .from("projects")
     .insert({
       name,
+      user_id: userId,
       description,
       color: color || "#3b82f6",
     })

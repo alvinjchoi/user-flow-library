@@ -16,6 +16,8 @@ export interface Database {
           description: string | null;
           color: string;
           avatar_url: string | null;
+          user_id: string;
+          deleted_at: string | null;
           share_token: string | null;
           is_public: boolean;
           created_at: string;
@@ -27,6 +29,8 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
+          user_id: string;
+          deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
           created_at?: string;
@@ -38,6 +42,8 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
+          user_id?: string;
+          deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
           created_at?: string;
