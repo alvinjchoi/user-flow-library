@@ -44,9 +44,10 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
   const [isPublic, setIsPublic] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState("");
-  
+
   // Show OrganizationSwitcher only on dashboard and project pages
-  const showOrgSwitcher = pathname?.startsWith('/dashboard') || pathname?.startsWith('/projects/');
+  const showOrgSwitcher =
+    pathname?.startsWith("/dashboard") || pathname?.startsWith("/projects/");
 
   const handleGenerateShareLink = async () => {
     if (!project) return;
@@ -206,6 +207,13 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
         </div>
         <nav className="flex items-center gap-6">
           <SignedIn>
+            {showOrgSwitcher && (
+              <OrganizationSwitcher
+                hidePersonal={true}
+                afterCreateOrganizationUrl="/dashboard"
+                afterSelectOrganizationUrl="/dashboard"
+              />
+            )}
             {/* Share button for project pages */}
             {project && (
               <Button
@@ -225,13 +233,6 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
             >
               Dashboard
             </Link>
-            {showOrgSwitcher && (
-              <OrganizationSwitcher
-                hidePersonal={true}
-                afterCreateOrganizationUrl="/dashboard"
-                afterSelectOrganizationUrl="/dashboard"
-              />
-            )}
           </SignedIn>
           <UserNav />
         </nav>
