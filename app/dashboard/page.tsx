@@ -54,9 +54,9 @@ export default function HomePage() {
   }, [user, organization]); // Reload when user or organization changes
 
   async function loadProjects() {
+    // Wait for Clerk to load before deciding
     if (!user && !organization) {
-      setProjects([]);
-      setLoading(false);
+      // Keep loading state while Clerk loads
       return;
     }
     try {
