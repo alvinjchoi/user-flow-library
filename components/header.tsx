@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Search, ArrowLeft, Share2, Copy, Check, X } from "lucide-react";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedIn, SignedOut, OrganizationSwitcher } from "@clerk/nextjs";
 import { UserNav } from "@/components/auth/user-nav";
 import Image from "next/image";
 import { useState } from "react";
@@ -235,6 +235,20 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               Home
             </Link>
           </SignedOut>
+          <SignedIn>
+            <OrganizationSwitcher
+              hidePersonal={false}
+              afterCreateOrganizationUrl="/"
+              afterSelectOrganizationUrl="/"
+              afterSelectPersonalUrl="/"
+              appearance={{
+                elements: {
+                  rootBox: "flex items-center",
+                  organizationSwitcherTrigger: "border border-border rounded-md px-3 py-2 hover:bg-accent",
+                },
+              }}
+            />
+          </SignedIn>
           <UserNav />
         </nav>
       </div>

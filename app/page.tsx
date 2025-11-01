@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Edit2 } from "lucide-react";
-import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useUser, useOrganization } from "@clerk/nextjs";
 import {
   getProjects,
   createProject,
@@ -35,6 +35,7 @@ import {
 export default function HomePage() {
   const router = useRouter();
   const { user } = useUser();
+  const { organization } = useOrganization();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -73,7 +74,9 @@ export default function HomePage() {
     if (!name) return;
 
     try {
-      const project = await createProject(name, user.id);
+      // Create project with organization ID if in an org context
+      const orgId = organization?.id || null;
+      const project = await createProject(name, user.id, orgId);
       router.push(`/projects/${project.id}`);
     } catch (error) {
       console.error("Error creating project:", error);

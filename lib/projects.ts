@@ -33,6 +33,7 @@ export async function getProject(id: string): Promise<Project | null> {
 export async function createProject(
   name: string,
   userId: string,
+  orgId?: string | null,
   description?: string,
   color?: string
 ): Promise<Project> {
@@ -40,7 +41,8 @@ export async function createProject(
     .from("projects")
     .insert({
       name,
-      user_id: userId,
+      user_id: orgId ? null : userId, // If org project, user_id is null
+      clerk_org_id: orgId || null,
       description,
       color: color || "#3b82f6",
     })

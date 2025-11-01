@@ -16,7 +16,8 @@ export interface Database {
           description: string | null;
           color: string;
           avatar_url: string | null;
-          user_id: string;
+          user_id: string | null;
+          clerk_org_id: string | null;
           deleted_at: string | null;
           share_token: string | null;
           is_public: boolean;
@@ -29,7 +30,8 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
-          user_id: string;
+          user_id?: string | null;
+          clerk_org_id?: string | null;
           deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
@@ -42,7 +44,8 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
-          user_id?: string;
+          user_id?: string | null;
+          clerk_org_id?: string | null;
           deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
