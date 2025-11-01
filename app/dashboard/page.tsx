@@ -204,18 +204,6 @@ export default function HomePage() {
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Project
                 </Button>
-
-                <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg text-sm">
-                  <p className="font-semibold mb-2">⚠️ Setup Required</p>
-                  <p className="text-left text-muted-foreground">
-                    If this is your first time, make sure you've run the SQL
-                    setup in Supabase:
-                    <br />
-                    <code className="text-xs bg-muted px-2 py-1 rounded mt-2 inline-block">
-                      sql/CREATE_FLOW_TABLES.sql
-                    </code>
-                  </p>
-                </div>
               </div>
             </div>
           ) : (
