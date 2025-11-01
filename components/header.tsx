@@ -237,10 +237,9 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
           </SignedOut>
           <SignedIn>
             <OrganizationSwitcher
-              hidePersonal={false}
+              hidePersonal={true}
               afterCreateOrganizationUrl="/dashboard"
               afterSelectOrganizationUrl="/dashboard"
-              afterSelectPersonalUrl="/dashboard"
             />
           </SignedIn>
           <UserNav />
