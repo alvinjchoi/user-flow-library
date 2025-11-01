@@ -1,14 +1,32 @@
 import { supabase } from "./supabase";
 import type { Project } from "./database.types";
 import { uploadFile } from "./storage";
+import { auth } from "@clerk/nextjs/server";
 
-// Get all projects
+// Get all projects for the current user or organization
 export async function getProjects(): Promise<Project[]> {
-  const { data, error } = await supabase
+  const { userId, orgId } = await auth();
+
+  if (!userId && !orgId) {
+    return []; // No authenticated user or organization
+  }
+
+  let query = supabase
     .from("projects")
     .select("*")
-    .is("deleted_at", null) // Only get non-deleted projects
-    .order("created_at", { ascending: false });
+    .is("deleted_at", null);
+
+  if (orgId) {
+    // If in an organization context, get org projects
+    query = query.eq("clerk_org_id", orgId);
+  } else if (userId) {
+    // If personal context, get user's personal projects
+    query = query.eq("user_id", userId);
+  } else {
+    return [];
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw error;
   return data || [];
@@ -16,14 +34,31 @@ export async function getProjects(): Promise<Project[]> {
 
 // Get single project
 export async function getProject(id: string): Promise<Project | null> {
-  const { data, error } = await supabase
+  const { userId, orgId } = await auth();
+
+  if (!userId && !orgId) {
+    return null; // No authenticated user or organization
+  }
+
+  let query = supabase
     .from("projects")
     .select("*")
     .eq("id", id)
-    .single();
+    .is("deleted_at", null);
+
+  // Ensure user can only access their own projects or projects from their organization
+  if (orgId) {
+    query = query.eq("clerk_org_id", orgId);
+  } else if (userId) {
+    query = query.eq("user_id", userId);
+  } else {
+    return null;
+  }
+
+  const { data, error } = await query.single();
 
   if (error) {
-    if (error.code === "PGRST116") return null; // Not found
+    if (error.code === "PGRST116") return null; // Not found or no access
     throw error;
   }
   return data;

@@ -51,11 +51,22 @@ export default function HomePage() {
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [user, organization]); // Reload when user or organization changes
 
   async function loadProjects() {
+    if (!user && !organization) {
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
     try {
+      console.log("Loading projects for:", { 
+        userId: user?.id, 
+        orgId: organization?.id,
+        orgName: organization?.name 
+      });
       const data = await getProjects();
+      console.log("Loaded projects:", data.length, data);
       setProjects(data);
     } catch (error) {
       console.error("Error loading projects:", error);
