@@ -45,9 +45,8 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState("");
 
-  // Show OrganizationSwitcher only on dashboard and project pages
-  const showOrgSwitcher =
-    pathname?.startsWith("/dashboard") || pathname?.startsWith("/projects/");
+  // Show OrganizationSwitcher only on dashboard (not on project pages)
+  const showOrgSwitcher = pathname?.startsWith("/dashboard");
 
   const handleGenerateShareLink = async () => {
     if (!project) return;
@@ -230,8 +229,8 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                 {isGenerating ? "Generating..." : "Share"}
               </Button>
             )}
-            {/* Dashboard link - hide when already on dashboard */}
-            {pathname !== "/dashboard" && (
+            {/* Dashboard link - hide when on dashboard or project pages */}
+            {!showOrgSwitcher && pathname !== "/" && (
               <Link
                 href="/dashboard"
                 className="text-sm hover:text-primary transition-colors"
