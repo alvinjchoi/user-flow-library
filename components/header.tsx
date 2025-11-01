@@ -141,79 +141,82 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
           {/* Back arrow for project pages */}
           {project && (
             <Link
-              href="/"
+              href="/dashboard"
               className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors"
-              title="Back to projects"
+              title="Back to dashboard"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
           )}
 
-          <Link
-            href="/"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
-              {project?.avatar_url ? (
-                <Image
-                  src={project.avatar_url}
-                  alt={`${project.name} avatar`}
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Search className="w-5 h-5 text-primary-foreground" />
-              )}
-            </div>
-            <div className="flex flex-col">
-              {project && isEditingName ? (
-                <input
-                  type="text"
-                  value={editingName}
-                  onChange={(e) => setEditingName(e.target.value)}
-                  onBlur={handleProjectNameSave}
-                  onKeyDown={handleProjectNameKeyDown}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-xl font-bold bg-transparent border-b-2 border-primary outline-none px-1 py-0.5"
-                  autoFocus
-                />
-              ) : (
-                <span
-                  className={`text-xl font-bold ${
-                    project
-                      ? "cursor-text hover:underline decoration-2 underline-offset-4"
-                      : ""
-                  }`}
-                  onClick={project ? handleProjectNameClick : undefined}
-                >
-                  {project ? project.name : "User Flow Library"}
-                </span>
-              )}
-              {stats && (
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>
-                    {stats.totalScreens} screen
-                    {stats.totalScreens !== 1 ? "s" : ""}
-                  </span>
-                  <span className="text-muted-foreground/40">•</span>
-                  <span>
-                    {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
-            </div>
-          </Link>
-        </div>
-        <nav className="flex items-center gap-6">
-          <SignedIn>
-            {showOrgSwitcher && (
+          {showOrgSwitcher ? (
+            <SignedIn>
               <OrganizationSwitcher
                 hidePersonal={true}
                 afterCreateOrganizationUrl="/dashboard"
                 afterSelectOrganizationUrl="/dashboard"
               />
-            )}
+            </SignedIn>
+          ) : (
+            <Link
+              href="/"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
+                {project?.avatar_url ? (
+                  <Image
+                    src={project.avatar_url}
+                    alt={`${project.name} avatar`}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Search className="w-5 h-5 text-primary-foreground" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                {project && isEditingName ? (
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onBlur={handleProjectNameSave}
+                    onKeyDown={handleProjectNameKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xl font-bold bg-transparent border-b-2 border-primary outline-none px-1 py-0.5"
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className={`text-xl font-bold ${
+                      project
+                        ? "cursor-text hover:underline decoration-2 underline-offset-4"
+                        : ""
+                    }`}
+                    onClick={project ? handleProjectNameClick : undefined}
+                  >
+                    {project ? project.name : "User Flow Library"}
+                  </span>
+                )}
+                {stats && (
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>
+                      {stats.totalScreens} screen
+                      {stats.totalScreens !== 1 ? "s" : ""}
+                    </span>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span>
+                      {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Link>
+          )}
+        </div>
+        <nav className="flex items-center gap-6">
+          <SignedIn>
             {/* Share button for project pages */}
             {project && (
               <Button
@@ -227,12 +230,15 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                 {isGenerating ? "Generating..." : "Share"}
               </Button>
             )}
-            <Link
-              href="/dashboard"
-              className="text-sm hover:text-primary transition-colors"
-            >
-              Dashboard
-            </Link>
+            {/* Dashboard link - hide when already on dashboard */}
+            {pathname !== "/dashboard" && (
+              <Link
+                href="/dashboard"
+                className="text-sm hover:text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+            )}
           </SignedIn>
           <UserNav />
         </nav>
