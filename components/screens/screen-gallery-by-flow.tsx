@@ -206,9 +206,19 @@ export function ScreenGalleryByFlow({
     return screens;
   }, [flows, screensByFlow]);
 
-  // Scroll to selected screen when selectedScreenId changes
+  // Track if this is the initial load to prevent auto-scroll
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   useEffect(() => {
-    if (!selectedScreenId) return;
+    // Mark initial load as complete after first render
+    if (isInitialLoad && flows.length > 0) {
+      setIsInitialLoad(false);
+    }
+  }, [flows.length, isInitialLoad]);
+
+  // Scroll to selected screen when selectedScreenId changes (but not on initial load)
+  useEffect(() => {
+    if (!selectedScreenId || isInitialLoad) return;
 
     const element = document.getElementById(`screen-${selectedScreenId}`);
     if (element) {
@@ -218,10 +228,10 @@ export function ScreenGalleryByFlow({
         inline: "center",
       });
     }
-  }, [selectedScreenId]);
+  }, [selectedScreenId, isInitialLoad]);
 
   useEffect(() => {
-    if (!selectedFlowId || selectedScreenId) {
+    if (!selectedFlowId || selectedScreenId || isInitialLoad) {
       return;
     }
 
@@ -236,7 +246,7 @@ export function ScreenGalleryByFlow({
       block: "start",
       inline: "nearest",
     });
-  }, [selectedFlowId, selectedScreenId]);
+  }, [selectedFlowId, selectedScreenId, isInitialLoad]);
 
   const handleScreenClick = (screen: Screen) => {
     setViewerScreen(screen);
