@@ -13,12 +13,12 @@ export function UserNav() {
   return (
     <div className="flex items-center gap-2">
       <SignedOut>
-        <SignInButton mode="modal">
+        <SignInButton>
           <Button variant="ghost" size="sm">
             Sign In
           </Button>
         </SignInButton>
-        <SignUpButton mode="modal">
+        <SignUpButton>
           <Button size="sm">Sign Up</Button>
         </SignUpButton>
       </SignedOut>
