@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Plus, Upload, CornerDownRight } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import type { Screen, Flow } from "@/lib/database.types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -207,31 +207,43 @@ export function ScreenGalleryByFlow({
   }, [flows, screensByFlow]);
 
   // Track if this is the initial load to prevent auto-scroll
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const hasScrolledRef = useRef(false);
+  const initialFlowIdRef = useRef<string | undefined>(undefined);
 
+  // Remember the initial selectedFlowId to skip auto-scroll for it
   useEffect(() => {
-    // Mark initial load as complete after first render
-    if (isInitialLoad && flows.length > 0) {
-      setIsInitialLoad(false);
+    if (initialFlowIdRef.current === undefined && selectedFlowId) {
+      initialFlowIdRef.current = selectedFlowId;
     }
-  }, [flows.length, isInitialLoad]);
+  }, [selectedFlowId]);
 
   // Scroll to selected screen when selectedScreenId changes (but not on initial load)
   useEffect(() => {
-    if (!selectedScreenId || isInitialLoad) return;
+    if (!selectedScreenId) return;
+
+    // Skip if this is the very first selection and we haven't scrolled yet
+    if (!hasScrolledRef.current && initialFlowIdRef.current !== undefined) {
+      return;
+    }
 
     const element = document.getElementById(`screen-${selectedScreenId}`);
     if (element) {
+      hasScrolledRef.current = true;
       element.scrollIntoView({
         behavior: "smooth",
         block: "center",
         inline: "center",
       });
     }
-  }, [selectedScreenId, isInitialLoad]);
+  }, [selectedScreenId]);
 
   useEffect(() => {
-    if (!selectedFlowId || selectedScreenId || isInitialLoad) {
+    if (!selectedFlowId || selectedScreenId) {
+      return;
+    }
+
+    // Skip auto-scroll for the initial flow selection
+    if (selectedFlowId === initialFlowIdRef.current && !hasScrolledRef.current) {
       return;
     }
 
@@ -241,12 +253,13 @@ export function ScreenGalleryByFlow({
       return;
     }
 
+    hasScrolledRef.current = true;
     element.scrollIntoView({
       behavior: "smooth",
       block: "start",
       inline: "nearest",
     });
-  }, [selectedFlowId, selectedScreenId, isInitialLoad]);
+  }, [selectedFlowId, selectedScreenId]);
 
   const handleScreenClick = (screen: Screen) => {
     setViewerScreen(screen);
