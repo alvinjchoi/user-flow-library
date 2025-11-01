@@ -11,6 +11,8 @@ export default function SignUpPage() {
           </p>
         </div>
         <SignUp 
+          fallbackRedirectUrl="/dashboard"
+          signInFallbackRedirectUrl="/dashboard"
           appearance={{
             elements: {
               formButtonPrimary: "bg-primary hover:bg-primary/90",

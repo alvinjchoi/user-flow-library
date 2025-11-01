@@ -14,12 +14,12 @@ export function UserNav() {
   return (
     <div className="flex items-center gap-2">
       <SignedOut>
-        <SignInButton>
+        <SignInButton fallbackRedirectUrl="/dashboard" signUpFallbackRedirectUrl="/dashboard">
           <Button variant="ghost" size="sm">
             Sign In
           </Button>
         </SignInButton>
-        <SignUpButton>
+        <SignUpButton fallbackRedirectUrl="/dashboard" signInFallbackRedirectUrl="/dashboard">
           <Button size="sm">Sign Up</Button>
         </SignUpButton>
       </SignedOut>
