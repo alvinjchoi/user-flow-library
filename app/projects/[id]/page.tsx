@@ -664,6 +664,7 @@ export default function ProjectPage() {
                   setEditingScreen(screen);
                   setEditScreenDialogOpen(true);
                 }}
+                onReorderScreens={handleReorderScreens}
                 selectedScreenId={selectedScreen?.id}
                 selectedFlowId={selectedFlow?.id}
               />
