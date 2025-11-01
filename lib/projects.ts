@@ -1,67 +1,53 @@
 import { supabase } from "./supabase";
 import type { Project } from "./database.types";
 import { uploadFile } from "./storage";
-import { auth } from "@clerk/nextjs/server";
 
-// Get all projects for the current user or organization
+// Get all projects - now calls API route which handles auth server-side
 export async function getProjects(): Promise<Project[]> {
-  const { userId, orgId } = await auth();
+  try {
+    const response = await fetch("/api/projects", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (!userId && !orgId) {
-    return []; // No authenticated user or organization
-  }
+    if (!response.ok) {
+      throw new Error("Failed to fetch projects");
+    }
 
-  let query = supabase
-    .from("projects")
-    .select("*")
-    .is("deleted_at", null);
-
-  if (orgId) {
-    // If in an organization context, get org projects
-    query = query.eq("clerk_org_id", orgId);
-  } else if (userId) {
-    // If personal context, get user's personal projects
-    query = query.eq("user_id", userId);
-  } else {
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching projects:", error);
     return [];
   }
-
-  const { data, error } = await query.order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
 }
 
-// Get single project
+// Get single project - now calls API route which handles auth server-side
 export async function getProject(id: string): Promise<Project | null> {
-  const { userId, orgId } = await auth();
+  try {
+    const response = await fetch(`/api/projects/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (!userId && !orgId) {
-    return null; // No authenticated user or organization
-  }
+    if (response.status === 404) {
+      return null;
+    }
 
-  let query = supabase
-    .from("projects")
-    .select("*")
-    .eq("id", id)
-    .is("deleted_at", null);
+    if (!response.ok) {
+      throw new Error("Failed to fetch project");
+    }
 
-  // Ensure user can only access their own projects or projects from their organization
-  if (orgId) {
-    query = query.eq("clerk_org_id", orgId);
-  } else if (userId) {
-    query = query.eq("user_id", userId);
-  } else {
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching project:", error);
     return null;
   }
-
-  const { data, error } = await query.single();
-
-  if (error) {
-    if (error.code === "PGRST116") return null; // Not found or no access
-    throw error;
-  }
-  return data;
 }
 
 // Create project
