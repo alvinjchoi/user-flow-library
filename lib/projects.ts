@@ -5,6 +5,7 @@ import { uploadFile } from "./storage";
 // Get all projects - now calls API route which handles auth server-side
 export async function getProjects(): Promise<Project[]> {
   try {
+    console.log("[getProjects] Fetching from /api/projects...");
     const response = await fetch("/api/projects", {
       method: "GET",
       credentials: "include", // Ensure cookies are sent
@@ -13,14 +14,19 @@ export async function getProjects(): Promise<Project[]> {
       },
     });
 
+    console.log("[getProjects] Response status:", response.status);
+
     if (!response.ok) {
-      throw new Error("Failed to fetch projects");
+      const errorText = await response.text();
+      console.error("[getProjects] Error response:", errorText);
+      throw new Error(`Failed to fetch projects: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
+    console.log("[getProjects] Success:", data.length, "projects");
     return data;
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    console.error("[getProjects] Exception:", error);
     return [];
   }
 }
