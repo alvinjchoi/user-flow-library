@@ -1,193 +1,65 @@
 # User Flow Library
 
-A Mobbin-style tool for organizing and managing user flows for your projects with hierarchical screen organization.
+User Flow Library is a Mobbin-style interface for organising projects, flows, and screens in a hierarchical tree with AI-assisted hotspot detection.
 
-## Tech Stack
+## Tutorials
 
-- **Next.js 15** - App Router
-- **Supabase** - PostgreSQL database + Storage
-- **Clerk** - Authentication & Organizations
-- **TypeScript** - Type safety
-- **Tailwind CSS v4** - Styling
-- **shadcn/ui** - UI components
-- **Python FastAPI** - UIED detection service (optional)
-- **OpenAI GPT-4 Vision** - AI-powered hotspot detection
+- [Local development walkthrough](docs/tutorials/local-development.md) – start the app against the managed Supabase project.
 
-## Data Structure
+## How-To Guides
 
-**Projects** → **Flows** → **Screens** (hierarchical tree)
+- [Set up Clerk webhooks](docs/how-to/clerk-webhook-setup.md)
+- [Apply the security update checklist](docs/how-to/security-update-guide.md)
 
-```
-Discord App (Project)
-├── Onboarding (Flow)
-│   ├── Welcome
-│   ├── Phone Entry
-│   └── Verification
-└── Messages (Flow)
-    ├── Inbox
-    └── New Message
-        ├── Search Friend
-        └── Create Group
-```
+## Reference
 
-## Setup
+- [Environment variables](docs/reference/environment-variables.md)
+- [Pull request description template](docs/reference/pr-description.md)
+- SQL migrations live in `sql/`, with `sql/README_MIGRATIONS.md` describing execution order.
 
-### 1. Install Dependencies
+## Explanations
 
-```bash
-pnpm install
-```
+- [Commenting feature design](docs/explanation/commenting-feature.md)
+- [Hotspot detection improvements](docs/explanation/hotspot-detection-improvements.md)
+- [Interactive prototype plan](docs/explanation/interactive-prototype-plan.md)
+- [UIED integration plan](docs/explanation/uied-integration-plan.md)
 
-### 2. Configure Supabase
+## Architecture at a Glance
 
-Environment variables are already set in `.env.local`:
+- **Frontend**: Next.js 15 App Router with TypeScript, Tailwind CSS v4, shadcn/ui, and Clerk for auth.
+- **Backend**: Supabase (Postgres + Storage) with SQL scripts for schema and storage policies.
+- **AI services**: GPT-4 Vision integration by default, optional Python FastAPI UIED service (`python-service/`).
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://jrhnlbilfozzrdphcvxp.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
-
-### 3. Create Database Tables
-
-Run `sql/CREATE_FLOW_TABLES.sql` in your Supabase SQL Editor:
-
-https://supabase.com/dashboard/project/jrhnlbilfozzrdphcvxp/sql/new
-
-This creates:
-
-- `projects` - Your apps/products
-- `flows` - User flows within projects
-- `screens` - Individual screens with tree structure
-- Auto-updating triggers for counts and paths
-
-### 4. Create Storage Bucket
-
-Run `sql/CREATE_STORAGE_BUCKET.sql` in your Supabase SQL Editor:
-
-This sets up:
-- `screenshots` bucket for storing uploaded images
-- Public access policies for uploads/downloads
-
-### 5. Configure AI Detection (Optional)
-
-**Option A: GPT-4 Vision (Default)**
-
-Add to `.env.local`:
-```env
-OPENAI_API_KEY=your-openai-api-key
-```
-
-**Option B: UIED Service (Recommended for accuracy)**
-
-1. Setup Python service:
-```bash
-cd python-service
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python main.py  # Runs on http://localhost:5000
-```
-
-2. Add to `.env.local`:
-```env
-UIED_SERVICE_URL=http://localhost:5000
-OPENAI_API_KEY=your-openai-api-key  # Fallback
-```
-
-See `python-service/SETUP.md` for detailed instructions.
-
-### 6. Start Development
-
-```bash
-pnpm run dev
-```
-
-Open http://localhost:3000
-
-## Features
-
-- [x] Projects dashboard
-- [x] Hierarchical flow tree (Mobbin-style sidebar)
-- [x] Screenshot upload with Supabase Storage
-- [x] AI-powered hotspot detection (GPT-4 Vision + UIED)
-- [x] Interactive prototype mode
-- [x] Figma-style commenting system
-- [x] Drag-and-drop screen ordering
-- [x] Public sharing links
-- [x] Multi-tenant organizations (Clerk)
-- [ ] Search across projects
-- [ ] Export flows
-
-## Project Structure
+### Domain model
 
 ```
-app/
-├── page.tsx                    # Landing page
-├── dashboard/page.tsx          # Projects dashboard
-├── projects/
-│   └── [id]/page.tsx           # Project detail with flows
-└── api/
-    ├── screens/[id]/
-    │   ├── detect-elements/    # AI hotspot detection
-    │   └── hotspots/           # Hotspot CRUD
-    └── hotspots/[id]/          # Hotspot operations
-
-components/
-├── projects/                   # Project components
-├── flows/                      # Flow tree & cards
-├── screens/                    # Screen gallery & upload
-├── hotspots/                   # Hotspot editor & player
-└── comments/                   # Commenting system
-
-python-service/                 # Optional UIED service
-├── main.py                     # FastAPI server
-├── requirements.txt            # Python dependencies
-├── Dockerfile                  # Container config
-└── SETUP.md                    # Setup instructions
-
-lib/
-├── projects.ts                 # Project CRUD
-├── flows.ts                    # Flow CRUD
-└── screens.ts                  # Screen CRUD (tree operations)
+Project → Flow → Screen
 ```
 
-## Database Schema
+Screens can be nested to represent sub-steps inside a flow.
 
-### Projects
+### Key directories
 
-```sql
-id, name, description, color, created_at, updated_at
+```
+app/             Next.js routes and API handlers
+components/      UI building blocks grouped by domain
+lib/             Supabase client utilities and CRUD helpers
+python-service/  Optional UIED detection microservice
+sql/             Schema and policy scripts for Supabase
 ```
 
-### Flows
-
-```sql
-id, project_id, name, description, order_index,
-screen_count, created_at, updated_at
-```
-
-### Screens (Tree Structure)
-
-```sql
-id, flow_id, parent_id, title, screenshot_url, notes,
-order_index, level, path, tags, created_at, updated_at
-```
-
-## Development
+## Development Commands
 
 ```bash
 pnpm run dev      # Start dev server
 pnpm run build    # Build for production
-pnpm run lint     # Run linter
+pnpm run lint     # Run ESLint
 ```
 
-## Deployment
+## Deployment Notes
 
-Deploy to Vercel with environment variables:
+Deploy to Vercel (or similar) with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Provide `OPENAI_API_KEY` or `UIED_SERVICE_URL` if hotspots are required.
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-## License
+## Licensing
 
 MIT

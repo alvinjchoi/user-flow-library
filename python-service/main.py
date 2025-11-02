@@ -69,45 +69,84 @@ async def root():
 @app.post("/detect", response_model=DetectionResponse)
 async def detect_ui_elements(request: DetectionRequest):
     """
-    Detect UI elements from a screenshot
-    
-    This endpoint downloads the image, runs UIED detection,
-    and returns bounding boxes in percentage coordinates.
+    Detect UI elements from a screenshot using UIED
+
+    This endpoint:
+    1. Downloads the image from URL
+    2. Runs UIED component detection
+    3. Optionally extracts text labels with OCR
+    4. Converts pixel coordinates to percentages
+    5. Returns formatted results
     """
     try:
-        # TODO: Implement UIED detection
-        # 1. Download image from URL
-        # 2. Run UIED detection
-        # 3. Extract text labels with OCR (if requested)
-        # 4. Convert coordinates to percentages
-        # 5. Return formatted results
-        
-        # Placeholder response
-        return DetectionResponse(
-            elements=[
-                DetectedElement(
-                    type="button",
-                    label="Example Button",
-                    description="Primary action button",
-                    boundingBox=BoundingBox(x=10, y=20, width=80, height=8),
-                    confidence=0.95
-                )
-            ],
-            imageWidth=1080,
-            imageHeight=1920
+        from uied_detector import get_detector
+
+        # Get detector instance
+        detector = get_detector()
+
+        # Run detection with OCR option
+        result = detector.detect(
+            str(request.imageUrl),
+            include_labels=request.includeLabels
         )
-        
+
+        # Filter by confidence
+        filtered_elements = [
+            DetectedElement(**elem)
+            for elem in result['elements']
+            if elem['confidence'] >= request.minConfidence
+        ]
+
+        return DetectionResponse(
+            elements=filtered_elements,
+            imageWidth=result['imageWidth'],
+            imageHeight=result['imageHeight']
+        )
+
+    except ImportError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"UIED not properly installed: {str(e)}"
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
+        import traceback
+        error_detail = f"Detection failed: {str(e)}\n{traceback.format_exc()}"
+        print(error_detail)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")
 async def health_check():
-    """Detailed health check"""
+    """Detailed health check with UIED availability"""
+    uied_available = False
+    ocr_available = False
+    error_message = None
+    
+    try:
+        # Check if UIED modules can be imported
+        import sys
+        from pathlib import Path
+        UIED_PATH = Path(__file__).parent / "UIED"
+        
+        if UIED_PATH.exists():
+            sys.path.insert(0, str(UIED_PATH))
+            from detect_compo.ip_region_proposal import compo_detection
+            uied_available = True
+            
+            # Check OCR
+            try:
+                from detect_text.text_detection import text_detection
+                ocr_available = True
+            except ImportError:
+                ocr_available = False
+    except Exception as e:
+        error_message = str(e)
+    
     return {
-        "status": "healthy",
-        "uied_available": False,  # TODO: Check if UIED is loaded
-        "ocr_available": False,   # TODO: Check if pytesseract is available
+        "status": "healthy" if uied_available else "degraded",
+        "uied_available": uied_available,
+        "ocr_available": ocr_available,
+        "error": error_message,
     }
 
 
