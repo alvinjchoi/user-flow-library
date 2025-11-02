@@ -369,12 +369,12 @@ export function ScreenViewerModal({
     hotspot: Omit<Hotspot, "id" | "created_at" | "updated_at">
   ) => {
     try {
-      console.log('[handleAddHotspot] Sending request:', {
+      console.log("[handleAddHotspot] Sending request:", {
         url: `/api/screens/${currentScreen.id}/hotspots`,
         hotspot: {
           label: hotspot.element_label,
-          position: { x: hotspot.x_position, y: hotspot.y_position }
-        }
+          position: { x: hotspot.x_position, y: hotspot.y_position },
+        },
       });
 
       const response = await fetch(
@@ -386,27 +386,32 @@ export function ScreenViewerModal({
         }
       );
 
-      console.log('[handleAddHotspot] Response:', {
+      console.log("[handleAddHotspot] Response:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok
+        ok: response.ok,
       });
 
       if (response.ok) {
         const newHotspot = await response.json();
-        console.log('[handleAddHotspot] Success! Created hotspot:', newHotspot.id);
+        console.log(
+          "[handleAddHotspot] Success! Created hotspot:",
+          newHotspot.id
+        );
         setHotspots((prev) => [...prev, newHotspot]);
       } else {
         let errorData;
         try {
           errorData = await response.json();
         } catch (e) {
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+          errorData = {
+            error: `HTTP ${response.status}: ${response.statusText}`,
+          };
         }
         console.error("[handleAddHotspot] Error response:", {
           status: response.status,
           statusText: response.statusText,
-          errorData
+          errorData,
         });
         throw new Error(errorData.error || "Failed to add hotspot");
       }

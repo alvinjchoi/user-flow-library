@@ -48,12 +48,17 @@ export function HotspotEditor({
   const [isAIDetecting, setIsAIDetecting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const imageRef = useRef<HTMLImageElement>(null);
 
   // Debug: Log hotspots whenever they change
   useEffect(() => {
-    console.log(`[HotspotEditor] Hotspots updated: ${hotspots.length} total`, hotspots);
+    console.log(
+      `[HotspotEditor] Hotspots updated: ${hotspots.length} total`,
+      hotspots
+    );
   }, [hotspots]);
 
   // Handle mouse down to start drawing
@@ -145,21 +150,25 @@ export function HotspotEditor({
       const data = await response.json();
 
       // Log full response for debugging
-      console.log('=== AI Detection Response ===');
-      console.log('Full data:', JSON.stringify(data, null, 2));
-      console.log('Elements count:', data.elements?.length || 0);
-      console.log('Detection method:', data.method);
-      console.log('=============================');
+      console.log("=== AI Detection Response ===");
+      console.log("Full data:", JSON.stringify(data, null, 2));
+      console.log("Elements count:", data.elements?.length || 0);
+      console.log("Detection method:", data.method);
+      console.log("=============================");
 
       // Log detection method used
-      const detectionMethod = data.method || 'unknown';
-      const methodLabel = 
-        detectionMethod === 'screencoder' ? '🎨 ScreenCoder' :
-        detectionMethod === 'uied' ? '🔍 UIED' :
-        detectionMethod === 'gpt4' ? '✨ GPT-4 Vision' :
-        detectionMethod === 'fallback' ? '⚠️ GPT-4 (Fallback)' : 
-        '❓ Unknown';
-      
+      const detectionMethod = data.method || "unknown";
+      const methodLabel =
+        detectionMethod === "screencoder"
+          ? "🎨 ScreenCoder"
+          : detectionMethod === "uied"
+          ? "🔍 UIED"
+          : detectionMethod === "gpt4"
+          ? "✨ GPT-4 Vision"
+          : detectionMethod === "fallback"
+          ? "⚠️ GPT-4 (Fallback)"
+          : "❓ Unknown";
+
       console.log(`Detection method: ${methodLabel}`, data);
 
       // Create hotspots for each detected element
@@ -170,11 +179,11 @@ export function HotspotEditor({
 
       for (const element of data.elements || []) {
         try {
-          console.log('Creating hotspot:', {
+          console.log("Creating hotspot:", {
             label: element.label,
-            position: element.boundingBox
+            position: element.boundingBox,
           });
-          
+
           await onAddHotspot({
             screen_id: screen.id,
             x_position: element.boundingBox.x,
@@ -197,18 +206,24 @@ export function HotspotEditor({
           console.error("❌ Failed to create hotspot:", element.label, error);
         }
       }
-      
-      console.log(`Hotspot creation complete: ${successCount} success, ${errorCount} failed`);
+
+      console.log(
+        `Hotspot creation complete: ${successCount} success, ${errorCount} failed`
+      );
 
       // Show detailed success message with detection method
-      const message = `${methodLabel}\n\nDetected ${data.elements.length} elements\nCreated ${successCount} hotspots${
+      const message = `${methodLabel}\n\nDetected ${
+        data.elements.length
+      } elements\nCreated ${successCount} hotspots${
         errorCount > 0 ? `\n⚠️ Failed: ${errorCount}` : ""
       }${data.warning ? `\n\n${data.warning}` : ""}`;
-      
+
       alert(message);
     } catch (error) {
       console.error("Error detecting elements:", error);
-      alert("❌ Failed to detect elements.\n\nPlease check:\n• OpenAI API key is configured\n• Image URL is accessible\n• Network connection");
+      alert(
+        "❌ Failed to detect elements.\n\nPlease check:\n• OpenAI API key is configured\n• Image URL is accessible\n• Network connection"
+      );
     } finally {
       setIsAIDetecting(false);
     }
@@ -478,7 +493,13 @@ export function HotspotEditor({
                           className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`Delete "${hotspot.element_label || 'this hotspot'}"?`)) {
+                            if (
+                              confirm(
+                                `Delete "${
+                                  hotspot.element_label || "this hotspot"
+                                }"?`
+                              )
+                            ) {
                               onDeleteHotspot(hotspot.id);
                             }
                           }}

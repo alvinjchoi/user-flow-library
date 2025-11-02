@@ -52,14 +52,14 @@ async function detectWithScreenCoder(
     }
 
     const data = await response.json();
-    
+
     // Debug: Log the full ScreenCoder response
-    console.log('=== ScreenCoder Response ===');
-    console.log('Full response:', JSON.stringify(data, null, 2));
-    console.log('data.blocks:', data.blocks);
-    console.log('data.metadata:', data.metadata);
-    console.log('Response keys:', Object.keys(data));
-    console.log('===========================');
+    console.log("=== ScreenCoder Response ===");
+    console.log("Full response:", JSON.stringify(data, null, 2));
+    console.log("data.blocks:", data.blocks);
+    console.log("data.metadata:", data.metadata);
+    console.log("Response keys:", Object.keys(data));
+    console.log("===========================");
 
     // Convert layout blocks to DetectedElements
     const elements: DetectedElement[] = [];
@@ -69,8 +69,8 @@ async function detectWithScreenCoder(
 
     // Parse bboxes from the response (ScreenCoder stores coordinates in 'bboxes', not 'blocks')
     const bboxes = data.bboxes || {};
-    
-    console.log('Found bboxes:', Object.keys(bboxes).length);
+
+    console.log("Found bboxes:", Object.keys(bboxes).length);
 
     for (const [blockName, bbox] of Object.entries(bboxes)) {
       const bboxArray = bbox as number[];
@@ -108,10 +108,12 @@ async function detectWithScreenCoder(
         boundingBox: { x, y, width, height },
         confidence: 0.85, // ScreenCoder uses GPT-4 Vision, high confidence
       });
-      
-      console.log(`Created element: ${blockName} at (${x.toFixed(1)}%, ${y.toFixed(1)}%)`);
+
+      console.log(
+        `Created element: ${blockName} at (${x.toFixed(1)}%, ${y.toFixed(1)}%)`
+      );
     }
-    
+
     console.log(`ScreenCoder: Converted ${elements.length} bboxes to elements`);
 
     return elements;
