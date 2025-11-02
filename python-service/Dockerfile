@@ -26,6 +26,10 @@ RUN git clone https://github.com/MulongXie/UIED.git UIED && \
 RUN find UIED -name "*.py" -type f -exec sed -i 's/time\.clock()/time.perf_counter()/g' {} + && \
     echo "✅ UIED patched for Python 3.10+ compatibility"
 
+# Clone ScreenCoder repository for layout generation
+RUN git clone https://github.com/leigest519/ScreenCoder.git ScreenCoder && \
+    echo "✅ ScreenCoder cloned successfully"
+
 # Copy application code
 COPY . .
 
