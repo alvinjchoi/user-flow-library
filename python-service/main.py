@@ -166,7 +166,6 @@ async def generate_layout(request: DetectionRequest):
 async def health_check():
     """Detailed health check with UIED and ScreenCoder availability"""
     uied_available = False
-    ocr_available = False
     screencoder_available = False
     openai_configured = bool(os.getenv('OPENAI_API_KEY'))
     error_message = None
@@ -182,13 +181,6 @@ async def health_check():
             sys.path.insert(0, str(UIED_PATH))
             from detect_compo.ip_region_proposal import compo_detection
             uied_available = True
-            
-            # Check OCR
-            try:
-                from detect_text.text_detection import text_detection
-                ocr_available = True
-            except ImportError:
-                ocr_available = False
         
         # Check ScreenCoder
         if SCREENCODER_PATH.exists():
@@ -200,10 +192,11 @@ async def health_check():
     return {
         "status": "healthy" if (uied_available and screencoder_available) else "degraded",
         "uied_available": uied_available,
-        "ocr_available": ocr_available,
         "screencoder_available": screencoder_available,
         "openai_configured": openai_configured,
+        "layout_generation_available": screencoder_available and openai_configured,
         "error": error_message,
+        "note": "OCR removed - use /generate-layout for text recognition"
     }
 
 

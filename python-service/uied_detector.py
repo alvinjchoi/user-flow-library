@@ -15,9 +15,9 @@ if UIED_PATH.exists() and str(UIED_PATH) not in sys.path:
 
 try:
     import detect_compo.ip_region_proposal as ip
-    import detect_text.text_detection as text
     import detect_merge.merge as merge
     UIED_IMPORTED = True
+    # OCR module removed - use /generate-layout for text recognition
 except ImportError as e:
     print(f"Warning: UIED modules could not be imported. Error: {e}")
     UIED_IMPORTED = False
@@ -134,20 +134,11 @@ class UIEDDetector:
             height, width = org_img.shape[:2]
             print(f"📐 Image dimensions: {width}x{height}")
             
-            # Run OCR first if labels are needed
+            # OCR disabled - PaddleOCR removed for performance
+            # Use GPT-4 Vision in /generate-layout for text recognition
             ocr_result_path = None
             if include_labels:
-                print("🔤 Running OCR detection...")
-                # Create OCR output directory
-                ocr_dir = temp_dir / "ocr"
-                ocr_dir.mkdir(parents=True, exist_ok=True)
-                text.text_detection(str(input_path), str(temp_dir), show=False, method='paddle')
-                ocr_result_path = ocr_dir / f"{input_path.stem}.json"
-                if ocr_result_path.exists():
-                    print(f"✅ OCR completed: {ocr_result_path}")
-                else:
-                    print("⚠️ OCR did not produce results")
-                    ocr_result_path = None
+                print("ℹ️  OCR disabled (use /generate-layout for text recognition)")
 
             # Run component detection
             print("🔍 Running component detection...")
