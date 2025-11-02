@@ -15,26 +15,13 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  try {
-    // Don't protect public routes
-    if (isPublicRoute(req)) {
-      return;
-    }
-    
-    if (isProtectedRoute(req)) {
-      await auth.protect();
-    }
-  } catch (error) {
-    console.error("Middleware error:", error);
-    // If Clerk is not properly configured, redirect to home
-    if (
-      req.nextUrl.pathname.startsWith("/projects") || 
-      req.nextUrl.pathname.startsWith("/admin") ||
-      req.nextUrl.pathname.startsWith("/dashboard") ||
-      req.nextUrl.pathname.startsWith("/organization")
-    ) {
-      return Response.redirect(new URL("/", req.url));
-    }
+  // Don't protect public routes
+  if (isPublicRoute(req)) {
+    return;
+  }
+  
+  if (isProtectedRoute(req)) {
+    await auth.protect();
   }
 });
 
