@@ -4,49 +4,63 @@ import type { Flow, Screen } from "./database.types";
 // Get all flows for a project
 export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
   try {
-    const { data, error } = await supabase
-      .from("flows")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("order_index");
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    // If flows table doesn't exist, return mock data for testing
-    console.warn("Flows table not found, using mock data:", error);
-    return [
-      {
-        id: "mock-flow-1",
-        project_id: projectId,
-        name: "Onboarding",
-        description: "User onboarding and browsing flow",
-        order_index: 0,
-        screen_count: 2, // Now has 2 screens: parent + child
-        parent_screen_id: null,
-        parent_flow_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+    console.log("[getFlowsByProject] Fetching flows for project:", projectId);
+    const response = await fetch(`/api/flows/${projectId}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ];
+    });
+
+    console.log("[getFlowsByProject] Response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[getFlowsByProject] Error response:", errorText);
+      throw new Error(`Failed to fetch flows: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("[getFlowsByProject] Success:", data.length, "flows");
+    return data;
+  } catch (error) {
+    console.error("[getFlowsByProject] Exception:", error);
+    return [];
   }
 }
 
 // Get screens for a flow (with tree structure)
 export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
   try {
-    const { data, error } = await supabase
-      .from("screens")
-      .select("*")
-      .eq("flow_id", flowId)
-      .order("order_index");
+    console.log("[getScreensByFlow] Fetching screens for flow:", flowId);
+    const response = await fetch(`/api/screens/${flowId}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    if (error) throw error;
-    return data || [];
+    console.log("[getScreensByFlow] Response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[getScreensByFlow] Error response:", errorText);
+      throw new Error(`Failed to fetch screens: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("[getScreensByFlow] Success:", data.length, "screens");
+    return data;
   } catch (error) {
-    // If screens table doesn't exist, return mock data for testing
-    console.warn("Screens table not found, using mock data:", error);
+    console.error("[getScreensByFlow] Exception:", error);
+    return [];
+  }
+}
 
+// DEPRECATED: Old mock data code - keeping for reference
+function getDeprecatedMockScreens(flowId: string): Screen[] {
     if (flowId === "mock-flow-1") {
       // Return hierarchical screens for "Browsing projects"
       return [
@@ -87,7 +101,6 @@ export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
     }
 
     return [];
-  }
 }
 
 // Build hierarchical tree from flat screen list
