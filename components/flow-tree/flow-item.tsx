@@ -50,6 +50,7 @@ interface FlowItemProps {
   canMoveDown?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  depth?: number; // Track nesting depth (max 5 levels)
 }
 
 export function FlowItem({
@@ -94,6 +95,7 @@ export function FlowItem({
   canMoveDown,
   onMoveUp,
   onMoveDown,
+  depth = 0,
 }: FlowItemProps) {
   const screens = screensByFlow.get(flow.id) || [];
   const isExpanded = expandedFlows.has(flow.id);
@@ -102,6 +104,10 @@ export function FlowItem({
   const isDragTarget = dragTargetFlow?.id === flow.id;
   const isFlowDragTarget = dragTargetFlowForFlow?.id === flow.id;
   const hasScreenshots = screens.some((screen) => screen.screenshot_url);
+
+  // MAX DEPTH PROTECTION: Allow up to 5 levels of nesting
+  const MAX_DEPTH = 5;
+  const isMaxDepth = depth >= MAX_DEPTH;
 
   // Get child flows for this flow
   const childFlows = childFlowsByParent.get(flow.id) || [];
@@ -193,8 +199,8 @@ export function FlowItem({
       {/* Hide screens in sidebar - only show flows */}
       {/* <FlowContent ... /> */}
 
-      {/* Recursively render child flows - only when parent is expanded */}
-      {isExpanded && childFlowsByParent.has(flow.id) && (
+      {/* Recursively render child flows - only when parent is expanded and not at max depth */}
+      {isExpanded && childFlowsByParent.has(flow.id) && !isMaxDepth && (
         <div className="border-l-2 border-primary/20 ml-4 pl-2 bg-muted/5">
           {childFlowsByParent.get(flow.id)!.map((childFlow, index) => (
             <FlowItem
@@ -240,8 +246,16 @@ export function FlowItem({
               canMoveDown={index < childFlows.length - 1}
               onMoveUp={() => handleChildMoveUp(childFlow.id)}
               onMoveDown={() => handleChildMoveDown(childFlow.id)}
+              depth={depth + 1}
             />
           ))}
+        </div>
+      )}
+
+      {/* Show warning if at max depth and has child flows */}
+      {isExpanded && childFlowsByParent.has(flow.id) && isMaxDepth && (
+        <div className="ml-4 pl-2 text-xs text-muted-foreground italic py-1">
+          ⚠️ Maximum nesting depth (5 levels) reached
         </div>
       )}
     </div>
