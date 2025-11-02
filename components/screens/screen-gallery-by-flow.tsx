@@ -16,6 +16,8 @@ interface ScreenGalleryByFlowProps {
   onAddScreen?: (flowId: string, parentId?: string) => void;
   onEditScreen?: (screen: Screen) => void;
   onReorderScreens?: (flowId: string, screens: Screen[]) => void;
+  onDeleteScreenshot?: (screenId: string) => Promise<void>;
+  onArchiveScreen?: (screenId: string) => Promise<void>;
   selectedScreenId?: string;
   selectedFlowId?: string;
   readOnly?: boolean;
@@ -218,6 +220,8 @@ export function ScreenGalleryByFlow({
   onAddScreen,
   onEditScreen,
   onReorderScreens,
+  onDeleteScreenshot,
+  onArchiveScreen,
   selectedScreenId,
   selectedFlowId,
   readOnly = false,
@@ -891,6 +895,8 @@ export function ScreenGalleryByFlow({
           onNavigate={handleScreenClick}
           onEdit={onEditScreen}
           onUploadScreenshot={onUploadScreenshot}
+          onDeleteScreenshot={onDeleteScreenshot}
+          onArchiveScreen={onArchiveScreen}
           readOnly={readOnly}
         />
       )}

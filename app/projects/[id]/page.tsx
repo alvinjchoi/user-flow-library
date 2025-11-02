@@ -265,6 +265,61 @@ export default function ProjectPage() {
     }
   }
 
+  async function handleDeleteScreenshot(screenId: string) {
+    try {
+      // Update the screen to remove screenshot_url
+      await updateScreen(screenId, { screenshot_url: null });
+
+      // Update local state
+      const updatedScreensByFlow = new Map(screensByFlow);
+      const updatedAllScreens = allScreens.map((s) =>
+        s.id === screenId ? { ...s, screenshot_url: null } : s
+      );
+
+      // Update each flow's screens
+      for (const [flowId, screens] of screensByFlow.entries()) {
+        const updatedScreens = screens.map((s) =>
+          s.id === screenId ? { ...s, screenshot_url: null } : s
+        );
+        updatedScreensByFlow.set(flowId, updatedScreens);
+      }
+
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+    } catch (error) {
+      console.error("Error deleting screenshot:", error);
+      throw error;
+    }
+  }
+
+  async function handleArchiveScreen(screenId: string) {
+    try {
+      // Delete the screen (hard delete for now - can be changed to soft delete later)
+      await deleteScreen(screenId);
+
+      // Update local state - remove screen from all lists
+      const updatedScreensByFlow = new Map(screensByFlow);
+      const updatedAllScreens = allScreens.filter((s) => s.id !== screenId);
+
+      // Remove from each flow's screens
+      for (const [flowId, screens] of screensByFlow.entries()) {
+        const updatedScreens = screens.filter((s) => s.id !== screenId);
+        updatedScreensByFlow.set(flowId, updatedScreens);
+      }
+
+      setScreensByFlow(updatedScreensByFlow);
+      setAllScreens(updatedAllScreens);
+
+      // Clear selection if archived screen was selected
+      if (selectedScreen?.id === screenId) {
+        setSelectedScreen(null);
+      }
+    } catch (error) {
+      console.error("Error archiving screen:", error);
+      throw error;
+    }
+  }
+
   async function handleUpdateScreenTitle(screenId: string, newTitle: string) {
     try {
       // Optimistic update - update local state immediately
@@ -665,6 +720,8 @@ export default function ProjectPage() {
                   setEditScreenDialogOpen(true);
                 }}
                 onReorderScreens={handleReorderScreens}
+                onDeleteScreenshot={handleDeleteScreenshot}
+                onArchiveScreen={handleArchiveScreen}
                 selectedScreenId={selectedScreen?.id}
                 selectedFlowId={selectedFlow?.id}
               />

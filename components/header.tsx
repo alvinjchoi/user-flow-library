@@ -157,24 +157,24 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               />
             </SignedIn>
           ) : (
-            <Link
-              href="/"
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
-                {project?.avatar_url ? (
-                  <Image
-                    src={project.avatar_url}
-                    alt={`${project.name} avatar`}
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Search className="w-5 h-5 text-primary-foreground" />
-                )}
-              </div>
-              <div className="flex flex-col">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
+              {project?.avatar_url ? (
+                <Image
+                  src={project.avatar_url}
+                  alt={`${project.name} avatar`}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Search className="w-5 h-5 text-primary-foreground" />
+              )}
+            </div>
+            <div className="flex flex-col">
                 {project && isEditingName ? (
                   <input
                     type="text"
@@ -196,22 +196,22 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                     onClick={project ? handleProjectNameClick : undefined}
                   >
                     {project ? project.name : "User Flow Library"}
+              </span>
+                )}
+              {stats && (
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>
+                    {stats.totalScreens} screen
+                    {stats.totalScreens !== 1 ? "s" : ""}
                   </span>
-                )}
-                {stats && (
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>
-                      {stats.totalScreens} screen
-                      {stats.totalScreens !== 1 ? "s" : ""}
-                    </span>
-                    <span className="text-muted-foreground/40">•</span>
-                    <span>
-                      {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Link>
+                  <span className="text-muted-foreground/40">•</span>
+                  <span>
+                    {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Link>
           )}
         </div>
         <nav className="flex items-center gap-6">
@@ -231,12 +231,12 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
             )}
             {/* Dashboard link - hide when on dashboard or project pages */}
             {!showOrgSwitcher && pathname !== "/" && (
-              <Link
+            <Link
                 href="/dashboard"
-                className="text-sm hover:text-primary transition-colors"
-              >
+              className="text-sm hover:text-primary transition-colors"
+            >
                 Dashboard
-              </Link>
+            </Link>
             )}
           </SignedIn>
           <UserNav />

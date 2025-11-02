@@ -208,6 +208,62 @@ export interface Database {
           created_at?: string;
         };
       };
+      screen_hotspots: {
+        Row: {
+          id: string;
+          screen_id: string;
+          x_position: number;
+          y_position: number;
+          width: number;
+          height: number;
+          element_type: 'button' | 'link' | 'card' | 'tab' | 'input' | 'icon' | 'other' | null;
+          element_label: string | null;
+          element_description: string | null;
+          target_screen_id: string | null;
+          interaction_type: 'navigate' | 'overlay' | 'replace' | 'back';
+          confidence_score: number | null;
+          is_ai_generated: boolean;
+          order_index: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          screen_id: string;
+          x_position: number;
+          y_position: number;
+          width: number;
+          height: number;
+          element_type?: 'button' | 'link' | 'card' | 'tab' | 'input' | 'icon' | 'other' | null;
+          element_label?: string | null;
+          element_description?: string | null;
+          target_screen_id?: string | null;
+          interaction_type?: 'navigate' | 'overlay' | 'replace' | 'back';
+          confidence_score?: number | null;
+          is_ai_generated?: boolean;
+          order_index?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          screen_id?: string;
+          x_position?: number;
+          y_position?: number;
+          width?: number;
+          height?: number;
+          element_type?: 'button' | 'link' | 'card' | 'tab' | 'input' | 'icon' | 'other' | null;
+          element_label?: string | null;
+          element_description?: string | null;
+          target_screen_id?: string | null;
+          interaction_type?: 'navigate' | 'overlay' | 'replace' | 'back';
+          confidence_score?: number | null;
+          is_ai_generated?: boolean;
+          order_index?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
@@ -217,3 +273,4 @@ export type Flow = Database["public"]["Tables"]["flows"]["Row"];
 export type Screen = Database["public"]["Tables"]["screens"]["Row"];
 export type ScreenInspiration =
   Database["public"]["Tables"]["screen_inspirations"]["Row"];
+export type Hotspot = Database["public"]["Tables"]["screen_hotspots"]["Row"];
