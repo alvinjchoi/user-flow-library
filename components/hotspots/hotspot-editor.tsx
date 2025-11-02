@@ -51,6 +51,11 @@ export function HotspotEditor({
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
+  // Debug: Log hotspots whenever they change
+  useEffect(() => {
+    console.log(`[HotspotEditor] Hotspots updated: ${hotspots.length} total`, hotspots);
+  }, [hotspots]);
+
   // Handle mouse down to start drawing
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (selectedHotspot || !imageRef.current) return;
@@ -139,10 +144,18 @@ export function HotspotEditor({
 
       const data = await response.json();
 
+      // Log full response for debugging
+      console.log('=== AI Detection Response ===');
+      console.log('Full data:', JSON.stringify(data, null, 2));
+      console.log('Elements count:', data.elements?.length || 0);
+      console.log('Detection method:', data.method);
+      console.log('=============================');
+
       // Log detection method used
       const detectionMethod = data.method || 'unknown';
       const methodLabel = 
-        detectionMethod === 'uied' ? '🔍 UIED (Precise)' :
+        detectionMethod === 'screencoder' ? '🎨 ScreenCoder' :
+        detectionMethod === 'uied' ? '🔍 UIED' :
         detectionMethod === 'gpt4' ? '✨ GPT-4 Vision' :
         detectionMethod === 'fallback' ? '⚠️ GPT-4 (Fallback)' : 
         '❓ Unknown';
@@ -153,8 +166,15 @@ export function HotspotEditor({
       let successCount = 0;
       let errorCount = 0;
 
-      for (const element of data.elements) {
+      console.log(`Creating ${data.elements?.length || 0} hotspots...`);
+
+      for (const element of data.elements || []) {
         try {
+          console.log('Creating hotspot:', {
+            label: element.label,
+            position: element.boundingBox
+          });
+          
           await onAddHotspot({
             screen_id: screen.id,
             x_position: element.boundingBox.x,
@@ -171,11 +191,14 @@ export function HotspotEditor({
             order_index: hotspots.length + element.order_index,
           });
           successCount++;
+          console.log(`✅ Hotspot created: ${element.label}`);
         } catch (error) {
           errorCount++;
-          console.error("Failed to create hotspot:", error);
+          console.error("❌ Failed to create hotspot:", element.label, error);
         }
       }
+      
+      console.log(`Hotspot creation complete: ${successCount} success, ${errorCount} failed`);
 
       // Show detailed success message with detection method
       const message = `${methodLabel}\n\nDetected ${data.elements.length} elements\nCreated ${successCount} hotspots${
