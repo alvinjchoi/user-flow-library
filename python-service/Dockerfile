@@ -22,6 +22,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN git clone https://github.com/MulongXie/UIED.git UIED && \
     echo "✅ UIED cloned successfully"
 
+# Patch UIED for Python 3.10+ compatibility (time.clock() was removed)
+RUN find UIED -name "*.py" -type f -exec sed -i 's/time\.clock()/time.perf_counter()/g' {} + && \
+    echo "✅ UIED patched for Python 3.10+ compatibility"
+
 # Copy application code
 COPY . .
 
