@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 // GET /api/screens/[id]/hotspots - Get all hotspots for a screen
 export async function GET(
@@ -9,7 +9,19 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    
+
+    // Use service role key to bypass RLS (we already have Clerk auth check)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
     const { data: hotspots, error } = await supabase
       .from("screen_hotspots")
       .select("*")
@@ -45,6 +57,18 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Use service role key to bypass RLS (we already have Clerk auth check)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
     const { id: screenId } = await context.params;
     const body = await request.json();
 
@@ -57,7 +81,7 @@ export async function POST(
       element_label,
       element_description,
       target_screen_id,
-      interaction_type = 'navigate',
+      interaction_type = "navigate",
       confidence_score,
       is_ai_generated = false,
       order_index = 0,
@@ -78,10 +102,14 @@ export async function POST(
 
     // Validate bounding box values
     if (
-      x_position < 0 || x_position > 100 ||
-      y_position < 0 || y_position > 100 ||
-      width < 0 || width > 100 ||
-      height < 0 || height > 100
+      x_position < 0 ||
+      x_position > 100 ||
+      y_position < 0 ||
+      y_position > 100 ||
+      width < 0 ||
+      width > 100 ||
+      height < 0 ||
+      height > 100
     ) {
       return NextResponse.json(
         { error: "Bounding box values must be between 0 and 100" },
@@ -119,11 +147,13 @@ export async function POST(
 
     return NextResponse.json(hotspot, { status: 201 });
   } catch (error) {
-    console.error("Unexpected error in POST /api/screens/[id]/hotspots:", error);
+    console.error(
+      "Unexpected error in POST /api/screens/[id]/hotspots:",
+      error
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
-

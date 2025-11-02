@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 // PATCH /api/hotspots/[id] - Update a hotspot
 export async function PATCH(
@@ -13,17 +13,35 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Use service role key to bypass RLS (we already have Clerk auth check)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
     const { id } = await context.params;
     const body = await request.json();
 
     // Validate bounding box values if provided
-    if (body.x_position !== undefined && (body.x_position < 0 || body.x_position > 100)) {
+    if (
+      body.x_position !== undefined &&
+      (body.x_position < 0 || body.x_position > 100)
+    ) {
       return NextResponse.json(
         { error: "x_position must be between 0 and 100" },
         { status: 400 }
       );
     }
-    if (body.y_position !== undefined && (body.y_position < 0 || body.y_position > 100)) {
+    if (
+      body.y_position !== undefined &&
+      (body.y_position < 0 || body.y_position > 100)
+    ) {
       return NextResponse.json(
         { error: "y_position must be between 0 and 100" },
         { status: 400 }
@@ -85,6 +103,18 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Use service role key to bypass RLS (we already have Clerk auth check)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
     const { id } = await context.params;
 
     const { error } = await supabase
@@ -109,4 +139,3 @@ export async function DELETE(
     );
   }
 }
-
