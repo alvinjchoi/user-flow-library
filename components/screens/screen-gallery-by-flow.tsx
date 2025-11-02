@@ -50,8 +50,8 @@ function ScreenCard({
   const borderRadius = 27.195;
 
   return (
-    <div 
-      className="shrink-0" 
+    <div
+      className="shrink-0"
       style={{ WebkitTouchCallout: "none" }}
       draggable={!readOnly}
       onDragStart={() => !readOnly && onDragStart?.(screen)}
@@ -89,7 +89,11 @@ function ScreenCard({
           role="button"
           className={`
             group flex h-full w-full overflow-hidden 
-            ${!readOnly ? "cursor-move hover:cursor-grab active:cursor-grabbing" : "cursor-zoom-in"}
+            ${
+              !readOnly
+                ? "cursor-move hover:cursor-grab active:cursor-grabbing"
+                : "cursor-zoom-in"
+            }
             focus-visible:ring-4 focus-visible:ring-primary/50
             ${isSelected ? "ring-4 ring-primary/50" : ""}
             ${isDragging ? "opacity-50" : ""}
@@ -284,7 +288,10 @@ export function ScreenGalleryByFlow({
     }
 
     // Skip auto-scroll for the initial flow selection
-    if (selectedFlowId === initialFlowIdRef.current && !hasScrolledRef.current) {
+    if (
+      selectedFlowId === initialFlowIdRef.current &&
+      !hasScrolledRef.current
+    ) {
       return;
     }
 
@@ -328,7 +335,9 @@ export function ScreenGalleryByFlow({
 
     if (sourceFlowId !== targetFlowId) {
       // TODO: Handle cross-flow drag (move screen to different flow)
-      alert("Moving screens between flows is not yet supported. Please use the sidebar for this.");
+      alert(
+        "Moving screens between flows is not yet supported. Please use the sidebar for this."
+      );
       setDraggedScreen(null);
       setDragOverScreen(null);
       return;
@@ -336,7 +345,9 @@ export function ScreenGalleryByFlow({
 
     // Reorder within same flow
     const flowScreens = screensByFlow.get(sourceFlowId) || [];
-    const draggedIndex = flowScreens.findIndex((s) => s.id === draggedScreen.id);
+    const draggedIndex = flowScreens.findIndex(
+      (s) => s.id === draggedScreen.id
+    );
     const targetIndex = flowScreens.findIndex((s) => s.id === targetScreen.id);
 
     if (draggedIndex === -1 || targetIndex === -1) {
@@ -491,7 +502,7 @@ export function ScreenGalleryByFlow({
               </div>
 
               {/* Add screen card */}
-              {!readOnly && flow.name.toLowerCase() !== "account" && (
+              {!readOnly && (
                 <div className="flex-shrink-0 w-64">
                   <Card
                     className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
@@ -532,7 +543,7 @@ export function ScreenGalleryByFlow({
                 ))}
 
                 {/* Add screen card */}
-                {!readOnly && flow.name.toLowerCase() !== "account" && (
+                {!readOnly && (
                   <div className="flex-shrink-0 w-64">
                     <Card
                       className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
@@ -599,20 +610,20 @@ export function ScreenGalleryByFlow({
 
                             {/* Add child screen card */}
                             {!readOnly && (
-                            <div className="flex-shrink-0 w-64">
-                              <Card
-                                className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onAddScreen?.(flow.id, parent.id);
-                                }}
-                              >
-                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                  <Plus className="h-6 w-6" />
-                                  <span className="text-xs">Add child</span>
-                                </div>
-                              </Card>
-                            </div>
+                              <div className="flex-shrink-0 w-64">
+                                <Card
+                                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddScreen?.(flow.id, parent.id);
+                                  }}
+                                >
+                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                    <Plus className="h-6 w-6" />
+                                    <span className="text-xs">Add child</span>
+                                  </div>
+                                </Card>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -660,8 +671,7 @@ export function ScreenGalleryByFlow({
                                 </div>
 
                                 {/* Add screen card */}
-                                {!readOnly &&
-                                  flow.name.toLowerCase() !== "account" && (
+                                {!readOnly && (
                                   <div className="flex-shrink-0 w-64">
                                     <Card
                                       className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
@@ -697,7 +707,9 @@ export function ScreenGalleryByFlow({
                                         }
                                         onSelectScreen={handleScreenClick}
                                         onUploadScreenshot={onUploadScreenshot}
-                                        isDragging={draggedScreen?.id === screen.id}
+                                        isDragging={
+                                          draggedScreen?.id === screen.id
+                                        }
                                         onDragStart={handleDragStart}
                                         onDragEnd={handleDragEnd}
                                         onDragOver={handleDragOver}
@@ -708,8 +720,7 @@ export function ScreenGalleryByFlow({
                                   ))}
 
                                   {/* Add screen card */}
-                                  {!readOnly &&
-                                    flow.name.toLowerCase() !== "account" && (
+                                  {!readOnly && (
                                     <div className="flex-shrink-0 w-64">
                                       <Card
                                         className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
@@ -778,7 +789,10 @@ export function ScreenGalleryByFlow({
                                                   onUploadScreenshot={
                                                     onUploadScreenshot
                                                   }
-                                                  isDragging={draggedScreen?.id === child.id}
+                                                  isDragging={
+                                                    draggedScreen?.id ===
+                                                    child.id
+                                                  }
                                                   onDragStart={handleDragStart}
                                                   onDragEnd={handleDragEnd}
                                                   onDragOver={handleDragOver}
@@ -790,25 +804,25 @@ export function ScreenGalleryByFlow({
 
                                             {/* Add child screen card */}
                                             {!readOnly && (
-                                            <div className="flex-shrink-0 w-64">
-                                              <Card
-                                                className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  onAddScreen?.(
-                                                    branchedFlow.id,
-                                                    branchedParent.id
-                                                  );
-                                                }}
-                                              >
-                                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                                  <Plus className="h-6 w-6" />
-                                                  <span className="text-xs">
-                                                    Add child
-                                                  </span>
-                                                </div>
-                                              </Card>
-                                            </div>
+                                              <div className="flex-shrink-0 w-64">
+                                                <Card
+                                                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onAddScreen?.(
+                                                      branchedFlow.id,
+                                                      branchedParent.id
+                                                    );
+                                                  }}
+                                                >
+                                                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                    <Plus className="h-6 w-6" />
+                                                    <span className="text-xs">
+                                                      Add child
+                                                    </span>
+                                                  </div>
+                                                </Card>
+                                              </div>
                                             )}
                                           </div>
                                         </div>

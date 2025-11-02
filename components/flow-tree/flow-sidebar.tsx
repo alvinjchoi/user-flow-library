@@ -242,9 +242,9 @@ export function FlowSidebar({
   // 1. Top-level flows (no parent_screen_id and no parent_flow_id)
   // 2. Child flows (have parent_flow_id)
   // 3. Branched flows (have parent_screen_id)
-  const mainFlows = flows.filter(
-    (f) => !f.parent_screen_id && !f.parent_flow_id
-  );
+  const mainFlows = flows
+    .filter((f) => !f.parent_screen_id && !f.parent_flow_id)
+    .sort((a, b) => a.order_index - b.order_index);
   const branchedFlows = flows.filter((f) => f.parent_screen_id);
   const childFlows = flows.filter((f) => f.parent_flow_id);
 
@@ -378,14 +378,14 @@ export function FlowSidebar({
             </Badge>
           )}
           {!readOnly && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 hover:bg-muted"
-            onClick={() => onAddFlow?.()}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-muted"
+              onClick={() => onAddFlow?.()}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
@@ -396,10 +396,10 @@ export function FlowSidebar({
           <div className="text-center py-8 text-sm text-muted-foreground">
             <p className="mb-2">No flows yet</p>
             {!readOnly && (
-            <Button variant="outline" size="sm" onClick={() => onAddFlow?.()}>
-              <Plus className="h-3 w-3 mr-1" />
-              Create first flow
-            </Button>
+              <Button variant="outline" size="sm" onClick={() => onAddFlow?.()}>
+                <Plus className="h-3 w-3 mr-1" />
+                Create first flow
+              </Button>
             )}
           </div>
         ) : (
