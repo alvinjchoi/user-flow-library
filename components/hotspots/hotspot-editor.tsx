@@ -457,19 +457,41 @@ export function HotspotEditor({
                 hotspots.map((hotspot, index) => (
                   <div
                     key={hotspot.id}
-                    className="p-3 border rounded cursor-pointer hover:bg-muted transition-colors"
-                    onClick={() => handleSelectHotspot(hotspot)}
+                    className="group p-3 border rounded hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">
-                        {hotspot.element_label || `Hotspot ${index + 1}`}
-                      </span>
-                      {hotspot.is_ai_generated && (
-                        <Sparkles className="h-3 w-3 text-primary" />
-                      )}
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() => handleSelectHotspot(hotspot)}
+                      >
+                        <span className="font-medium">
+                          {hotspot.element_label || `Hotspot ${index + 1}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {hotspot.is_ai_generated && (
+                          <Sparkles className="h-3 w-3 text-primary" />
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Delete "${hotspot.element_label || 'this hotspot'}"?`)) {
+                              onDeleteHotspot(hotspot.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                     {hotspot.target_screen_id && (
-                      <p className="text-xs text-muted-foreground">
+                      <p
+                        className="text-xs text-muted-foreground cursor-pointer"
+                        onClick={() => handleSelectHotspot(hotspot)}
+                      >
                         →{" "}
                         {availableScreens.find(
                           (s) => s.id === hotspot.target_screen_id
