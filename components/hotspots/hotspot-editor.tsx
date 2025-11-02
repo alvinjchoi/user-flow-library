@@ -355,9 +355,15 @@ export function HotspotEditor({
                       handleSelectHotspot(hotspot);
                     }}
                   >
-                    {/* Label overlay */}
+                    {/* Label overlay - positioned to avoid screen edges */}
                     {hotspot.element_label && (
-                      <div className="absolute -top-6 left-0 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                      <div
+                        className={`absolute bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap ${
+                          hotspot.y_position < 8
+                            ? "top-full mt-1"
+                            : "-top-6"
+                        } ${hotspot.x_position > 70 ? "right-0" : "left-0"}`}
+                      >
                         {hotspot.element_label}
                       </div>
                     )}
