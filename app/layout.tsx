@@ -9,9 +9,12 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "UI Pattern Library - Design Inspiration",
+  title: {
+    default: "User Flow Library",
+    template: "User Flow Library | %s",
+  },
   description:
-    "Discover and explore curated UI/UX design patterns for your next project",
+    "Organize and manage user flows for your projects with hierarchical screen organization",
   generator: "v0.app",
 };
 

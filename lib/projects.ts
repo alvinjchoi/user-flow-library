@@ -2,36 +2,59 @@ import { supabase } from "./supabase";
 import type { Project } from "./database.types";
 import { uploadFile } from "./storage";
 
-// Get all projects
+// Get all projects - now calls API route which handles auth server-side
 export async function getProjects(): Promise<Project[]> {
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .is("deleted_at", null) // Only get non-deleted projects
-    .order("created_at", { ascending: false });
+  try {
+    const response = await fetch("/api/projects", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (error) throw error;
-  return data || [];
+    if (!response.ok) {
+      throw new Error("Failed to fetch projects");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    return [];
+  }
 }
 
-// Get single project
+// Get single project - now calls API route which handles auth server-side
 export async function getProject(id: string): Promise<Project | null> {
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const response = await fetch(`/api/projects/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (error) {
-    if (error.code === "PGRST116") return null; // Not found
-    throw error;
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch project");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    return null;
   }
-  return data;
 }
 
 // Create project
 export async function createProject(
   name: string,
+  userId: string,
+  orgId?: string | null,
   description?: string,
   color?: string
 ): Promise<Project> {
@@ -39,6 +62,8 @@ export async function createProject(
     .from("projects")
     .insert({
       name,
+      user_id: orgId ? null : userId, // If org project, user_id is null
+      clerk_org_id: orgId || null,
       description,
       color: color || "#3b82f6",
     })

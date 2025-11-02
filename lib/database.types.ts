@@ -16,6 +16,9 @@ export interface Database {
           description: string | null;
           color: string;
           avatar_url: string | null;
+          user_id: string | null;
+          clerk_org_id: string | null;
+          deleted_at: string | null;
           share_token: string | null;
           is_public: boolean;
           created_at: string;
@@ -27,6 +30,9 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
+          user_id?: string | null;
+          clerk_org_id?: string | null;
+          deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
           created_at?: string;
@@ -38,6 +44,9 @@ export interface Database {
           description?: string | null;
           color?: string;
           avatar_url?: string | null;
+          user_id?: string | null;
+          clerk_org_id?: string | null;
+          deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
           created_at?: string;
@@ -93,6 +102,8 @@ export interface Database {
           y_position: number;
           comment_text: string;
           is_resolved: boolean;
+          resolved_at: string | null;
+          resolved_by: string | null;
           parent_comment_id: string | null;
           created_at: string;
           updated_at: string;
@@ -107,6 +118,8 @@ export interface Database {
           y_position: number;
           comment_text: string;
           is_resolved?: boolean;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
           parent_comment_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -121,6 +134,8 @@ export interface Database {
           y_position?: number;
           comment_text?: string;
           is_resolved?: boolean;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
           parent_comment_id?: string | null;
           created_at?: string;
           updated_at?: string;

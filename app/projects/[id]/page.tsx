@@ -47,6 +47,13 @@ export default function ProjectPage() {
   >(undefined);
   const [loading, setLoading] = useState(true);
 
+  // Set page title based on project name
+  useEffect(() => {
+    if (project) {
+      document.title = `User Flow Library | ${project.name}`;
+    }
+  }, [project]);
+
   useEffect(() => {
     initializeStorage();
     loadProjectData();
@@ -583,7 +590,11 @@ export default function ProjectPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header with project avatar */}
-      <Header project={project} stats={projectStats} />
+      <Header 
+        project={project} 
+        stats={projectStats}
+        onProjectUpdate={(updatedProject) => setProject(updatedProject)}
+      />
 
       {/* Main content with sidebar */}
       <div className="flex flex-1 overflow-hidden">
@@ -653,6 +664,7 @@ export default function ProjectPage() {
                   setEditingScreen(screen);
                   setEditScreenDialogOpen(true);
                 }}
+                onReorderScreens={handleReorderScreens}
                 selectedScreenId={selectedScreen?.id}
                 selectedFlowId={selectedFlow?.id}
               />

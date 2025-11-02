@@ -34,20 +34,33 @@ export async function PATCH(
     const body = await request.json();
     const { comment_text, is_resolved } = body;
 
-    // Verify user owns this comment
-    const { data: existingComment } = await supabase
-      .from("screen_comments")
-      .select("user_id")
-      .eq("id", commentId)
-      .single();
+    // If editing comment text, verify user owns this comment
+    if (comment_text !== undefined) {
+      const { data: existingComment } = await supabase
+        .from("screen_comments")
+        .select("user_id")
+        .eq("id", commentId)
+        .single();
 
-    if (!existingComment || existingComment.user_id !== userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (!existingComment || existingComment.user_id !== userId) {
+        return NextResponse.json({ error: "Forbidden - You can only edit your own comments" }, { status: 403 });
+      }
     }
 
     const updates: any = { updated_at: new Date().toISOString() };
     if (comment_text !== undefined) updates.comment_text = comment_text;
-    if (is_resolved !== undefined) updates.is_resolved = is_resolved;
+    if (is_resolved !== undefined) {
+      updates.is_resolved = is_resolved;
+      // Track resolution timestamp and user
+      if (is_resolved) {
+        updates.resolved_at = new Date().toISOString();
+        updates.resolved_by = userId;
+      } else {
+        // If unresolving, clear the resolution tracking
+        updates.resolved_at = null;
+        updates.resolved_by = null;
+      }
+    }
 
     const { data: comment, error } = await supabase
       .from("screen_comments")
