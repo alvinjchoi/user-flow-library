@@ -165,22 +165,30 @@ class UIEDDetector:
             compo_result_path = ip_dir / f"{input_path.stem}.json"
             print(f"✅ Component detection completed: {compo_result_path}")
 
-            # Merge components and OCR results
-            print("🔗 Merging results...")
-            # Create merge output directory
+            # Merge components and OCR results (or use components only if no OCR)
             merge_dir = temp_dir / "merge"
             merge_dir.mkdir(parents=True, exist_ok=True)
-            merge.merge(
-                str(input_path),
-                str(compo_result_path),
-                str(ocr_result_path) if ocr_result_path else None,
-                str(merge_dir),
-                is_remove_bar=self.key_params['remove-bar'],
-                is_paragraph=self.key_params['merge-line-to-paragraph'],
-                show=False
-            )
-            merged_json_path = merge_dir / f"{input_path.stem}.json"
-            print(f"✅ Merge completed: {merged_json_path}")
+            
+            if ocr_result_path and ocr_result_path.exists():
+                print("🔗 Merging components with OCR results...")
+                merge.merge(
+                    str(input_path),
+                    str(compo_result_path),
+                    str(ocr_result_path),
+                    str(merge_dir),
+                    is_remove_bar=self.key_params['remove-bar'],
+                    is_paragraph=self.key_params['merge-line-to-paragraph'],
+                    show=False
+                )
+                merged_json_path = merge_dir / f"{input_path.stem}.json"
+                print(f"✅ Merge completed: {merged_json_path}")
+            else:
+                print("ℹ️  No OCR results, using component detection only...")
+                # Copy component results to merge directory
+                import shutil
+                merged_json_path = merge_dir / f"{input_path.stem}.json"
+                shutil.copy(str(compo_result_path), str(merged_json_path))
+                print(f"✅ Using components only: {merged_json_path}")
 
             # Load and process the merged JSON
             with open(merged_json_path, 'r') as f:
