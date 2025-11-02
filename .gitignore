@@ -37,3 +37,4 @@ python-service/.env
 python-service/temp/
 python-service/output/
 python-service/UIED/
+python-service/ScreenCoder/
