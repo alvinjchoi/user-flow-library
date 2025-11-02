@@ -188,39 +188,16 @@ export function BranchedFlowItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              {(() => {
-                // Check if parent flow is "Account"
-                let isAccountFlow = false;
-                if (flow.parent_screen_id && allScreens && allFlows) {
-                  const parentScreen = allScreens.find(
-                    (s) => s.id === flow.parent_screen_id
-                  );
-                  if (parentScreen) {
-                    const parentFlow = allFlows.find(
-                      (f) => f.id === parentScreen.flow_id
-                    );
-                    if (
-                      parentFlow &&
-                      parentFlow.name.toLowerCase() === "account"
-                    ) {
-                      isAccountFlow = true;
-                    }
-                  }
-                }
-
-                return !isAccountFlow ? (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddScreen();
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add screen
-                  </DropdownMenuItem>
-                ) : null;
-              })()}
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddScreen();
+                  setMenuOpen(false);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add screen
+              </DropdownMenuItem>
               {onMoveFlow && (
                 <DropdownMenuItem
                   onClick={(e) => {
