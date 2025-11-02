@@ -4,8 +4,7 @@ const BUCKET_NAME = "screenshots";
 
 // Initialize storage bucket (run once)
 export async function initializeStorage() {
-  // Note: Bucket must be created manually in Supabase Dashboard
-  // or by running sql/CREATE_STORAGE_BUCKET.sql
+  // Note: Create the `screenshots` bucket manually in Supabase Dashboard (see docs/tutorials/local-development.md)
   // We don't need to check on every page load since uploads will fail gracefully if not configured
   return true;
 }

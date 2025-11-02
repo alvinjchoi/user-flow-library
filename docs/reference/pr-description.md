@@ -101,7 +101,7 @@ ALTER TABLE screen_comments ADD COLUMN resolved_by TEXT;
 
 - Added `ENVIRONMENT_VARIABLES.md` with all required env vars
 - Added `SECURITY_UPDATE_GUIDE.md` for migration
-- Added `sql/COMBINED_SETUP.sql` for easier setup
+- Added `sql/tutorials/COMBINED_SETUP.sql` for easier setup
 - Updated README with new branding
 
 ## 🧪 Testing
@@ -127,7 +127,7 @@ Tested on:
 **Before Merge:**
 
 1. ⚠️ Add `SUPABASE_SERVICE_ROLE_KEY` to Vercel Production
-2. Run `sql/COMBINED_SETUP.sql` on Production Supabase
+2. Run `sql/tutorials/COMBINED_SETUP.sql` on Production Supabase
 3. Verify Clerk JWT template (`supabase`) is configured
 
 **After Merge:**

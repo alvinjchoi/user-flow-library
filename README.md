@@ -15,7 +15,7 @@ User Flow Library is a Mobbin-style interface for organising projects, flows, an
 
 - [Environment variables](docs/reference/environment-variables.md)
 - [Pull request description template](docs/reference/pr-description.md)
-- SQL migrations live in `sql/`, with `sql/README_MIGRATIONS.md` describing execution order.
+- SQL migrations live in `sql/`, with `sql/reference/migration-guide.md` describing execution order.
 
 ## Explanations
 

@@ -19,7 +19,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ## 3. Create database tables
 
-Run `sql/CREATE_FLOW_TABLES.sql` in the Supabase SQL Editor (`https://supabase.com/dashboard/project/jrhnlbilfozzrdphcvxp/sql/new`).
+Run `sql/reference/CREATE_FLOW_TABLES.sql` in the Supabase SQL Editor (`https://supabase.com/dashboard/project/jrhnlbilfozzrdphcvxp/sql/new`).
 
 This script creates:
 
@@ -28,9 +28,10 @@ This script creates:
 - `screens` – hierarchical screen nodes
 - Triggers that maintain counts and materialised paths
 
-## 4. Create storage bucket
+## 4. Ensure storage buckets exist
 
-Execute `sql/CREATE_STORAGE_BUCKET.sql` in the Supabase SQL Editor. This provisions the `screenshots` bucket and the public policies needed for uploads.
+- Create a `screenshots` bucket in Supabase Storage (Dashboard → Storage → Create bucket) and make it public for read access.
+- To generate the `project-avatars` bucket and its policies, run `sql/how-to/SETUP_PROJECT_AVATARS_COMPLETE.sql` in the SQL Editor.
 
 ## 5. Optional: configure AI hotspot detection
 

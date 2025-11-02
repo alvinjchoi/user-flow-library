@@ -28,11 +28,19 @@ interface DetectedElement {
 // Helper: Detect elements using UIED service
 async function detectWithUIED(imageUrl: string): Promise<DetectedElement[]> {
   try {
+    // UIED can be slow (especially first run with model downloads)
+    // Set a generous timeout: 2 minutes
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
+    
     const response = await fetch(`${UIED_SERVICE_URL}/detect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageUrl, includeLabels: true }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`UIED service error: ${response.statusText}`);
