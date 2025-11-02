@@ -20,9 +20,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 5000
+# Expose port (dynamic for Render)
+EXPOSE $PORT
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+# Run the application using environment PORT variable
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-5000}"
 
