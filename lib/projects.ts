@@ -7,6 +7,7 @@ export async function getProjects(): Promise<Project[]> {
   try {
     const response = await fetch("/api/projects", {
       method: "GET",
+      credentials: "include", // Ensure cookies are sent
       headers: {
         "Content-Type": "application/json",
       },
@@ -25,14 +26,41 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 // Get single project - now calls API route which handles auth server-side
+// Retries once if initial request fails (to handle auth timing issues)
 export async function getProject(id: string): Promise<Project | null> {
   try {
     const response = await fetch(`/api/projects/${id}`, {
       method: "GET",
+      credentials: "include", // Ensure cookies are sent
       headers: {
         "Content-Type": "application/json",
       },
     });
+
+    // If we get 401 (Unauthorized), wait briefly and retry once
+    // This handles cases where Clerk auth cookies aren't ready yet
+    if (response.status === 401) {
+      console.log("[getProject] Got 401, retrying after 1s...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+      const retryResponse = await fetch(`/api/projects/${id}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (retryResponse.status === 404) {
+        return null;
+      }
+
+      if (!retryResponse.ok) {
+        throw new Error("Failed to fetch project after retry");
+      }
+
+      return await retryResponse.json();
+    }
 
     if (response.status === 404) {
       return null;
