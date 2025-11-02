@@ -101,27 +101,38 @@ class ScreenCoderGenerator:
         # Encode image
         base64_image = self.encode_image(image_path)
         
-        # Improved prompt for GPT-4 Vision (must be very direct and explicit)
-        prompt = f"""You are a UI layout analyzer. Analyze this screenshot and identify major UI regions.
+        # Component-level detection prompt
+        prompt = f"""You are a UI component analyzer. Analyze this screenshot and identify ALL interactive components and UI elements.
 
-For EACH distinct region you identify, provide:
-1. A label (header, navigation, sidebar, main content, footer, or other descriptive name)
+For EACH component you identify, provide:
+1. A specific, descriptive label (e.g., "Sign In button", "Email input", "Logo", "Search icon")
 2. Its bounding box coordinates in the format: <bbox>x1 y1 x2 y2</bbox>
 
 Coordinates are in pixels. Image dimensions: {w}x{h} pixels.
 
+Component types to identify:
+- Buttons (with their text/label)
+- Input fields (email, password, search, etc.)
+- Icons and images (logo, profile, menu, etc.)
+- Cards and containers (with descriptive names)
+- Links and navigation items
+- Text headings and labels
+- Tabs and toggles
+
 Rules:
-- x1,y1 = top-left corner coordinates
-- x2,y2 = bottom-right corner coordinates  
-- Regions should NOT overlap
-- Include ALL visible content within regions
-- Be precise with coordinates
+- x1,y1 = top-left corner, x2,y2 = bottom-right corner
+- Be SPECIFIC with labels - include text content when visible
+- Identify individual components, not just sections
+- Components can overlap if they're nested (e.g., button inside card)
 
 Example format:
-header <bbox>0 0 {w} 100</bbox>
-main content <bbox>0 100 {w} 800</bbox>
+Logo image <bbox>20 20 150 80</bbox>
+Search input field <bbox>200 30 500 70</bbox>
+"Sign In" button <bbox>520 30 620 70</bbox>
+Profile icon <bbox>640 30 690 80</bbox>
+Product card "iPhone 15" <bbox>100 150 350 450</bbox>
 
-Now analyze this UI screenshot and provide labeled bounding boxes:"""
+Now analyze this UI and list ALL components with precise bounding boxes:"""
         
         # Call GPT-4 Vision
         response = self._call_gpt_vision(base64_image, prompt)
