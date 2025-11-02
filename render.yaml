@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: uied-detection-service
+    runtime: docker
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: python-service
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: PYTHONUNBUFFERED
+        value: 1
+    healthCheckPath: /health
+    autoDeploy: false
+
