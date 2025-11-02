@@ -299,12 +299,12 @@ export function HotspotEditor({
               )}
             </Button>
             <Button
+              onClick={onClose}
               variant="ghost"
               size="icon"
-              onClick={onClose}
               className="text-white hover:bg-white/10"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -359,9 +359,7 @@ export function HotspotEditor({
                     {hotspot.element_label && (
                       <div
                         className={`absolute bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap ${
-                          hotspot.y_position < 8
-                            ? "top-full mt-1"
-                            : "-top-6"
+                          hotspot.y_position < 8 ? "top-full mt-1" : "-top-6"
                         } ${hotspot.x_position > 70 ? "right-0" : "left-0"}`}
                       >
                         {hotspot.element_label}
