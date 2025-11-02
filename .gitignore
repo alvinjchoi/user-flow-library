@@ -28,3 +28,12 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Python service
+python-service/__pycache__/
+python-service/venv/
+python-service/env/
+python-service/.env
+python-service/temp/
+python-service/output/
+python-service/UIED/

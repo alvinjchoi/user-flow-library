@@ -6,9 +6,12 @@ A Mobbin-style tool for organizing and managing user flows for your projects wit
 
 - **Next.js 15** - App Router
 - **Supabase** - PostgreSQL database + Storage
+- **Clerk** - Authentication & Organizations
 - **TypeScript** - Type safety
 - **Tailwind CSS v4** - Styling
 - **shadcn/ui** - UI components
+- **Python FastAPI** - UIED detection service (optional)
+- **OpenAI GPT-4 Vision** - AI-powered hotspot detection
 
 ## Data Structure
 
@@ -65,7 +68,35 @@ This sets up:
 - `screenshots` bucket for storing uploaded images
 - Public access policies for uploads/downloads
 
-### 5. Start Development
+### 5. Configure AI Detection (Optional)
+
+**Option A: GPT-4 Vision (Default)**
+
+Add to `.env.local`:
+```env
+OPENAI_API_KEY=your-openai-api-key
+```
+
+**Option B: UIED Service (Recommended for accuracy)**
+
+1. Setup Python service:
+```bash
+cd python-service
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py  # Runs on http://localhost:5000
+```
+
+2. Add to `.env.local`:
+```env
+UIED_SERVICE_URL=http://localhost:5000
+OPENAI_API_KEY=your-openai-api-key  # Fallback
+```
+
+See `python-service/SETUP.md` for detailed instructions.
+
+### 6. Start Development
 
 ```bash
 pnpm run dev
@@ -78,26 +109,41 @@ Open http://localhost:3000
 - [x] Projects dashboard
 - [x] Hierarchical flow tree (Mobbin-style sidebar)
 - [x] Screenshot upload with Supabase Storage
-- [ ] Drag-and-drop screen ordering
+- [x] AI-powered hotspot detection (GPT-4 Vision + UIED)
+- [x] Interactive prototype mode
+- [x] Figma-style commenting system
+- [x] Drag-and-drop screen ordering
+- [x] Public sharing links
+- [x] Multi-tenant organizations (Clerk)
 - [ ] Search across projects
 - [ ] Export flows
-- [ ] Public sharing links
 
 ## Project Structure
 
 ```
 app/
-├── page.tsx                    # Projects dashboard
+├── page.tsx                    # Landing page
+├── dashboard/page.tsx          # Projects dashboard
 ├── projects/
-│   └── [id]/
-│       ├── page.tsx            # Project detail
-│       └── flows/[flowId]/
-│           └── page.tsx        # Flow with screen tree
+│   └── [id]/page.tsx           # Project detail with flows
+└── api/
+    ├── screens/[id]/
+    │   ├── detect-elements/    # AI hotspot detection
+    │   └── hotspots/           # Hotspot CRUD
+    └── hotspots/[id]/          # Hotspot operations
 
 components/
 ├── projects/                   # Project components
 ├── flows/                      # Flow tree & cards
-└── screens/                    # Screen gallery & upload
+├── screens/                    # Screen gallery & upload
+├── hotspots/                   # Hotspot editor & player
+└── comments/                   # Commenting system
+
+python-service/                 # Optional UIED service
+├── main.py                     # FastAPI server
+├── requirements.txt            # Python dependencies
+├── Dockerfile                  # Container config
+└── SETUP.md                    # Setup instructions
 
 lib/
 ├── projects.ts                 # Project CRUD

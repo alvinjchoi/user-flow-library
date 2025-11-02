@@ -7,6 +7,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// UIED service configuration
+const UIED_SERVICE_URL = process.env.UIED_SERVICE_URL; // e.g., http://localhost:5000
+const USE_UIED = Boolean(UIED_SERVICE_URL);
+
 // Type for detected element from AI
 interface DetectedElement {
   type: 'button' | 'link' | 'card' | 'tab' | 'input' | 'icon' | 'other';
@@ -21,58 +25,38 @@ interface DetectedElement {
   confidence: number; // 0.0 to 1.0
 }
 
-// POST /api/screens/[id]/detect-elements - Use AI to detect clickable elements
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+// Helper: Detect elements using UIED service
+async function detectWithUIED(imageUrl: string): Promise<DetectedElement[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const response = await fetch(`${UIED_SERVICE_URL}/detect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl, includeLabels: true }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`UIED service error: ${response.statusText}`);
     }
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: "OpenAI API is not configured" },
-        { status: 503 }
-      );
-    }
+    const data = await response.json();
+    return data.elements || [];
+  } catch (error) {
+    console.error('UIED detection failed:', error);
+    throw error;
+  }
+}
 
-    const { id: screenId } = await context.params;
-
-    // Get the screen and its screenshot URL
-    const { data: screen, error: screenError } = await supabase
-      .from("screens")
-      .select("id, title, screenshot_url")
-      .eq("id", screenId)
-      .single();
-
-    if (screenError || !screen) {
-      return NextResponse.json(
-        { error: "Screen not found" },
-        { status: 404 }
-      );
-    }
-
-    if (!screen.screenshot_url) {
-      return NextResponse.json(
-        { error: "Screen has no screenshot" },
-        { status: 400 }
-      );
-    }
-
-    // Call GPT-4 Vision to detect clickable elements
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `You are analyzing a mobile app screenshot to identify all clickable UI elements for creating an interactive prototype.
+// Helper: Detect elements using GPT-4 Vision
+async function detectWithGPT4(imageUrl: string): Promise<DetectedElement[]> {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `You are analyzing a mobile app screenshot to identify all clickable UI elements for creating an interactive prototype.
 
 **CRITICAL: Bounding Box Accuracy**
 - Provide TIGHT, PRECISE bounding boxes that wrap EXACTLY around the interactive element
@@ -115,45 +99,111 @@ Return ONLY a valid JSON array with no additional text. Example format:
     "confidence": 0.95
   }
 ]`,
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: imageUrl,
+              detail: "high",
             },
-            {
-              type: "image_url",
-              image_url: {
-                url: screen.screenshot_url,
-                detail: "high",
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 2000,
-      temperature: 0.3, // Lower temperature for more consistent results
-    });
+          },
+        ],
+      },
+    ],
+    max_tokens: 2000,
+    temperature: 0.3,
+  });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from GPT-4 Vision');
+  }
+
+  // Parse the JSON response
+  const cleanedContent = content
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
+  
+  return JSON.parse(cleanedContent);
+}
+
+// POST /api/screens/[id]/detect-elements - Use AI to detect clickable elements
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id: screenId } = await context.params;
+
+    // Get the screen and its screenshot URL
+    const { data: screen, error: screenError } = await supabase
+      .from("screens")
+      .select("id, title, screenshot_url")
+      .eq("id", screenId)
+      .single();
+
+    if (screenError || !screen) {
       return NextResponse.json(
-        { error: "No response from AI" },
-        { status: 500 }
+        { error: "Screen not found" },
+        { status: 404 }
       );
     }
 
-    // Parse the JSON response
-    let detectedElements: DetectedElement[];
-    try {
-      // Remove markdown code blocks if present
-      const cleanedContent = content
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-      detectedElements = JSON.parse(cleanedContent);
-    } catch (parseError) {
-      console.error("Error parsing AI response:", parseError);
-      console.error("Raw content:", content);
+    if (!screen.screenshot_url) {
       return NextResponse.json(
-        { error: "Failed to parse AI response", details: content },
-        { status: 500 }
+        { error: "Screen has no screenshot" },
+        { status: 400 }
       );
+    }
+
+    let detectedElements: DetectedElement[];
+    let detectionMethod: 'uied' | 'gpt4' | 'fallback' = 'gpt4';
+    let detectionError: string | null = null;
+
+    // Try UIED first if configured
+    if (USE_UIED) {
+      try {
+        console.log('🔍 Attempting UIED detection...');
+        detectedElements = await detectWithUIED(screen.screenshot_url);
+        detectionMethod = 'uied';
+        console.log(`✅ UIED detected ${detectedElements.length} elements`);
+      } catch (uiedError: any) {
+        console.warn('⚠️ UIED detection failed, falling back to GPT-4:', uiedError.message);
+        detectionError = uiedError.message;
+        detectionMethod = 'fallback';
+        
+        // Fallback to GPT-4
+        if (!process.env.OPENAI_API_KEY) {
+          return NextResponse.json(
+            { 
+              error: "UIED service failed and OpenAI API is not configured", 
+              details: detectionError 
+            },
+            { status: 503 }
+          );
+        }
+
+        detectedElements = await detectWithGPT4(screen.screenshot_url);
+        console.log(`✅ GPT-4 fallback detected ${detectedElements.length} elements`);
+      }
+    } else {
+      // Use GPT-4 Vision as primary method
+      if (!process.env.OPENAI_API_KEY) {
+        return NextResponse.json(
+          { error: "OpenAI API is not configured" },
+          { status: 503 }
+        );
+      }
+
+      console.log('🔍 Using GPT-4 Vision detection...');
+      detectedElements = await detectWithGPT4(screen.screenshot_url);
+      console.log(`✅ GPT-4 detected ${detectedElements.length} elements`);
     }
 
     // Validate and normalize the detected elements
@@ -179,7 +229,8 @@ Return ONLY a valid JSON array with no additional text. Example format:
       elements: validElements,
       count: validElements.length,
       raw_count: detectedElements.length,
-      usage: response.usage,
+      method: detectionMethod,
+      ...(detectionError && { warning: detectionError }),
     });
   } catch (error: any) {
     console.error("Unexpected error in POST /api/screens/[id]/detect-elements:", error);
