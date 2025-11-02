@@ -18,7 +18,9 @@ interface HotspotEditorProps {
   screen: Screen;
   hotspots: Hotspot[];
   availableScreens: Screen[];
-  onAddHotspot: (hotspot: Omit<Hotspot, "id" | "created_at" | "updated_at">) => Promise<void>;
+  onAddHotspot: (
+    hotspot: Omit<Hotspot, "id" | "created_at" | "updated_at">
+  ) => Promise<void>;
   onUpdateHotspot: (id: string, updates: Partial<Hotspot>) => Promise<void>;
   onDeleteHotspot: (id: string) => Promise<void>;
   onClose: () => void;
@@ -44,6 +46,9 @@ export function HotspotEditor({
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingBox, setDrawingBox] = useState<DrawingBox | null>(null);
   const [isAIDetecting, setIsAIDetecting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   // Handle mouse down to start drawing
@@ -121,36 +126,58 @@ export function HotspotEditor({
   const handleAIDetect = async () => {
     setIsAIDetecting(true);
     try {
-      const response = await fetch(`/api/screens/${screen.id}/detect-elements`, {
-        method: "POST",
-      });
+      const response = await fetch(
+        `/api/screens/${screen.id}/detect-elements`,
+        {
+          method: "POST",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to detect elements");
       }
 
       const data = await response.json();
-      
+
+      console.log("Detected elements:", data.elements);
+
       // Create hotspots for each detected element
+      let successCount = 0;
+      let errorCount = 0;
+
       for (const element of data.elements) {
-        await onAddHotspot({
-          screen_id: screen.id,
-          x_position: element.boundingBox.x,
-          y_position: element.boundingBox.y,
-          width: element.boundingBox.width,
-          height: element.boundingBox.height,
-          element_type: element.type,
-          element_label: element.label,
-          element_description: element.description,
-          target_screen_id: null,
-          interaction_type: "navigate",
-          confidence_score: element.confidence,
-          is_ai_generated: true,
-          order_index: hotspots.length + element.order_index,
-        });
+        try {
+          console.log("Creating hotspot:", element);
+          await onAddHotspot({
+            screen_id: screen.id,
+            x_position: element.boundingBox.x,
+            y_position: element.boundingBox.y,
+            width: element.boundingBox.width,
+            height: element.boundingBox.height,
+            element_type: element.type,
+            element_label: element.label,
+            element_description: element.description,
+            target_screen_id: null,
+            interaction_type: "navigate",
+            confidence_score: element.confidence,
+            is_ai_generated: true,
+            order_index: hotspots.length + element.order_index,
+          });
+          successCount++;
+          console.log("Hotspot created successfully");
+        } catch (error) {
+          errorCount++;
+          console.error("Failed to create hotspot:", error);
+        }
       }
 
-      alert(`Detected ${data.elements.length} interactive elements!`);
+      alert(
+        `Detected ${
+          data.elements.length
+        } elements. Created ${successCount} hotspots. ${
+          errorCount > 0 ? `Failed: ${errorCount}` : ""
+        }`
+      );
     } catch (error) {
       console.error("Error detecting elements:", error);
       alert("Failed to detect elements. Make sure OpenAI API is configured.");
@@ -361,7 +388,8 @@ export function HotspotEditor({
                   )}
                   {selectedHotspot.confidence_score && (
                     <p className="text-muted-foreground mt-1">
-                      Confidence: {(selectedHotspot.confidence_score * 100).toFixed(0)}%
+                      Confidence:{" "}
+                      {(selectedHotspot.confidence_score * 100).toFixed(0)}%
                     </p>
                   )}
                 </div>
@@ -414,7 +442,10 @@ export function HotspotEditor({
                     </div>
                     {hotspot.target_screen_id && (
                       <p className="text-xs text-muted-foreground">
-                        → {availableScreens.find((s) => s.id === hotspot.target_screen_id)?.display_name || "Target"}
+                        →{" "}
+                        {availableScreens.find(
+                          (s) => s.id === hotspot.target_screen_id
+                        )?.display_name || "Target"}
                       </p>
                     )}
                   </div>
@@ -427,4 +458,3 @@ export function HotspotEditor({
     </div>
   );
 }
-
