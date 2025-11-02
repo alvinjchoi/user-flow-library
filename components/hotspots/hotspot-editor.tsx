@@ -139,7 +139,15 @@ export function HotspotEditor({
 
       const data = await response.json();
 
-      console.log("Detected elements:", data.elements);
+      // Log detection method used
+      const detectionMethod = data.method || 'unknown';
+      const methodLabel = 
+        detectionMethod === 'uied' ? '🔍 UIED (Precise)' :
+        detectionMethod === 'gpt4' ? '✨ GPT-4 Vision' :
+        detectionMethod === 'fallback' ? '⚠️ GPT-4 (Fallback)' : 
+        '❓ Unknown';
+      
+      console.log(`Detection method: ${methodLabel}`, data);
 
       // Create hotspots for each detected element
       let successCount = 0;
@@ -147,7 +155,6 @@ export function HotspotEditor({
 
       for (const element of data.elements) {
         try {
-          console.log("Creating hotspot:", element);
           await onAddHotspot({
             screen_id: screen.id,
             x_position: element.boundingBox.x,
@@ -164,23 +171,21 @@ export function HotspotEditor({
             order_index: hotspots.length + element.order_index,
           });
           successCount++;
-          console.log("Hotspot created successfully");
         } catch (error) {
           errorCount++;
           console.error("Failed to create hotspot:", error);
         }
       }
 
-      alert(
-        `Detected ${
-          data.elements.length
-        } elements. Created ${successCount} hotspots. ${
-          errorCount > 0 ? `Failed: ${errorCount}` : ""
-        }`
-      );
+      // Show detailed success message with detection method
+      const message = `${methodLabel}\n\nDetected ${data.elements.length} elements\nCreated ${successCount} hotspots${
+        errorCount > 0 ? `\n⚠️ Failed: ${errorCount}` : ""
+      }${data.warning ? `\n\n${data.warning}` : ""}`;
+      
+      alert(message);
     } catch (error) {
       console.error("Error detecting elements:", error);
-      alert("Failed to detect elements. Make sure OpenAI API is configured.");
+      alert("❌ Failed to detect elements.\n\nPlease check:\n• OpenAI API key is configured\n• Image URL is accessible\n• Network connection");
     } finally {
       setIsAIDetecting(false);
     }

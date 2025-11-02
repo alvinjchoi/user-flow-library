@@ -56,6 +56,23 @@ pnpm run build    # Build for production
 pnpm run lint     # Run ESLint
 ```
 
+## AI Detection (Optional)
+
+The app supports **hybrid AI detection** for interactive UI elements:
+
+### Quick Start: GPT-4 Vision
+```bash
+OPENAI_API_KEY=sk-your-key-here
+```
+
+### Advanced: UIED + GPT-4 (Higher Accuracy)
+Deploy UIED separately (Railway/Render) and configure:
+```bash
+UIED_SERVICE_URL=https://your-railway-app.up.railway.app
+```
+
+**📖 Full guide:** [docs/how-to/uied-deployment-options.md](docs/how-to/uied-deployment-options.md)
+
 ## Deployment Notes
 
 Deploy to Vercel (or similar) with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Provide `OPENAI_API_KEY` or `UIED_SERVICE_URL` if hotspots are required.
