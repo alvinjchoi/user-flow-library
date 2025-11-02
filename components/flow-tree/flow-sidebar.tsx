@@ -242,9 +242,9 @@ export function FlowSidebar({
   // 1. Top-level flows (no parent_screen_id and no parent_flow_id)
   // 2. Child flows (have parent_flow_id)
   // 3. Branched flows (have parent_screen_id)
-  const mainFlows = flows.filter(
-    (f) => !f.parent_screen_id && !f.parent_flow_id
-  );
+  const mainFlows = flows
+    .filter((f) => !f.parent_screen_id && !f.parent_flow_id)
+    .sort((a, b) => a.order_index - b.order_index);
   const branchedFlows = flows.filter((f) => f.parent_screen_id);
   const childFlows = flows.filter((f) => f.parent_flow_id);
 

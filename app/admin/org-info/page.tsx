@@ -76,7 +76,7 @@ export default function OrgInfoPage() {
                   </p>
                   <ol className="text-sm space-y-1 list-decimal list-inside text-muted-foreground">
                     <li>Go to Supabase SQL Editor</li>
-                    <li>Run: <code className="bg-background px-1 py-0.5 rounded">sql/ASSIGN_PROJECTS_TO_ORG.sql</code></li>
+                    <li>Run: <code className="bg-background px-1 py-0.5 rounded">sql/how-to/ASSIGN_PROJECTS_TO_ORG.sql</code></li>
                     <li>Replace <code className="bg-background px-1 py-0.5 rounded">YOUR_CLERK_ORG_ID</code> with: <code className="bg-background px-1 py-0.5 rounded font-mono">{organization.id}</code></li>
                   </ol>
                 </div>
@@ -164,4 +164,3 @@ WHERE clerk_org_id = '${organization.id}';`}</code>
     </div>
   );
 }
-

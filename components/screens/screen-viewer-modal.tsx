@@ -1,16 +1,51 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Edit2, Upload, ImageIcon, Plus, Trash2, MessageCircle, Check, Download } from "lucide-react";
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Edit2,
+  Upload,
+  ImageIcon,
+  Plus,
+  Trash2,
+  MessageCircle,
+  Check,
+  Download,
+  Shapes,
+  Play,
+  MoreVertical,
+  Archive,
+} from "lucide-react";
 import Image from "next/image";
-import type { Screen } from "@/lib/database.types";
+import type { Screen, Hotspot } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   getScreenInspirations,
   addScreenInspiration,
   removeScreenInspiration,
 } from "@/lib/inspirations";
 import { CommentPin, NewCommentPin, type ScreenComment } from "./comment-pin";
+import { HotspotEditor } from "@/components/hotspots/hotspot-editor";
+import { PrototypePlayer } from "@/components/hotspots/prototype-player";
 
 interface ScreenViewerModalProps {
   screen: Screen | null;
@@ -19,6 +54,8 @@ interface ScreenViewerModalProps {
   onNavigate?: (screen: Screen) => void;
   onEdit?: (screen: Screen) => void;
   onUploadScreenshot?: (screenId: string) => void;
+  onDeleteScreenshot?: (screenId: string) => Promise<void>;
+  onArchiveScreen?: (screenId: string) => Promise<void>;
   readOnly?: boolean;
 }
 
@@ -29,19 +66,35 @@ export function ScreenViewerModal({
   onNavigate,
   onEdit,
   onUploadScreenshot,
+  onDeleteScreenshot,
+  onArchiveScreen,
   readOnly = false,
 }: ScreenViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inspirations, setInspirations] = useState<Screen[]>([]);
   const [isAddingInspiration, setIsAddingInspiration] = useState(false);
   const [loadingInspirations, setLoadingInspirations] = useState(false);
-  
+
   // Comment state
   const [comments, setComments] = useState<ScreenComment[]>([]);
   const [isCommentMode, setIsCommentMode] = useState(false);
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
-  const [newCommentPosition, setNewCommentPosition] = useState<{ x: number; y: number } | null>(null);
+  const [newCommentPosition, setNewCommentPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
+  // Hotspot state
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  const [isHotspotEditorOpen, setIsHotspotEditorOpen] = useState(false);
+  const [isPrototypePlayerOpen, setIsPrototypePlayerOpen] = useState(false);
+  const [hotspotsByScreen, setHotspotsByScreen] = useState<
+    Map<string, Hotspot[]>
+  >(new Map());
+
+  // Delete/Archive state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
 
   // Update current index when screen changes
   useEffect(() => {
@@ -62,7 +115,7 @@ export function ScreenViewerModal({
   useEffect(() => {
     const loadInspirations = async () => {
       if (!currentScreen) return;
-      
+
       setLoadingInspirations(true);
       try {
         const inspos = await getScreenInspirations(currentScreen.id);
@@ -93,23 +146,26 @@ export function ScreenViewerModal({
         setComments([]);
         return;
       }
-      
+
       try {
-        const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
-          signal: abortController.signal,
-        });
-        
+        const response = await fetch(
+          `/api/screens/${currentScreen.id}/comments`,
+          {
+            signal: abortController.signal,
+          }
+        );
+
         if (!response.ok) {
           console.error("Failed to load comments:", response.statusText);
           setComments([]);
           return;
         }
-        
+
         const data = await response.json();
         setComments(data.comments || []);
       } catch (error) {
         // Ignore abort errors
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           return;
         }
         console.error("Error loading comments:", error);
@@ -124,6 +180,59 @@ export function ScreenViewerModal({
       abortController.abort();
     };
   }, [currentScreen?.id]);
+
+  // Load hotspots when current screen changes
+  useEffect(() => {
+    const loadHotspots = async () => {
+      if (!currentScreen) {
+        setHotspots([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/screens/${currentScreen.id}/hotspots`
+        );
+        if (!response.ok) {
+          console.error("Failed to load hotspots:", response.statusText);
+          setHotspots([]);
+          return;
+        }
+
+        const data = await response.json();
+        setHotspots(data);
+      } catch (error) {
+        console.error("Error loading hotspots:", error);
+        setHotspots([]);
+      }
+    };
+
+    loadHotspots();
+  }, [currentScreen?.id]);
+
+  // Load all hotspots for prototype mode
+  useEffect(() => {
+    const loadAllHotspots = async () => {
+      const hotspotMap = new Map<string, Hotspot[]>();
+
+      try {
+        await Promise.all(
+          allScreens.map(async (s) => {
+            const response = await fetch(`/api/screens/${s.id}/hotspots`);
+            if (response.ok) {
+              const data = await response.json();
+              hotspotMap.set(s.id, data);
+            }
+          })
+        );
+        setHotspotsByScreen(hotspotMap);
+      } catch (error) {
+        console.error("Error loading all hotspots:", error);
+      }
+    };
+
+    loadAllHotspots();
+  }, [allScreens]);
 
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allScreens.length - 1;
@@ -186,15 +295,18 @@ export function ScreenViewerModal({
     if (!currentScreen || !newCommentPosition) return;
 
     try {
-      const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          x_position: newCommentPosition.x,
-          y_position: newCommentPosition.y,
-          comment_text: commentText,
-        }),
-      });
+      const response = await fetch(
+        `/api/screens/${currentScreen.id}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            x_position: newCommentPosition.x,
+            y_position: newCommentPosition.y,
+            comment_text: commentText,
+          }),
+        }
+      );
 
       if (response.ok) {
         const { comment } = await response.json();
@@ -215,16 +327,19 @@ export function ScreenViewerModal({
       const parentComment = comments.find((c) => c.id === parentId);
       if (!parentComment) return;
 
-      const response = await fetch(`/api/screens/${currentScreen.id}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          x_position: parentComment.x_position,
-          y_position: parentComment.y_position,
-          comment_text: replyText,
-          parent_comment_id: parentId,
-        }),
-      });
+      const response = await fetch(
+        `/api/screens/${currentScreen.id}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            x_position: parentComment.x_position,
+            y_position: parentComment.y_position,
+            comment_text: replyText,
+            parent_comment_id: parentId,
+          }),
+        }
+      );
 
       if (response.ok) {
         const { comment } = await response.json();
@@ -253,7 +368,9 @@ export function ScreenViewerModal({
       } else {
         const errorData = await response.json();
         console.error("Error resolving comment:", errorData);
-        alert("Failed to resolve comment: " + (errorData.error || "Unknown error"));
+        alert(
+          "Failed to resolve comment: " + (errorData.error || "Unknown error")
+        );
       }
     } catch (error) {
       console.error("Error resolving comment:", error);
@@ -274,6 +391,77 @@ export function ScreenViewerModal({
     } catch (error) {
       console.error("Error deleting comment:", error);
       alert("Failed to delete comment");
+    }
+  };
+
+  // Hotspot handlers
+  const handleAddHotspot = async (
+    hotspot: Omit<Hotspot, "id" | "created_at" | "updated_at">
+  ) => {
+    try {
+      const response = await fetch(
+        `/api/screens/${currentScreen.id}/hotspots`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(hotspot),
+        }
+      );
+
+      if (response.ok) {
+        const newHotspot = await response.json();
+        setHotspots((prev) => [...prev, newHotspot]);
+      } else {
+        const errorData = await response.json();
+        console.error("Error adding hotspot:", errorData);
+        throw new Error(errorData.error || "Failed to add hotspot");
+      }
+    } catch (error) {
+      console.error("Error adding hotspot:", error);
+      throw error;
+    }
+  };
+
+  const handleUpdateHotspot = async (id: string, updates: Partial<Hotspot>) => {
+    try {
+      const response = await fetch(`/api/hotspots/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+
+      if (response.ok) {
+        const updatedHotspot = await response.json();
+        setHotspots((prev) =>
+          prev.map((h) => (h.id === id ? updatedHotspot : h))
+        );
+      } else {
+        const errorData = await response.json();
+        console.error("Error updating hotspot:", errorData);
+        throw new Error(errorData.error || "Failed to update hotspot");
+      }
+    } catch (error) {
+      console.error("Error updating hotspot:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteHotspot = async (id: string) => {
+    try {
+      const response = await fetch(`/api/hotspots/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setHotspots((prev) => prev.filter((h) => h.id !== id));
+      } else {
+        const errorData = await response.json();
+        console.error("Error deleting hotspot:", errorData);
+        throw new Error(errorData.error || "Failed to delete hotspot");
+      }
+    } catch (error) {
+      console.error("Error deleting hotspot:", error);
+      throw error;
     }
   };
 
@@ -300,6 +488,36 @@ export function ScreenViewerModal({
     } catch (error) {
       console.error("Error downloading screenshot:", error);
       alert("Failed to download screenshot");
+    }
+  };
+
+  // Delete screenshot handler
+  const handleDeleteScreenshot = async () => {
+    if (!onDeleteScreenshot || !currentScreen) return;
+
+    try {
+      await onDeleteScreenshot(currentScreen.id);
+      setDeleteDialogOpen(false);
+      // Close modal after deletion
+      onClose();
+    } catch (error) {
+      console.error("Error deleting screenshot:", error);
+      alert("Failed to delete screenshot");
+    }
+  };
+
+  // Archive screen handler
+  const handleArchiveScreen = async () => {
+    if (!onArchiveScreen || !currentScreen) return;
+
+    try {
+      await onArchiveScreen(currentScreen.id);
+      setArchiveDialogOpen(false);
+      // Close modal after archiving
+      onClose();
+    } catch (error) {
+      console.error("Error archiving screen:", error);
+      alert("Failed to archive screen");
     }
   };
 
@@ -403,6 +621,66 @@ export function ScreenViewerModal({
               Download
             </Button>
           )}
+          {!readOnly && currentScreen.screenshot_url && (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsHotspotEditorOpen(true)}
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
+                <Shapes className="h-4 w-4 mr-2" />
+                Edit Hotspots
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsPrototypePlayerOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Play
+              </Button>
+            </>
+          )}
+          {!readOnly && (onDeleteScreenshot || onArchiveScreen) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {onDeleteScreenshot && currentScreen.screenshot_url && (
+                  <DropdownMenuItem
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Screenshot
+                  </DropdownMenuItem>
+                )}
+                {onArchiveScreen && (
+                  <>
+                    {onDeleteScreenshot && currentScreen.screenshot_url && (
+                      <DropdownMenuSeparator />
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => setArchiveDialogOpen(true)}
+                      className="text-orange-600 focus:text-orange-600"
+                    >
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archive Screen
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -430,7 +708,7 @@ export function ScreenViewerModal({
 
           {/* Image */}
           {currentScreen.screenshot_url ? (
-            <div 
+            <div
               className="relative max-w-[600px] max-h-full aspect-[9/19.5]"
               onClick={handleImageClick}
               style={{ cursor: isCommentMode ? "crosshair" : "default" }}
@@ -444,22 +722,23 @@ export function ScreenViewerModal({
                     "0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
                 }}
               />
-              
+
               {/* Comment pins (hidden in read-only mode) */}
-              {!readOnly && rootComments.map((comment) => (
-                <CommentPin
-                  key={comment.id}
-                  comment={comment}
-                  replies={getCommentReplies(comment.id)}
-                  isActive={activeCommentId === comment.id}
-                  onClick={() => setActiveCommentId(comment.id)}
-                  onClose={() => setActiveCommentId(null)}
-                  onReply={(text) => handleReplyToComment(comment.id, text)}
-                  onResolve={() => handleResolveComment(comment.id)}
-                  onDelete={() => handleDeleteComment(comment.id)}
-                />
-              ))}
-              
+              {!readOnly &&
+                rootComments.map((comment) => (
+                  <CommentPin
+                    key={comment.id}
+                    comment={comment}
+                    replies={getCommentReplies(comment.id)}
+                    isActive={activeCommentId === comment.id}
+                    onClick={() => setActiveCommentId(comment.id)}
+                    onClose={() => setActiveCommentId(null)}
+                    onReply={(text) => handleReplyToComment(comment.id, text)}
+                    onResolve={() => handleResolveComment(comment.id)}
+                    onDelete={() => handleDeleteComment(comment.id)}
+                  />
+                ))}
+
               {/* New comment creation (hidden in read-only mode) */}
               {!readOnly && newCommentPosition && (
                 <NewCommentPin
@@ -498,7 +777,8 @@ export function ScreenViewerModal({
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-white font-semibold text-sm">
-                    Comments ({comments.filter((c) => !c.parent_comment_id).length})
+                    Comments (
+                    {comments.filter((c) => !c.parent_comment_id).length})
                   </h3>
                   <Button
                     variant="ghost"
@@ -515,7 +795,7 @@ export function ScreenViewerModal({
                     const replies = getCommentReplies(comment.id);
                     const totalComments = 1 + replies.length;
                     const isActive = activeCommentId === comment.id;
-                    
+
                     return (
                       <button
                         key={comment.id}
@@ -688,7 +968,9 @@ export function ScreenViewerModal({
 
                         {/* Remove button */}
                         <button
-                          onClick={() => handleRemoveInspiration(inspiration.id)}
+                          onClick={() =>
+                            handleRemoveInspiration(inspiration.id)
+                          }
                           className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-red-500/80 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Remove inspiration"
                         >
@@ -773,9 +1055,75 @@ export function ScreenViewerModal({
         onClick={onClose}
         aria-label="Close modal"
       />
+
+      {/* Hotspot Editor Modal */}
+      {isHotspotEditorOpen && currentScreen && (
+        <HotspotEditor
+          screen={currentScreen}
+          hotspots={hotspots}
+          availableScreens={allScreens}
+          onAddHotspot={handleAddHotspot}
+          onUpdateHotspot={handleUpdateHotspot}
+          onDeleteHotspot={handleDeleteHotspot}
+          onClose={() => setIsHotspotEditorOpen(false)}
+        />
+      )}
+
+      {/* Prototype Player Modal */}
+      {isPrototypePlayerOpen && currentScreen && (
+        <PrototypePlayer
+          startScreen={currentScreen}
+          allScreens={allScreens}
+          hotspotsByScreen={hotspotsByScreen}
+          onClose={() => setIsPrototypePlayerOpen(false)}
+        />
+      )}
+
+      {/* Delete Screenshot Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Screenshot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the screenshot file. The screen entry
+              will remain, but the image will be removed. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteScreenshot}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Screenshot
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Archive Screen Confirmation Dialog */}
+      <AlertDialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Screen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will archive the entire screen including its screenshot,
+              comments, and hotspots. You can restore archived screens later
+              from the settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleArchiveScreen}
+              className="bg-orange-600 text-white hover:bg-orange-700"
+            >
+              Archive Screen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-
-
-
