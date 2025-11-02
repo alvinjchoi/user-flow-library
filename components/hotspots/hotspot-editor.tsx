@@ -405,9 +405,22 @@ export function HotspotEditor({
 
         {/* Sidebar */}
         <div className="w-96 bg-card rounded-lg p-6 overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">
-            {selectedHotspot ? "Edit Hotspot" : "Hotspots"}
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">
+              {selectedHotspot ? "Edit Hotspot" : "Hotspots"}
+            </h3>
+            {selectedHotspot && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedHotspot(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            )}
+          </div>
 
           {selectedHotspot ? (
             /* Selected Hotspot Details */
