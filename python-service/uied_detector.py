@@ -116,8 +116,11 @@ class UIEDDetector:
         temp_dir.mkdir(parents=True, exist_ok=True)
         
         try:
-            # Download image
-            image_name = Path(image_url).name.split('?')[0] or 'screenshot.png'
+            # Download image with proper extension
+            image_name = Path(image_url).name.split('?')[0] or 'screenshot'
+            # Ensure proper extension for PaddleOCR
+            if not any(image_name.lower().endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.bmp']):
+                image_name = f"{image_name}.png"
             input_path = temp_dir / image_name
             
             print(f"📥 Downloading image from {image_url}")
@@ -135,8 +138,11 @@ class UIEDDetector:
             ocr_result_path = None
             if include_labels:
                 print("🔤 Running OCR detection...")
+                # Create OCR output directory
+                ocr_dir = temp_dir / "ocr"
+                ocr_dir.mkdir(parents=True, exist_ok=True)
                 text.text_detection(str(input_path), str(temp_dir), show=False, method='paddle')
-                ocr_result_path = temp_dir / "ocr" / f"{input_path.stem}.json"
+                ocr_result_path = ocr_dir / f"{input_path.stem}.json"
                 if ocr_result_path.exists():
                     print(f"✅ OCR completed: {ocr_result_path}")
                 else:
@@ -145,6 +151,9 @@ class UIEDDetector:
 
             # Run component detection
             print("🔍 Running component detection...")
+            # Create IP output directory
+            ip_dir = temp_dir / "ip"
+            ip_dir.mkdir(parents=True, exist_ok=True)
             ip.compo_detection(
                 str(input_path),
                 str(temp_dir),
@@ -153,21 +162,24 @@ class UIEDDetector:
                 resize_by_height=None,
                 show=False
             )
-            compo_result_path = temp_dir / "ip" / f"{input_path.stem}.json"
+            compo_result_path = ip_dir / f"{input_path.stem}.json"
             print(f"✅ Component detection completed: {compo_result_path}")
 
             # Merge components and OCR results
             print("🔗 Merging results...")
+            # Create merge output directory
+            merge_dir = temp_dir / "merge"
+            merge_dir.mkdir(parents=True, exist_ok=True)
             merge.merge(
                 str(input_path),
                 str(compo_result_path),
                 str(ocr_result_path) if ocr_result_path else None,
-                str(temp_dir / "merge"),
+                str(merge_dir),
                 is_remove_bar=self.key_params['remove-bar'],
                 is_paragraph=self.key_params['merge-line-to-paragraph'],
                 show=False
             )
-            merged_json_path = temp_dir / "merge" / f"{input_path.stem}.json"
+            merged_json_path = merge_dir / f"{input_path.stem}.json"
             print(f"✅ Merge completed: {merged_json_path}")
 
             # Load and process the merged JSON
