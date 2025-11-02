@@ -9,6 +9,7 @@ import {
   ArrowUp,
   ArrowDown,
   CornerDownRight,
+  Pencil,
 } from "lucide-react";
 import type { Flow, Screen } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
@@ -176,17 +177,7 @@ export function FlowHeader({
           />
         </div>
       ) : (
-        <span
-          className="flex-1 truncate text-left hover:underline cursor-text"
-          onClick={(e) => {
-            if (onUpdateFlowName) {
-              e.stopPropagation();
-              setIsEditing(true);
-            }
-          }}
-        >
-          {flow.name}
-        </span>
+        <span className="flex-1 truncate text-left">{flow.name}</span>
       )}
 
       {hasScreenshots && (
@@ -221,30 +212,44 @@ export function FlowHeader({
             <Plus className="h-4 w-4 mr-2" />
             Add flow
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddScreen();
-              setMenuOpen(false);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add screen
-          </DropdownMenuItem>
-          {onMoveFlow && (
+          {flow.name.toLowerCase() !== "account" && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddScreen();
+                setMenuOpen(false);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add screen
+            </DropdownMenuItem>
+          )}
+          {onUpdateFlowName && flow.parent_flow_id && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  setMoveDialogOpen(true);
+                  setIsEditing(true);
                   setMenuOpen(false);
                 }}
               >
-                <GitBranch className="h-4 w-4 mr-2" />
-                Move flow to...
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit flow name
               </DropdownMenuItem>
             </>
+          )}
+          {onMoveFlow && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setMoveDialogOpen(true);
+                setMenuOpen(false);
+              }}
+            >
+              <GitBranch className="h-4 w-4 mr-2" />
+              Move flow to...
+            </DropdownMenuItem>
           )}
           {(canMoveUp || canMoveDown) && <DropdownMenuSeparator />}
           {canMoveUp && (
