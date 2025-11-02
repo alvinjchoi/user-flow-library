@@ -14,7 +14,6 @@ import {
   Check,
   Download,
   Shapes,
-  Play,
   MoreVertical,
   Archive,
 } from "lucide-react";
@@ -45,7 +44,6 @@ import {
 } from "@/lib/inspirations";
 import { CommentPin, NewCommentPin, type ScreenComment } from "./comment-pin";
 import { HotspotEditor } from "@/components/hotspots/hotspot-editor";
-import { PrototypePlayer } from "@/components/hotspots/prototype-player";
 
 interface ScreenViewerModalProps {
   screen: Screen | null;
@@ -87,10 +85,6 @@ export function ScreenViewerModal({
   // Hotspot state
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [isHotspotEditorOpen, setIsHotspotEditorOpen] = useState(false);
-  const [isPrototypePlayerOpen, setIsPrototypePlayerOpen] = useState(false);
-  const [hotspotsByScreen, setHotspotsByScreen] = useState<
-    Map<string, Hotspot[]>
-  >(new Map());
 
   // Delete/Archive state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -209,30 +203,6 @@ export function ScreenViewerModal({
 
     loadHotspots();
   }, [currentScreen?.id]);
-
-  // Load all hotspots for prototype mode
-  useEffect(() => {
-    const loadAllHotspots = async () => {
-      const hotspotMap = new Map<string, Hotspot[]>();
-
-      try {
-        await Promise.all(
-          allScreens.map(async (s) => {
-            const response = await fetch(`/api/screens/${s.id}/hotspots`);
-            if (response.ok) {
-              const data = await response.json();
-              hotspotMap.set(s.id, data);
-            }
-          })
-        );
-        setHotspotsByScreen(hotspotMap);
-      } catch (error) {
-        console.error("Error loading all hotspots:", error);
-      }
-    };
-
-    loadAllHotspots();
-  }, [allScreens]);
 
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < allScreens.length - 1;
@@ -631,15 +601,6 @@ export function ScreenViewerModal({
               >
                 <Shapes className="h-4 w-4 mr-2" />
                 Edit Hotspots
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsPrototypePlayerOpen(true)}
-                className="bg-primary hover:bg-primary/90 text-white"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Play
               </Button>
             </>
           )}
@@ -1066,16 +1027,6 @@ export function ScreenViewerModal({
           onUpdateHotspot={handleUpdateHotspot}
           onDeleteHotspot={handleDeleteHotspot}
           onClose={() => setIsHotspotEditorOpen(false)}
-        />
-      )}
-
-      {/* Prototype Player Modal */}
-      {isPrototypePlayerOpen && currentScreen && (
-        <PrototypePlayer
-          startScreen={currentScreen}
-          allScreens={allScreens}
-          hotspotsByScreen={hotspotsByScreen}
-          onClose={() => setIsPrototypePlayerOpen(false)}
         />
       )}
 
