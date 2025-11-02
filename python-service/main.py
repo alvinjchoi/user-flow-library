@@ -118,16 +118,16 @@ async def detect_ui_elements(request: DetectionRequest):
 @app.post("/generate-layout")
 async def generate_layout(request: DetectionRequest):
     """
-    Generate HTML/CSS layout from a screenshot using ScreenCoder + GPT-4 Vision
+    Generate HTML/CSS layout from a screenshot using ScreenCoder's methodology
     
-    This endpoint:
-    1. Downloads the screenshot
-    2. Uses GPT-4 Vision to analyze the UI
-    3. Generates semantic HTML5 + Tailwind CSS code
-    4. Returns clean, production-ready layout code
+    This endpoint uses ScreenCoder's actual implementation:
+    1. Block Parsing: Identify major layout blocks (header, sidebar, navigation, main content)
+    2. HTML Generation: Generate HTML/CSS for each block using GPT-4 Vision
+    3. Layout Assembly: Combine blocks into complete page structure
+    4. Returns production-ready HTML with Tailwind CSS
     """
     try:
-        from layout_generator import get_generator
+        from screencoder_wrapper import get_generator
         
         # Get OpenAI API key from environment
         openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -137,15 +137,13 @@ async def generate_layout(request: DetectionRequest):
                 detail="OPENAI_API_KEY not configured. Layout generation requires OpenAI API access."
             )
         
-        # Get generator instance
+        # Get ScreenCoder generator instance
         generator = get_generator(openai_api_key)
         
-        # Generate layout
+        # Generate layout using ScreenCoder's approach
         result = generator.generate_layout(
             str(request.imageUrl),
-            model="gpt-4o",  # Using GPT-4o for better vision capabilities
-            include_css=True,
-            output_format="html"
+            include_full_page=True
         )
         
         return result
