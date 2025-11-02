@@ -13,7 +13,7 @@ const USE_UIED = Boolean(UIED_SERVICE_URL);
 
 // Type for detected element from AI
 interface DetectedElement {
-  type: 'button' | 'link' | 'card' | 'tab' | 'input' | 'icon' | 'other';
+  type: "button" | "link" | "card" | "tab" | "input" | "icon" | "other";
   label: string;
   description: string;
   boundingBox: {
@@ -26,16 +26,18 @@ interface DetectedElement {
 }
 
 // Helper: Detect elements using ScreenCoder layout generation
-async function detectWithScreenCoder(imageUrl: string): Promise<DetectedElement[]> {
+async function detectWithScreenCoder(
+  imageUrl: string
+): Promise<DetectedElement[]> {
   try {
     // ScreenCoder calls GPT-4 multiple times (block parsing + HTML generation per block)
     // Set a generous timeout: 3 minutes
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 seconds
-    
+
     const response = await fetch(`${UIED_SERVICE_URL}/generate-layout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageUrl }),
       signal: controller.signal,
     });
@@ -44,43 +46,61 @@ async function detectWithScreenCoder(imageUrl: string): Promise<DetectedElement[
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`ScreenCoder service error: ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `ScreenCoder service error: ${response.statusText} - ${errorText}`
+      );
     }
 
     const data = await response.json();
     
+    // Debug: Log the full ScreenCoder response
+    console.log('=== ScreenCoder Response ===');
+    console.log('Full response:', JSON.stringify(data, null, 2));
+    console.log('data.blocks:', data.blocks);
+    console.log('data.metadata:', data.metadata);
+    console.log('Response keys:', Object.keys(data));
+    console.log('===========================');
+
     // Convert layout blocks to DetectedElements
     const elements: DetectedElement[] = [];
     const metadata = data.metadata || {};
     const imageWidth = metadata.imageWidth || 1290; // fallback dimensions
     const imageHeight = metadata.imageHeight || 2796;
+
+    // Parse bboxes from the response (ScreenCoder stores coordinates in 'bboxes', not 'blocks')
+    const bboxes = data.bboxes || {};
     
-    // Parse blocks from the response
-    const blocks = data.blocks || {};
-    
-    for (const [blockName, blockData] of Object.entries(blocks)) {
-      const block = blockData as any;
-      if (!block.bbox) continue;
-      
-      const [x1, y1, x2, y2] = block.bbox;
-      
+    console.log('Found bboxes:', Object.keys(bboxes).length);
+
+    for (const [blockName, bbox] of Object.entries(bboxes)) {
+      const bboxArray = bbox as number[];
+      if (!bboxArray || bboxArray.length !== 4) {
+        console.warn(`Invalid bbox for ${blockName}:`, bboxArray);
+        continue;
+      }
+
+      const [x1, y1, x2, y2] = bboxArray;
+
       // Convert pixel coordinates to percentages
       const x = (x1 / imageWidth) * 100;
       const y = (y1 / imageHeight) * 100;
       const width = ((x2 - x1) / imageWidth) * 100;
       const height = ((y2 - y1) / imageHeight) * 100;
-      
+
       // Map block name to element type
-      let type: DetectedElement['type'] = 'other';
+      let type: DetectedElement["type"] = "other";
       const lowerName = blockName.toLowerCase();
-      if (lowerName.includes('button')) type = 'button';
-      else if (lowerName.includes('nav') || lowerName.includes('menu')) type = 'link';
-      else if (lowerName.includes('card')) type = 'card';
-      else if (lowerName.includes('tab')) type = 'tab';
-      else if (lowerName.includes('input') || lowerName.includes('search')) type = 'input';
-      else if (lowerName.includes('icon')) type = 'icon';
-      else if (lowerName.includes('header') || lowerName.includes('footer')) type = 'other';
-      
+      if (lowerName.includes("button")) type = "button";
+      else if (lowerName.includes("nav") || lowerName.includes("menu"))
+        type = "link";
+      else if (lowerName.includes("card")) type = "card";
+      else if (lowerName.includes("tab")) type = "tab";
+      else if (lowerName.includes("input") || lowerName.includes("search"))
+        type = "input";
+      else if (lowerName.includes("icon")) type = "icon";
+      else if (lowerName.includes("header") || lowerName.includes("footer"))
+        type = "other";
+
       elements.push({
         type,
         label: blockName,
@@ -88,11 +108,15 @@ async function detectWithScreenCoder(imageUrl: string): Promise<DetectedElement[
         boundingBox: { x, y, width, height },
         confidence: 0.85, // ScreenCoder uses GPT-4 Vision, high confidence
       });
+      
+      console.log(`Created element: ${blockName} at (${x.toFixed(1)}%, ${y.toFixed(1)}%)`);
     }
     
+    console.log(`ScreenCoder: Converted ${elements.length} bboxes to elements`);
+
     return elements;
   } catch (error) {
-    console.error('ScreenCoder detection failed:', error);
+    console.error("ScreenCoder detection failed:", error);
     throw error;
   }
 }
@@ -104,10 +128,10 @@ async function detectWithUIED(imageUrl: string): Promise<DetectedElement[]> {
     // Set a generous timeout: 2 minutes
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
-    
+
     const response = await fetch(`${UIED_SERVICE_URL}/detect`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageUrl, includeLabels: true }),
       signal: controller.signal,
     });
@@ -121,7 +145,7 @@ async function detectWithUIED(imageUrl: string): Promise<DetectedElement[]> {
     const data = await response.json();
     return data.elements || [];
   } catch (error) {
-    console.error('UIED detection failed:', error);
+    console.error("UIED detection failed:", error);
     throw error;
   }
 }
@@ -196,7 +220,7 @@ Return ONLY a valid JSON array with no additional text. Example format:
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    throw new Error('No response from GPT-4 Vision');
+    throw new Error("No response from GPT-4 Vision");
   }
 
   // Parse the JSON response
@@ -204,7 +228,7 @@ Return ONLY a valid JSON array with no additional text. Example format:
     .replace(/```json\n?/g, "")
     .replace(/```\n?/g, "")
     .trim();
-  
+
   return JSON.parse(cleanedContent);
 }
 
@@ -229,10 +253,7 @@ export async function POST(
       .single();
 
     if (screenError || !screen) {
-      return NextResponse.json(
-        { error: "Screen not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Screen not found" }, { status: 404 });
     }
 
     if (!screen.screenshot_url) {
@@ -243,44 +264,55 @@ export async function POST(
     }
 
     let detectedElements: DetectedElement[];
-    let detectionMethod: 'screencoder' | 'uied' | 'gpt4' | 'fallback' = 'gpt4';
+    let detectionMethod: "screencoder" | "uied" | "gpt4" | "fallback" = "gpt4";
     let detectionError: string | null = null;
 
     // Try ScreenCoder first if configured (best for layout detection)
     if (USE_UIED) {
       try {
-        console.log('🎨 Attempting ScreenCoder layout detection...');
+        console.log("🎨 Attempting ScreenCoder layout detection...");
         detectedElements = await detectWithScreenCoder(screen.screenshot_url);
-        detectionMethod = 'screencoder';
-        console.log(`✅ ScreenCoder detected ${detectedElements.length} layout blocks`);
+        detectionMethod = "screencoder";
+        console.log(
+          `✅ ScreenCoder detected ${detectedElements.length} layout blocks`
+        );
       } catch (screencoderError: any) {
-        console.warn('⚠️ ScreenCoder failed, trying UIED component detection:', screencoderError.message);
+        console.warn(
+          "⚠️ ScreenCoder failed, trying UIED component detection:",
+          screencoderError.message
+        );
         detectionError = screencoderError.message;
-        
+
         // Fallback to UIED component detection
         try {
-          console.log('🔍 Attempting UIED component detection...');
+          console.log("🔍 Attempting UIED component detection...");
           detectedElements = await detectWithUIED(screen.screenshot_url);
-          detectionMethod = 'uied';
+          detectionMethod = "uied";
           console.log(`✅ UIED detected ${detectedElements.length} components`);
         } catch (uiedError: any) {
-          console.warn('⚠️ UIED also failed, falling back to GPT-4:', uiedError.message);
+          console.warn(
+            "⚠️ UIED also failed, falling back to GPT-4:",
+            uiedError.message
+          );
           detectionError = `ScreenCoder: ${screencoderError.message}; UIED: ${uiedError.message}`;
-          detectionMethod = 'fallback';
-          
+          detectionMethod = "fallback";
+
           // Final fallback to GPT-4
           if (!process.env.OPENAI_API_KEY) {
             return NextResponse.json(
-              { 
-                error: "All detection methods failed and OpenAI API is not configured", 
-                details: detectionError 
+              {
+                error:
+                  "All detection methods failed and OpenAI API is not configured",
+                details: detectionError,
               },
               { status: 503 }
             );
           }
 
           detectedElements = await detectWithGPT4(screen.screenshot_url);
-          console.log(`✅ GPT-4 fallback detected ${detectedElements.length} elements`);
+          console.log(
+            `✅ GPT-4 fallback detected ${detectedElements.length} elements`
+          );
         }
       }
     } else {
@@ -292,7 +324,7 @@ export async function POST(
         );
       }
 
-      console.log('🔍 Using GPT-4 Vision detection...');
+      console.log("🔍 Using GPT-4 Vision detection...");
       detectedElements = await detectWithGPT4(screen.screenshot_url);
       console.log(`✅ GPT-4 detected ${detectedElements.length} elements`);
     }
@@ -303,10 +335,14 @@ export async function POST(
         // Validate bounding box
         const { x, y, width, height } = element.boundingBox;
         return (
-          x >= 0 && x <= 100 &&
-          y >= 0 && y <= 100 &&
-          width > 0 && width <= 100 &&
-          height > 0 && height <= 100 &&
+          x >= 0 &&
+          x <= 100 &&
+          y >= 0 &&
+          y <= 100 &&
+          width > 0 &&
+          width <= 100 &&
+          height > 0 &&
+          height <= 100 &&
           x + width <= 100 &&
           y + height <= 100
         );
@@ -324,8 +360,11 @@ export async function POST(
       ...(detectionError && { warning: detectionError }),
     });
   } catch (error: any) {
-    console.error("Unexpected error in POST /api/screens/[id]/detect-elements:", error);
-    
+    console.error(
+      "Unexpected error in POST /api/screens/[id]/detect-elements:",
+      error
+    );
+
     // Handle OpenAI specific errors
     if (error?.status === 401) {
       return NextResponse.json(
@@ -346,4 +385,3 @@ export async function POST(
     );
   }
 }
-
