@@ -74,15 +74,23 @@ export async function POST(
               type: "text",
               text: `You are analyzing a mobile app screenshot to identify all clickable UI elements for creating an interactive prototype.
 
+**CRITICAL: Bounding Box Accuracy**
+- Provide TIGHT, PRECISE bounding boxes that wrap EXACTLY around the interactive element
+- DO NOT include extra padding or whitespace
+- The box should only cover the actual clickable area (button, icon, or text)
+- For text buttons: include only the text and immediate button background, not surrounding space
+- For icons: wrap tightly around the icon shape
+- Measure carefully using the actual pixel dimensions
+
 For each interactive element, provide:
 1. Element type: Choose from 'button', 'link', 'tab', 'card', 'icon', 'input', or 'other'
-2. Element label: The text or accessible name of the element (if visible)
+2. Element label: The exact text visible on the element (case-sensitive)
 3. Element description: A brief description of what the element does
 4. Bounding box coordinates as percentages (0-100):
-   - x: horizontal position from left edge
-   - y: vertical position from top edge
-   - width: element width as percentage of total width
-   - height: element height as percentage of total height
+   - x: horizontal position from left edge to the LEFT edge of the element (not its center)
+   - y: vertical position from top edge to the TOP edge of the element (not its center)
+   - width: EXACT width of the clickable element (not including padding)
+   - height: EXACT height of the clickable element (not including padding)
 5. Confidence score (0.0-1.0): How confident you are that this is an interactive element
 
 Focus on:
@@ -94,7 +102,7 @@ Focus on:
 
 Ignore:
 - Decorative elements (logos, background images, illustrations)
-- Static text (headings, paragraphs, labels)
+- Static text (headings, paragraphs, labels that are not clickable)
 - Non-interactive UI chrome (status bar, safe areas)
 
 Return ONLY a valid JSON array with no additional text. Example format:
@@ -103,7 +111,7 @@ Return ONLY a valid JSON array with no additional text. Example format:
     "type": "button",
     "label": "Sign In",
     "description": "Primary sign-in button",
-    "boundingBox": { "x": 10, "y": 70, "width": 80, "height": 8 },
+    "boundingBox": { "x": 12, "y": 72, "width": 76, "height": 6 },
     "confidence": 0.95
   }
 ]`,
