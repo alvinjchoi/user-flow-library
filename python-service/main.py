@@ -115,11 +115,60 @@ async def detect_ui_elements(request: DetectionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/generate-layout")
+async def generate_layout(request: DetectionRequest):
+    """
+    Generate HTML/CSS layout from a screenshot using ScreenCoder + GPT-4 Vision
+    
+    This endpoint:
+    1. Downloads the screenshot
+    2. Uses GPT-4 Vision to analyze the UI
+    3. Generates semantic HTML5 + Tailwind CSS code
+    4. Returns clean, production-ready layout code
+    """
+    try:
+        from layout_generator import get_generator
+        
+        # Get OpenAI API key from environment
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+        if not openai_api_key:
+            raise HTTPException(
+                status_code=503,
+                detail="OPENAI_API_KEY not configured. Layout generation requires OpenAI API access."
+            )
+        
+        # Get generator instance
+        generator = get_generator(openai_api_key)
+        
+        # Generate layout
+        result = generator.generate_layout(
+            str(request.imageUrl),
+            model="gpt-4o",  # Using GPT-4o for better vision capabilities
+            include_css=True,
+            output_format="html"
+        )
+        
+        return result
+        
+    except ImportError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"ScreenCoder not properly installed: {str(e)}"
+        )
+    except Exception as e:
+        import traceback
+        error_detail = f"Layout generation failed: {str(e)}\n{traceback.format_exc()}"
+        print(error_detail)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/health")
 async def health_check():
-    """Detailed health check with UIED availability"""
+    """Detailed health check with UIED and ScreenCoder availability"""
     uied_available = False
     ocr_available = False
+    screencoder_available = False
+    openai_configured = bool(os.getenv('OPENAI_API_KEY'))
     error_message = None
     
     try:
@@ -127,6 +176,7 @@ async def health_check():
         import sys
         from pathlib import Path
         UIED_PATH = Path(__file__).parent / "UIED"
+        SCREENCODER_PATH = Path(__file__).parent / "ScreenCoder"
         
         if UIED_PATH.exists():
             sys.path.insert(0, str(UIED_PATH))
@@ -139,13 +189,20 @@ async def health_check():
                 ocr_available = True
             except ImportError:
                 ocr_available = False
+        
+        # Check ScreenCoder
+        if SCREENCODER_PATH.exists():
+            screencoder_available = True
+            
     except Exception as e:
         error_message = str(e)
     
     return {
-        "status": "healthy" if uied_available else "degraded",
+        "status": "healthy" if (uied_available and screencoder_available) else "degraded",
         "uied_available": uied_available,
         "ocr_available": ocr_available,
+        "screencoder_available": screencoder_available,
+        "openai_configured": openai_configured,
         "error": error_message,
     }
 
