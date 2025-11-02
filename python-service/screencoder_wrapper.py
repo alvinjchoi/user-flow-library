@@ -101,12 +101,12 @@ class ScreenCoderGenerator:
         # Encode image
         base64_image = self.encode_image(image_path)
         
-        # Component-level detection prompt
-        prompt = f"""You are a UI component analyzer. Analyze this screenshot and identify ALL interactive components and UI elements.
+        # Component-level detection prompt (precise bounding boxes)
+        prompt = f"""You are a UI component analyzer. Analyze this screenshot and identify ALL interactive components and UI elements with TIGHT, PRECISE bounding boxes.
 
 For EACH component you identify, provide:
 1. A specific, descriptive label (e.g., "Sign In button", "Email input", "Logo", "Search icon")
-2. Its bounding box coordinates in the format: <bbox>x1 y1 x2 y2</bbox>
+2. Its TIGHT bounding box coordinates in the format: <bbox>x1 y1 x2 y2</bbox>
 
 Coordinates are in pixels. Image dimensions: {w}x{h} pixels.
 
@@ -119,20 +119,23 @@ Component types to identify:
 - Text headings and labels
 - Tabs and toggles
 
-Rules:
+CRITICAL Rules for ACCURATE bounding boxes:
 - x1,y1 = top-left corner, x2,y2 = bottom-right corner
+- Draw TIGHT boxes - include ONLY the visible element, NO extra padding
+- For buttons: box should cover ONLY the button area (background + text)
+- For inputs: box should cover ONLY the input field border
+- For icons: box should cover ONLY the icon, not surrounding space
+- For text: box should cover ONLY the text itself, not white space
+- Measure pixel positions carefully - accuracy is critical
 - Be SPECIFIC with labels - include text content when visible
-- Identify individual components, not just sections
-- Components can overlap if they're nested (e.g., button inside card)
 
-Example format:
-Logo image <bbox>20 20 150 80</bbox>
-Search input field <bbox>200 30 500 70</bbox>
-"Sign In" button <bbox>520 30 620 70</bbox>
-Profile icon <bbox>640 30 690 80</bbox>
-Product card "iPhone 15" <bbox>100 150 350 450</bbox>
+Example format (tight boxes):
+Logo image <bbox>20 20 140 75</bbox>
+Search input field <bbox>200 30 490 68</bbox>
+"Sign In" button <bbox>522 32 618 68</bbox>
+Profile icon <bbox>642 32 688 78</bbox>
 
-Now analyze this UI and list ALL components with precise bounding boxes:"""
+Now analyze this UI and provide TIGHT, ACCURATE bounding boxes for all components:"""
         
         # Call GPT-4 Vision
         response = self._call_gpt_vision(base64_image, prompt)
