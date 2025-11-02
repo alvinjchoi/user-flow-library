@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
     }
 
     console.log("[API /projects] Executing query...");
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
     if (error) {
       console.error("[API /projects] Query error:", error);
@@ -50,4 +52,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
+// Force redeploy Sun Nov  2 15:12:27 PST 2025
