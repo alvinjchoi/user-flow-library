@@ -53,7 +53,7 @@ export async function getProject(id: string): Promise<Project | null> {
     if (response.status === 401) {
       console.log("[getProject] Got 401, retrying after 1s...");
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       const retryResponse = await fetch(`/api/projects/${id}`, {
         method: "GET",
         credentials: "include",
@@ -88,7 +88,9 @@ export async function getProject(id: string): Promise<Project | null> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[getProject] Error response:", errorText);
-      throw new Error(`Failed to fetch project: ${response.status} ${errorText}`);
+      throw new Error(
+        `Failed to fetch project: ${response.status} ${errorText}`
+      );
     }
 
     const data = await response.json();

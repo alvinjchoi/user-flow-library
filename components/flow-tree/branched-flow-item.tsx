@@ -188,16 +188,16 @@ export function BranchedFlowItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddScreen();
-                  setMenuOpen(false);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add screen
-              </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddScreen();
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add screen
+                  </DropdownMenuItem>
               {onMoveFlow && (
                 <DropdownMenuItem
                   onClick={(e) => {
