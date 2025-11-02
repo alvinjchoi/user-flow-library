@@ -10,7 +10,12 @@ export async function GET(
     const { id } = await params;
     const { userId, orgId } = await auth();
 
+    // Debug logging
+    console.log("[API /projects/[id]] Request for project:", id);
+    console.log("[API /projects/[id]] Auth context:", { userId, orgId });
+
     if (!userId && !orgId) {
+      console.log("[API /projects/[id]] Unauthorized: No userId or orgId");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -22,14 +27,21 @@ export async function GET(
 
     // Ensure user can only access their own projects or projects from their organization
     if (orgId) {
+      console.log("[API /projects/[id]] Filtering by orgId:", orgId);
       query = query.eq("clerk_org_id", orgId);
     } else if (userId) {
+      console.log("[API /projects/[id]] Filtering by userId:", userId);
       query = query.eq("user_id", userId);
     } else {
+      console.log("[API /projects/[id]] Unauthorized: No filter applied");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { data, error } = await query.single();
+    console.log("[API /projects/[id]] Query result:", {
+      data: data?.id,
+      error: error?.code,
+    });
 
     if (error) {
       if (error.code === "PGRST116") {
@@ -48,4 +60,3 @@ export async function GET(
     );
   }
 }
-

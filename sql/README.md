@@ -21,7 +21,11 @@ The SQL folder follows the Diátaxis framework so you can find the right script 
 - `how-to/ADD_SOFT_DELETE_SUPPORT.sql` – introduce `deleted_at` soft-delete columns.
 - `how-to/ADD_USER_OWNERSHIP_TO_PROJECTS.sql` – add a `user_id` column and secure it with RLS.
 - `how-to/ASSIGN_PROJECTS_TO_ORG.sql` – backfill existing projects to a Clerk organization.
+- `how-to/CLEANUP_INVALID_AVATAR_URLS.sql` – remove broken avatar URLs and fall back to color blocks.
 - `how-to/COMPLETE_PARENT_FLOW_ID_SETUP.sql` – reapply constraints and indexes for `parent_flow_id`.
+- `how-to/CONVERT_ORG_PROJECT_TO_PERSONAL.sql` – transfer an org project to personal ownership.
+- `how-to/DEBUG_USER_ORG_ACCESS.sql` – view all projects you can access and check auth state.
+- `how-to/INVESTIGATE_PROJECT_ACCESS_ISSUE.sql` – comprehensive diagnostic queries for access problems.
 - `how-to/OPTIONAL_PROFILES_AND_ORGS.sql` – create extended `profiles` and `organizations` tables.
 - `how-to/SETUP_PROJECT_AVATARS_COMPLETE.sql` – provision the `project-avatars` storage bucket and policies.
 

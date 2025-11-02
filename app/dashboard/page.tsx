@@ -242,13 +242,23 @@ export default function HomePage() {
                               src={project.avatar_url}
                               alt={`${project.name} avatar`}
                               className="w-10 h-10 rounded-lg object-cover"
+                              onError={(e) => {
+                                // Hide the broken image and show color block instead
+                                e.currentTarget.style.display = 'none';
+                                const colorBlock = e.currentTarget.nextElementSibling;
+                                if (colorBlock instanceof HTMLElement) {
+                                  colorBlock.style.display = 'block';
+                                }
+                              }}
                             />
-                          ) : (
-                            <div
-                              className="w-10 h-10 rounded-lg flex-shrink-0"
-                              style={{ backgroundColor: project.color }}
-                            />
-                          )}
+                          ) : null}
+                          <div
+                            className="w-10 h-10 rounded-lg flex-shrink-0"
+                            style={{ 
+                              backgroundColor: project.color,
+                              display: project.avatar_url ? 'none' : 'block'
+                            }}
+                          />
                           {/* Pencil icon - appears on hover */}
                           <Button
                             variant="secondary"

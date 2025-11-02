@@ -169,10 +169,13 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                   width={32}
                   height={32}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Hide broken image and show icon instead
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
-              ) : (
-                <Search className="w-5 h-5 text-primary-foreground" />
-              )}
+              ) : null}
+              <Search className="w-5 h-5 text-primary-foreground" style={{ display: project?.avatar_url ? 'none' : 'block' }} />
             </div>
             <div className="flex flex-col">
                 {project && isEditingName ? (

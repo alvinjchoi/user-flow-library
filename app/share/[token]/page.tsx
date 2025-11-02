@@ -71,13 +71,15 @@ export default function SharePage() {
         return;
       }
 
-      setProject(projectData);
+      // Type narrowing: assign to typed variable
+      const validProject: Project = projectData;
+      setProject(validProject);
 
       // Load flows
       const { data: flowsData, error: flowsError } = await supabase
         .from("flows")
         .select("*")
-        .eq("project_id", projectData.id)
+        .eq("project_id", validProject.id)
         .order("order_index");
 
       if (flowsError) {
@@ -87,13 +89,14 @@ export default function SharePage() {
         return;
       }
 
-      setFlows(flowsData || []);
+      const validFlows: Flow[] = flowsData || [];
+      setFlows(validFlows);
 
       // Load screens for each flow
       const screensMap = new Map<string, Screen[]>();
       const allScreensList: Screen[] = [];
 
-      for (const flow of flowsData || []) {
+      for (const flow of validFlows) {
         const { data: screensData, error: screensError } = await supabase
           .from("screens")
           .select("*")
@@ -172,10 +175,20 @@ export default function SharePage() {
                     width={32}
                     height={32}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Hide broken image and show icon instead
+                      e.currentTarget.style.display = "none";
+                      const icon = e.currentTarget.nextElementSibling;
+                      if (icon instanceof HTMLElement) {
+                        icon.style.display = "block";
+                      }
+                    }}
                   />
-                ) : (
-                  <Search className="w-5 h-5 text-primary-foreground" />
-                )}
+                ) : null}
+                <Search
+                  className="w-5 h-5 text-primary-foreground"
+                  style={{ display: project.avatar_url ? "none" : "block" }}
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold">{project.name}</span>
@@ -298,4 +311,3 @@ export default function SharePage() {
     </div>
   );
 }
-

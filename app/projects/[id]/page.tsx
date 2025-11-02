@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import { useUser, useOrganization } from "@clerk/nextjs";
 import { getProject } from "@/lib/projects";
 import {
   getFlowsByProject,
@@ -29,6 +30,8 @@ export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
+  const { user, isLoaded: userLoaded } = useUser();
+  const { organization, isLoaded: orgLoaded } = useOrganization();
 
   const [project, setProject] = useState<Project | null>(null);
   const [flows, setFlows] = useState<Flow[]>([]);
@@ -56,10 +59,25 @@ export default function ProjectPage() {
 
   useEffect(() => {
     initializeStorage();
-    loadProjectData();
-  }, [projectId]);
+    // Only load project data when Clerk is ready
+    if (userLoaded && orgLoaded) {
+      loadProjectData();
+    }
+  }, [projectId, userLoaded, orgLoaded]);
 
   async function loadProjectData() {
+    // Double-check auth is loaded before proceeding
+    if (!userLoaded || !orgLoaded) {
+      console.log("[ProjectPage] Waiting for auth to load...");
+      return;
+    }
+
+    console.log("[ProjectPage] Loading project data with auth:", {
+      userId: user?.id,
+      orgId: organization?.id,
+      orgName: organization?.name,
+    });
+
     try {
       setLoading(true);
 
@@ -632,11 +650,27 @@ export default function ProjectPage() {
   if (!project) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <h2 className="text-2xl font-bold mb-2">Project not found</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             This project doesn't exist or you don't have access to it.
           </p>
+          <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg text-left space-y-2">
+            <p className="font-semibold">Common reasons:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>You're not logged in</li>
+              <li>
+                You're not in the right organization (use the org switcher)
+              </li>
+              <li>The project was deleted</li>
+              <li>You don't have permission to view this project</li>
+            </ul>
+            <p className="mt-4">
+              <a href="/dashboard" className="text-primary hover:underline">
+                ← Back to Dashboard
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -645,10 +679,12 @@ export default function ProjectPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header with project avatar */}
-      <Header 
-        project={project} 
+      <Header
+        project={project}
         stats={projectStats}
-        onProjectUpdate={(updatedProject) => setProject(updatedProject)}
+        onProjectUpdate={(updatedProject) =>
+          setProject({ ...project, ...updatedProject })
+        }
       />
 
       {/* Main content with sidebar */}
