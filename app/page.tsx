@@ -30,7 +30,7 @@ export default function LandingPage() {
               Perfect for designers, product managers, and development teams.
             </p>
 
-            <SignedOut>
+        <SignedOut>
               <div className="flex gap-4 justify-center">
                 <Button size="lg" asChild>
                   <Link href="/sign-up">
@@ -43,16 +43,16 @@ export default function LandingPage() {
                     Sign In
                   </Link>
                 </Button>
-              </div>
-            </SignedOut>
+          </div>
+        </SignedOut>
 
-            <SignedIn>
+        <SignedIn>
               <Button size="lg" asChild>
                 <Link href="/dashboard">
                   Go to Dashboard
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-              </Button>
+                </Button>
             </SignedIn>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 <div className="flex flex-col items-center text-center">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                     <Users className="w-6 h-6 text-primary" />
-                  </div>
+              </div>
                   <h3 className="text-xl font-semibold mb-2">
                     Team Collaboration
                   </h3>
@@ -94,7 +94,7 @@ export default function LandingPage() {
                     Work together with your team using organizations. 
                     Comment on designs and track feedback.
                   </p>
-                </div>
+            </div>
               </CardContent>
             </Card>
 
@@ -103,7 +103,7 @@ export default function LandingPage() {
                 <div className="flex flex-col items-center text-center">
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                     <Share2 className="w-6 h-6 text-primary" />
-                  </div>
+                        </div>
                   <h3 className="text-xl font-semibold mb-2">
                     Share with Clients
                   </h3>
@@ -111,11 +111,11 @@ export default function LandingPage() {
                     Generate public share links for your projects. 
                     Perfect for client presentations and feedback.
                   </p>
-                </div>
-              </CardContent>
-            </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
           </div>
-        </div>
+              </div>
 
         {/* CTA Section */}
         <SignedOut>
