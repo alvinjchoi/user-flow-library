@@ -51,6 +51,7 @@ export function HotspotEditor({
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
     null
   );
+  const [drawMode, setDrawMode] = useState(false); // Explicit draw mode toggle
   const imageRef = useRef<HTMLImageElement>(null);
 
   // Debug: Log hotspots whenever they change
@@ -63,7 +64,8 @@ export function HotspotEditor({
 
   // Handle mouse down to start drawing
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (selectedHotspot || !imageRef.current) return;
+    // Only allow drawing in draw mode
+    if (!drawMode || selectedHotspot || !imageRef.current) return;
 
     const rect = imageRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -277,10 +279,27 @@ export function HotspotEditor({
           <div>
             <h2 className="text-white text-xl font-semibold">Hotspot Editor</h2>
             <p className="text-white/70 text-sm mt-1">
-              Draw boxes or use AI to detect clickable elements
+              {drawMode
+                ? "🎯 Draw Mode: Click and drag to create hotspot boxes"
+                : "Click 'Draw Mode' to manually add hotspots, or use AI"}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={() => {
+                setDrawMode(!drawMode);
+                setSelectedHotspot(null);
+              }}
+              variant={drawMode ? "default" : "outline"}
+              className={
+                drawMode
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "text-white border-white/30 hover:bg-white/10"
+              }
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {drawMode ? "Drawing..." : "Draw Mode"}
+            </Button>
             <Button
               onClick={handleAIDetect}
               disabled={isAIDetecting}
@@ -315,7 +334,7 @@ export function HotspotEditor({
         {/* Image with Hotspots Overlay */}
         <div className="flex-1 flex items-center justify-center relative">
           <div
-            className="relative"
+            className={`relative ${drawMode ? "cursor-crosshair" : ""}`}
             style={{ maxWidth: "100%", maxHeight: "100%" }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
