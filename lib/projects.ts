@@ -19,7 +19,9 @@ export async function getProjects(): Promise<Project[]> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[getProjects] Error response:", errorText);
-      throw new Error(`Failed to fetch projects: ${response.status} ${errorText}`);
+      throw new Error(
+        `Failed to fetch projects: ${response.status} ${errorText}`
+      );
     }
 
     const data = await response.json();
@@ -35,6 +37,7 @@ export async function getProjects(): Promise<Project[]> {
 // Retries once if initial request fails (to handle auth timing issues)
 export async function getProject(id: string): Promise<Project | null> {
   try {
+    console.log("[getProject] Fetching project:", id);
     const response = await fetch(`/api/projects/${id}`, {
       method: "GET",
       credentials: "include", // Ensure cookies are sent
@@ -42,6 +45,8 @@ export async function getProject(id: string): Promise<Project | null> {
         "Content-Type": "application/json",
       },
     });
+
+    console.log("[getProject] Response status:", response.status);
 
     // If we get 401 (Unauthorized), wait briefly and retry once
     // This handles cases where Clerk auth cookies aren't ready yet
@@ -57,29 +62,40 @@ export async function getProject(id: string): Promise<Project | null> {
         },
       });
 
+      console.log("[getProject] Retry response status:", retryResponse.status);
+
       if (retryResponse.status === 404) {
+        console.log("[getProject] 404 after retry - project not found");
         return null;
       }
 
       if (!retryResponse.ok) {
-        throw new Error("Failed to fetch project after retry");
+        const errorText = await retryResponse.text();
+        console.error("[getProject] Error after retry:", errorText);
+        throw new Error(`Failed to fetch project after retry: ${errorText}`);
       }
 
-      return await retryResponse.json();
+      const data = await retryResponse.json();
+      console.log("[getProject] Success after retry:", data.name);
+      return data;
     }
 
     if (response.status === 404) {
+      console.log("[getProject] 404 - project not found");
       return null;
     }
 
     if (!response.ok) {
-      throw new Error("Failed to fetch project");
+      const errorText = await response.text();
+      console.error("[getProject] Error response:", errorText);
+      throw new Error(`Failed to fetch project: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
+    console.log("[getProject] Success:", data.name);
     return data;
   } catch (error) {
-    console.error("Error fetching project:", error);
+    console.error("[getProject] Exception:", error);
     return null;
   }
 }
@@ -175,8 +191,8 @@ export async function uploadProjectAvatar(
   const fileExt = file.name.split(".").pop();
   const fileName = `${projectId}-${Date.now()}.${fileExt}`;
 
-      // Upload file to project-avatars bucket
-      const avatarUrl = await uploadFile("project-avatars", fileName, file);
+  // Upload file to project-avatars bucket
+  const avatarUrl = await uploadFile("project-avatars", fileName, file);
 
   // Update project with avatar URL
   const { error } = await supabase
