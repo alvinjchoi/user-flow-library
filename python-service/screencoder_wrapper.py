@@ -166,7 +166,7 @@ Now analyze this UI and provide TIGHT, ACCURATE bounding boxes for all component
         lines = response.strip().split('\n')
         component_idx = 0
         
-        for line in lines:
+        for i, line in enumerate(lines):
             line_original = line.strip()
             line_lower = line_original.lower()
             
@@ -177,8 +177,24 @@ Now analyze this UI and provide TIGHT, ACCURATE bounding boxes for all component
             bbox_start_idx = line_lower.find('<bbox>')
             label = line_lower[:bbox_start_idx].strip()
             
-            # Skip if no label
-            if not label:
+            # If label is just a dash/bullet (GPT used numbered list format),
+            # look at the previous non-empty line for the actual label
+            if label in ['-', '•', '*', '']:
+                # Look back for the component name
+                for j in range(i - 1, max(-1, i - 3), -1):  # Check up to 2 lines back
+                    prev_line = lines[j].strip()
+                    if prev_line:
+                        # Remove numbering, asterisks, and markdown formatting
+                        clean_label = re.sub(r'^\d+\.\s*', '', prev_line)  # Remove "1. "
+                        clean_label = re.sub(r'^\*+\s*', '', clean_label)  # Remove "** "
+                        clean_label = re.sub(r'\*+$', '', clean_label)  # Remove trailing "**"
+                        clean_label = clean_label.strip('*').strip()
+                        if clean_label:
+                            label = clean_label
+                            break
+            
+            # Skip if still no valid label
+            if not label or label in ['-', '•', '*']:
                 continue
             
             # Extract bbox coordinates
