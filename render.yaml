@@ -11,4 +11,4 @@ services:
       - key: PYTHONUNBUFFERED
         value: 1
     healthCheckPath: /health
-    autoDeploy: false
+    autoDeploy: true
