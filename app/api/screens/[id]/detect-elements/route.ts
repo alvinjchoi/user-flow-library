@@ -7,8 +7,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// UIED service configuration
-const UIED_SERVICE_URL = process.env.UIED_SERVICE_URL; // e.g., http://localhost:5000
+// UIED/ScreenCoder service configuration
+const UIED_SERVICE_URL = process.env.UIED_SERVICE_URL; // e.g., http://localhost:5000 or https://user-flow-library.onrender.com
 const USE_UIED = Boolean(UIED_SERVICE_URL);
 
 // Type for detected element from AI
@@ -23,6 +23,78 @@ interface DetectedElement {
     height: number; // percentage 0-100
   };
   confidence: number; // 0.0 to 1.0
+}
+
+// Helper: Detect elements using ScreenCoder layout generation
+async function detectWithScreenCoder(imageUrl: string): Promise<DetectedElement[]> {
+  try {
+    // ScreenCoder calls GPT-4 multiple times (block parsing + HTML generation per block)
+    // Set a generous timeout: 3 minutes
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 seconds
+    
+    const response = await fetch(`${UIED_SERVICE_URL}/generate-layout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`ScreenCoder service error: ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    
+    // Convert layout blocks to DetectedElements
+    const elements: DetectedElement[] = [];
+    const metadata = data.metadata || {};
+    const imageWidth = metadata.imageWidth || 1290; // fallback dimensions
+    const imageHeight = metadata.imageHeight || 2796;
+    
+    // Parse blocks from the response
+    const blocks = data.blocks || {};
+    
+    for (const [blockName, blockData] of Object.entries(blocks)) {
+      const block = blockData as any;
+      if (!block.bbox) continue;
+      
+      const [x1, y1, x2, y2] = block.bbox;
+      
+      // Convert pixel coordinates to percentages
+      const x = (x1 / imageWidth) * 100;
+      const y = (y1 / imageHeight) * 100;
+      const width = ((x2 - x1) / imageWidth) * 100;
+      const height = ((y2 - y1) / imageHeight) * 100;
+      
+      // Map block name to element type
+      let type: DetectedElement['type'] = 'other';
+      const lowerName = blockName.toLowerCase();
+      if (lowerName.includes('button')) type = 'button';
+      else if (lowerName.includes('nav') || lowerName.includes('menu')) type = 'link';
+      else if (lowerName.includes('card')) type = 'card';
+      else if (lowerName.includes('tab')) type = 'tab';
+      else if (lowerName.includes('input') || lowerName.includes('search')) type = 'input';
+      else if (lowerName.includes('icon')) type = 'icon';
+      else if (lowerName.includes('header') || lowerName.includes('footer')) type = 'other';
+      
+      elements.push({
+        type,
+        label: blockName,
+        description: `${blockName} region detected by ScreenCoder`,
+        boundingBox: { x, y, width, height },
+        confidence: 0.85, // ScreenCoder uses GPT-4 Vision, high confidence
+      });
+    }
+    
+    return elements;
+  } catch (error) {
+    console.error('ScreenCoder detection failed:', error);
+    throw error;
+  }
 }
 
 // Helper: Detect elements using UIED service
@@ -171,37 +243,48 @@ export async function POST(
     }
 
     let detectedElements: DetectedElement[];
-    let detectionMethod: 'uied' | 'gpt4' | 'fallback' = 'gpt4';
+    let detectionMethod: 'screencoder' | 'uied' | 'gpt4' | 'fallback' = 'gpt4';
     let detectionError: string | null = null;
 
-    // Try UIED first if configured
+    // Try ScreenCoder first if configured (best for layout detection)
     if (USE_UIED) {
       try {
-        console.log('🔍 Attempting UIED detection...');
-        detectedElements = await detectWithUIED(screen.screenshot_url);
-        detectionMethod = 'uied';
-        console.log(`✅ UIED detected ${detectedElements.length} elements`);
-      } catch (uiedError: any) {
-        console.warn('⚠️ UIED detection failed, falling back to GPT-4:', uiedError.message);
-        detectionError = uiedError.message;
-        detectionMethod = 'fallback';
+        console.log('🎨 Attempting ScreenCoder layout detection...');
+        detectedElements = await detectWithScreenCoder(screen.screenshot_url);
+        detectionMethod = 'screencoder';
+        console.log(`✅ ScreenCoder detected ${detectedElements.length} layout blocks`);
+      } catch (screencoderError: any) {
+        console.warn('⚠️ ScreenCoder failed, trying UIED component detection:', screencoderError.message);
+        detectionError = screencoderError.message;
         
-        // Fallback to GPT-4
-        if (!process.env.OPENAI_API_KEY) {
-          return NextResponse.json(
-            { 
-              error: "UIED service failed and OpenAI API is not configured", 
-              details: detectionError 
-            },
-            { status: 503 }
-          );
-        }
+        // Fallback to UIED component detection
+        try {
+          console.log('🔍 Attempting UIED component detection...');
+          detectedElements = await detectWithUIED(screen.screenshot_url);
+          detectionMethod = 'uied';
+          console.log(`✅ UIED detected ${detectedElements.length} components`);
+        } catch (uiedError: any) {
+          console.warn('⚠️ UIED also failed, falling back to GPT-4:', uiedError.message);
+          detectionError = `ScreenCoder: ${screencoderError.message}; UIED: ${uiedError.message}`;
+          detectionMethod = 'fallback';
+          
+          // Final fallback to GPT-4
+          if (!process.env.OPENAI_API_KEY) {
+            return NextResponse.json(
+              { 
+                error: "All detection methods failed and OpenAI API is not configured", 
+                details: detectionError 
+              },
+              { status: 503 }
+            );
+          }
 
-        detectedElements = await detectWithGPT4(screen.screenshot_url);
-        console.log(`✅ GPT-4 fallback detected ${detectedElements.length} elements`);
+          detectedElements = await detectWithGPT4(screen.screenshot_url);
+          console.log(`✅ GPT-4 fallback detected ${detectedElements.length} elements`);
+        }
       }
     } else {
-      // Use GPT-4 Vision as primary method
+      // Use GPT-4 Vision as primary method (when UIED service not configured)
       if (!process.env.OPENAI_API_KEY) {
         return NextResponse.json(
           { error: "OpenAI API is not configured" },
