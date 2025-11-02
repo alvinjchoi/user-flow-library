@@ -53,7 +53,10 @@ export async function POST(
 ) {
   try {
     const { userId } = await auth();
+    console.log('[Hotspot API] Auth check:', { userId, hasUser: !!userId });
+    
     if (!userId) {
+      console.error('[Hotspot API] Unauthorized: No userId found');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -117,6 +120,12 @@ export async function POST(
       );
     }
 
+    console.log('[Hotspot API] Creating hotspot:', {
+      screenId,
+      element_label,
+      position: { x_position, y_position, width, height }
+    });
+
     const { data: hotspot, error } = await supabase
       .from("screen_hotspots")
       .insert({
@@ -138,21 +147,28 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error("Error creating hotspot:", error);
+      console.error("[Hotspot API] Database error:", {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       return NextResponse.json(
-        { error: "Failed to create hotspot" },
+        { error: "Failed to create hotspot", details: error.message },
         { status: 500 }
       );
     }
 
+    console.log('[Hotspot API] Hotspot created successfully:', hotspot.id);
     return NextResponse.json(hotspot, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       "Unexpected error in POST /api/screens/[id]/hotspots:",
       error
     );
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error?.message },
       { status: 500 }
     );
   }
