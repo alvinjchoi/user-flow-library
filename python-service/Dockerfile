@@ -2,8 +2,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for OpenCV and UIED
+# Install system dependencies for OpenCV, UIED, and git
 RUN apt-get update && apt-get install -y \
+    git \
     libgl1 \
     libglib2.0-0 \
     libgomp1 \
@@ -16,6 +17,10 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Clone UIED repository
+RUN git clone https://github.com/MulongXie/UIED.git UIED && \
+    echo "✅ UIED cloned successfully"
 
 # Copy application code
 COPY . .
