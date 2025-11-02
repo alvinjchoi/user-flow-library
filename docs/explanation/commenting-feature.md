@@ -5,7 +5,7 @@ This feature adds Figma-style commenting to screenshots in the ScreenViewerModal
 
 ## ✅ What's Already Done
 
-### 1. Database Schema (`sql/ADD_SCREEN_COMMENTS.sql`)
+### 1. Database Schema (`sql/how-to/ADD_SCREEN_COMMENTS.sql`)
 - `screen_comments` table created with:
   - Position tracking (x_position, y_position as percentages)
   - User info (user_id, user_name, user_avatar)
@@ -104,7 +104,7 @@ Add a section in the right sidebar to show/hide resolved comments:
 ### 1. Run the Migration
 ```sql
 -- Run this in Supabase SQL Editor
-\i sql/ADD_SCREEN_COMMENTS.sql
+\i sql/how-to/ADD_SCREEN_COMMENTS.sql
 ```
 
 ### 2. Update Database Types
@@ -176,4 +176,3 @@ pnpm dev
 - Comment threads open to the right of pins (like Figma)
 - Resolved comments shown in green with checkmark
 - Comment mode shows crosshair cursor
-

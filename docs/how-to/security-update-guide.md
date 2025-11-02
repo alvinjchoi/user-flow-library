@@ -19,7 +19,7 @@
 **IMPORTANT**: You need to run this SQL script on your Supabase database:
 
 ```bash
-sql/ADD_USER_OWNERSHIP_TO_PROJECTS.sql
+sql/how-to/ADD_USER_OWNERSHIP_TO_PROJECTS.sql
 ```
 
 Go to: **Supabase Dashboard → SQL Editor → New Query** and paste the contents of this file.
@@ -174,4 +174,3 @@ If you encounter any issues:
 2. Verify Clerk JWT template is configured correctly
 3. Ensure environment variables are set properly
 4. Test with multiple user accounts
-

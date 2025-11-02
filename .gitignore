@@ -30,17 +30,10 @@ next-env.d.ts
 /.clerk/
 
 # Python service
-/python-service/UIED/
-/python-service/venv/
-/python-service/env/
-/python-service/__pycache__/
-/python-service/*.pyc
-/python-service/*.pyo
-/python-service/*.egg-info/
-/python-service/dist/
-/python-service/build/
-/python-service/output/
-/python-service/temp/
-/python-service/.pytest_cache/
-/python-service/.coverage
-/python-service/htmlcov/
+python-service/__pycache__/
+python-service/venv/
+python-service/env/
+python-service/.env
+python-service/temp/
+python-service/output/
+python-service/UIED/
