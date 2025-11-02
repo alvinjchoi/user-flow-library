@@ -101,16 +101,33 @@ class ScreenCoderGenerator:
         # Encode image
         base64_image = self.encode_image(image_path)
         
-        # ScreenCoder's block parsing prompt
-        prompt = """Return the bounding boxes of the sidebar, main content, header, and navigation in this webpage screenshot. 
-Please only return the corresponding bounding boxes. Note: 
-1. The areas should not overlap
-2. All text information and other content should be framed inside
-3. Try to keep it compact without leaving blank space
-4. Output a label and the corresponding bounding box for each line in the format: <bbox>x1 y1 x2 y2</bbox>"""
+        # Improved prompt for GPT-4 Vision (must be very direct and explicit)
+        prompt = f"""You are a UI layout analyzer. Analyze this screenshot and identify major UI regions.
+
+For EACH distinct region you identify, provide:
+1. A label (header, navigation, sidebar, main content, footer, or other descriptive name)
+2. Its bounding box coordinates in the format: <bbox>x1 y1 x2 y2</bbox>
+
+Coordinates are in pixels. Image dimensions: {w}x{h} pixels.
+
+Rules:
+- x1,y1 = top-left corner coordinates
+- x2,y2 = bottom-right corner coordinates  
+- Regions should NOT overlap
+- Include ALL visible content within regions
+- Be precise with coordinates
+
+Example format:
+header <bbox>0 0 {w} 100</bbox>
+main content <bbox>0 100 {w} 800</bbox>
+
+Now analyze this UI screenshot and provide labeled bounding boxes:"""
         
         # Call GPT-4 Vision
         response = self._call_gpt_vision(base64_image, prompt)
+        
+        # Debug: Print GPT response
+        print(f"🤖 GPT Block Parsing Response:\n{response[:500]}")
         
         # Parse bounding boxes from response
         bboxes = self._parse_bbox_response(response, w, h)
@@ -136,42 +153,42 @@ Please only return the corresponding bounding boxes. Note:
         component_idx = 0
         
         for line in lines:
-            line = line.strip().lower()
-            if not line:
+            line_original = line.strip()
+            line_lower = line_original.lower()
+            
+            if not line_lower or '<bbox>' not in line_lower:
                 continue
             
-            # Find component name
-            component_name = None
-            if 'header' in line:
-                component_name = 'header'
-            elif 'sidebar' in line:
-                component_name = 'sidebar'
-            elif 'navigation' in line or 'nav' in line:
-                component_name = 'navigation'
-            elif 'main content' in line or 'main' in line:
-                component_name = 'main content'
+            # Extract the label (text before <bbox>)
+            bbox_start_idx = line_lower.find('<bbox>')
+            label = line_lower[:bbox_start_idx].strip()
             
-            # Find bbox in this line
-            if '<bbox>' in line and '</bbox>' in line and component_name:
-                start_idx = line.find('<bbox>') + 6
-                end_idx = line.find('</bbox>')
-                coords_str = line[start_idx:end_idx].strip()
+            # Skip if no label
+            if not label:
+                continue
+            
+            # Extract bbox coordinates
+            try:
+                start_idx = line_lower.find('<bbox>') + 6
+                end_idx = line_lower.find('</bbox>')
+                coords_str = line_lower[start_idx:end_idx].strip()
                 
-                try:
-                    coords = list(map(int, coords_str.split()))
-                    if len(coords) == 4:
-                        x_min, y_min, x_max, y_max = coords
-                        # Clamp to image bounds
-                        x_min = max(0, min(x_min, width))
-                        y_min = max(0, min(y_min, height))
-                        x_max = max(0, min(x_max, width))
-                        y_max = max(0, min(y_max, height))
-                        
-                        bboxes[component_name] = (x_min, y_min, x_max, y_max)
-                        print(f"  - {component_name}: ({x_min}, {y_min}, {x_max}, {y_max})")
-                except (ValueError, IndexError) as e:
-                    print(f"Warning: Failed to parse bbox for {component_name}: {e}")
-                    continue
+                coords = list(map(int, coords_str.split()))
+                if len(coords) == 4:
+                    x_min, y_min, x_max, y_max = coords
+                    
+                    # Clamp to image bounds
+                    x_min = max(0, min(x_min, width))
+                    y_min = max(0, min(y_min, height))
+                    x_max = max(0, min(x_max, width))
+                    y_max = max(0, min(y_max, height))
+                    
+                    if x_max > x_min and y_max > y_min:
+                        bboxes[label] = (x_min, y_min, x_max, y_max)
+                        print(f"  - {label}: ({x_min}, {y_min}, {x_max}, {y_max})")
+            except (ValueError, IndexError) as e:
+                print(f"⚠️  Could not parse line '{line_original}': {e}")
+                continue
         
         return bboxes
     
