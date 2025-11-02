@@ -290,11 +290,11 @@ export function HotspotEditor({
                 setDrawMode(!drawMode);
                 setSelectedHotspot(null);
               }}
-              variant={drawMode ? "default" : "outline"}
+              variant="default"
               className={
                 drawMode
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "text-white border-white/30 hover:bg-white/10"
+                  ? "bg-green-600 hover:bg-green-700 text-white border-green-600"
+                  : "bg-gray-800 hover:bg-gray-700 text-white border-gray-700"
               }
             >
               <Plus className="h-4 w-4 mr-2" />
