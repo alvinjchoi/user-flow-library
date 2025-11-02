@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let query = supabase
+    // Use admin client (bypasses RLS) since we already verified auth with Clerk
+    let query = supabaseAdmin
       .from("projects")
       .select("*")
       .is("deleted_at", null);
