@@ -1,205 +1,153 @@
-"""
-UIED Detection Service
-FastAPI service for UI element detection using UIED
-"""
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, HttpUrl
-from typing import List, Optional
+from pydantic import BaseModel
 import os
-from dotenv import load_dotenv
+from typing import Optional, Dict, Any
+import traceback
 
-load_dotenv()
+# Import detection modules
+try:
+    from uied_detector import UIEDDetector
+    UIED_AVAILABLE = True
+except Exception as e:
+    print(f"Warning: UIED not available: {e}")
+    UIED_AVAILABLE = False
 
-app = FastAPI(
-    title="UIED Detection Service",
-    description="UI Element Detection API for User Flow Library",
-    version="1.0.0"
-)
+try:
+    from screencoder_wrapper import ScreenCoderWrapper
+    SCREENCODER_AVAILABLE = True
+except Exception as e:
+    print(f"Warning: ScreenCoder not available: {e}")
+    SCREENCODER_AVAILABLE = False
 
-# CORS configuration
+app = FastAPI()
+
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Initialize detectors
+uied_detector = UIEDDetector() if UIED_AVAILABLE else None
+screencoder = ScreenCoderWrapper() if SCREENCODER_AVAILABLE else None
 
-# Request/Response models
-class DetectionRequest(BaseModel):
-    imageUrl: HttpUrl
-    includeLabels: bool = True  # OCR text extraction
-    minConfidence: float = 0.7
+class DetectRequest(BaseModel):
+    imageUrl: str
+    includeLabels: bool = True
 
-
-class BoundingBox(BaseModel):
-    x: float  # Percentage 0-100
-    y: float  # Percentage 0-100
-    width: float  # Percentage 0-100
-    height: float  # Percentage 0-100
-
-
-class DetectedElement(BaseModel):
-    type: str  # button, input, text, image, etc.
-    label: Optional[str] = None
-    description: Optional[str] = None
-    boundingBox: BoundingBox
-    confidence: float
-
-
-class DetectionResponse(BaseModel):
-    elements: List[DetectedElement]
-    imageWidth: int
-    imageHeight: int
-
+class LayoutRequest(BaseModel):
+    imageUrl: str
+    includeFullPage: bool = True
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "UIED Detection Service",
-        "version": "1.0.0"
-    }
-
-
-@app.post("/detect", response_model=DetectionResponse)
-async def detect_ui_elements(request: DetectionRequest):
-    """
-    Detect UI elements from a screenshot using UIED
-
-    This endpoint:
-    1. Downloads the image from URL
-    2. Runs UIED component detection
-    3. Optionally extracts text labels with OCR
-    4. Converts pixel coordinates to percentages
-    5. Returns formatted results
-    """
-    try:
-        from uied_detector import get_detector
-
-        # Get detector instance
-        detector = get_detector()
-
-        # Run detection with OCR option
-        result = detector.detect(
-            str(request.imageUrl),
-            include_labels=request.includeLabels
-        )
-
-        # Filter by confidence
-        filtered_elements = [
-            DetectedElement(**elem)
-            for elem in result['elements']
-            if elem['confidence'] >= request.minConfidence
-        ]
-
-        return DetectionResponse(
-            elements=filtered_elements,
-            imageWidth=result['imageWidth'],
-            imageHeight=result['imageHeight']
-        )
-
-    except ImportError as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"UIED not properly installed: {str(e)}"
-        )
-    except Exception as e:
-        import traceback
-        error_detail = f"Detection failed: {str(e)}\n{traceback.format_exc()}"
-        print(error_detail)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/generate-layout")
-async def generate_layout(request: DetectionRequest):
-    """
-    Generate HTML/CSS layout from a screenshot using ScreenCoder's methodology
-    
-    This endpoint uses ScreenCoder's actual implementation:
-    1. Block Parsing: Identify major layout blocks (header, sidebar, navigation, main content)
-    2. HTML Generation: Generate HTML/CSS for each block using GPT-4 Vision
-    3. Layout Assembly: Combine blocks into complete page structure
-    4. Returns production-ready HTML with Tailwind CSS
-    """
-    try:
-        from screencoder_wrapper import get_generator
-        
-        # Get OpenAI API key from environment
-        openai_api_key = os.getenv('OPENAI_API_KEY')
-        if not openai_api_key:
-            raise HTTPException(
-                status_code=503,
-                detail="OPENAI_API_KEY not configured. Layout generation requires OpenAI API access."
-            )
-        
-        # Get ScreenCoder generator instance
-        generator = get_generator(openai_api_key)
-        
-        # Generate layout using ScreenCoder's approach
-        result = generator.generate_layout(
-            str(request.imageUrl),
-            include_full_page=True
-        )
-        
-        return result
-        
-    except ImportError as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"ScreenCoder not properly installed: {str(e)}"
-        )
-    except Exception as e:
-        import traceback
-        error_detail = f"Layout generation failed: {str(e)}\n{traceback.format_exc()}"
-        print(error_detail)
-        raise HTTPException(status_code=500, detail=str(e))
-
+    return {"message": "UIED Detection Service"}
 
 @app.get("/health")
-async def health_check():
-    """Detailed health check with UIED and ScreenCoder availability"""
-    uied_available = False
-    screencoder_available = False
-    openai_configured = bool(os.getenv('OPENAI_API_KEY'))
-    error_message = None
-    
-    try:
-        # Check if UIED modules can be imported
-        import sys
-        from pathlib import Path
-        UIED_PATH = Path(__file__).parent / "UIED"
-        SCREENCODER_PATH = Path(__file__).parent / "ScreenCoder"
-        
-        if UIED_PATH.exists():
-            sys.path.insert(0, str(UIED_PATH))
-            from detect_compo.ip_region_proposal import compo_detection
-            uied_available = True
-        
-        # Check ScreenCoder
-        if SCREENCODER_PATH.exists():
-            screencoder_available = True
-            
-    except Exception as e:
-        error_message = str(e)
+async def health():
+    """Health check endpoint"""
+    openai_configured = bool(os.getenv("OPENAI_API_KEY"))
     
     return {
-        "status": "healthy" if (uied_available and screencoder_available) else "degraded",
-        "uied_available": uied_available,
-        "screencoder_available": screencoder_available,
+        "status": "healthy",
+        "uied_available": UIED_AVAILABLE,
+        "screencoder_available": SCREENCODER_AVAILABLE,
         "openai_configured": openai_configured,
-        "layout_generation_available": screencoder_available and openai_configured,
-        "error": error_message,
+        "layout_generation_available": SCREENCODER_AVAILABLE and openai_configured,
+        "error": None,
         "note": "OCR removed - use /generate-layout for text recognition"
     }
 
+@app.post("/detect")
+async def detect_elements(request: DetectRequest):
+    """
+    Detect UI elements using UIED
+    
+    Args:
+        imageUrl: URL of the screenshot
+        includeLabels: Whether to include text labels (requires OCR)
+    
+    Returns:
+        List of detected UI elements with bounding boxes
+    """
+    if not UIED_AVAILABLE:
+        raise HTTPException(status_code=503, detail="UIED detector not available")
+    
+    try:
+        elements = uied_detector.detect(
+            request.imageUrl,
+            include_labels=request.includeLabels
+        )
+        
+        return {
+            "elements": elements,
+            "count": len(elements),
+            "method": "uied"
+        }
+    except Exception as e:
+        print(f"Error in /detect: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 5000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+@app.post("/detect-components")
+async def detect_components(request: DetectRequest):
+    """
+    Fast component detection using GPT-4o-mini (optimized for hotspots)
+    
+    This endpoint:
+    - Uses single GPT call (fast)
+    - Uses GPT-4o-mini (10x cheaper)
+    - Returns only bounding boxes (no HTML)
+    
+    Perfect for hotspot detection!
+    """
+    if not SCREENCODER_AVAILABLE:
+        raise HTTPException(status_code=503, detail="ScreenCoder not available")
+    
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=503, detail="OpenAI API key not configured")
+    
+    try:
+        # Use fast component detection (no HTML generation)
+        result = screencoder.detect_components_fast(request.imageUrl)
+        
+        return {
+            "elements": result["elements"],
+            "count": len(result["elements"]),
+            "bboxes": result["bboxes"],
+            "metadata": result["metadata"],
+            "method": "screencoder-fast"
+        }
+    except Exception as e:
+        print(f"Error in /detect-components: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/generate-layout")
+async def generate_layout(request: LayoutRequest):
+    """
+    Generate complete HTML layout using ScreenCoder (slow, for full page generation)
+    
+    Note: This is slower and more expensive. Use /detect-components for hotspot detection.
+    """
+    if not SCREENCODER_AVAILABLE:
+        raise HTTPException(status_code=503, detail="ScreenCoder not available")
+    
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=503, detail="OpenAI API key not configured")
+    
+    try:
+        result = screencoder.generate_layout(
+            request.imageUrl,
+            include_full_page=request.includeFullPage
+        )
+        
+        return result
+    except Exception as e:
+        print(f"Error in /generate-layout: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))

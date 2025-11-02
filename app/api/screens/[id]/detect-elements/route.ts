@@ -30,12 +30,11 @@ async function detectWithScreenCoder(
   imageUrl: string
 ): Promise<DetectedElement[]> {
   try {
-    // ScreenCoder calls GPT-4 multiple times (block parsing + HTML generation per block)
-    // Set a generous timeout: 3 minutes
+    // Fast mode: single GPT-4o-mini call (~5-10 seconds)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
 
-    const response = await fetch(`${UIED_SERVICE_URL}/generate-layout`, {
+    const response = await fetch(`${UIED_SERVICE_URL}/detect-components`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageUrl }),
@@ -53,68 +52,44 @@ async function detectWithScreenCoder(
 
     const data = await response.json();
 
-    // Debug: Log the full ScreenCoder response
-    console.log("=== ScreenCoder Response ===");
-    console.log("Full response:", JSON.stringify(data, null, 2));
-    console.log("data.blocks:", data.blocks);
-    console.log("data.metadata:", data.metadata);
-    console.log("Response keys:", Object.keys(data));
-    console.log("===========================");
-
-    // Convert layout blocks to DetectedElements
+    // Convert to DetectedElement format (already in percentages!)
     const elements: DetectedElement[] = [];
-    const metadata = data.metadata || {};
-    const imageWidth = metadata.imageWidth || 1290; // fallback dimensions
-    const imageHeight = metadata.imageHeight || 2796;
 
-    // Parse bboxes from the response (ScreenCoder stores coordinates in 'bboxes', not 'blocks')
-    const bboxes = data.bboxes || {};
-
-    console.log("Found bboxes:", Object.keys(bboxes).length);
-
-    for (const [blockName, bbox] of Object.entries(bboxes)) {
-      const bboxArray = bbox as number[];
-      if (!bboxArray || bboxArray.length !== 4) {
-        console.warn(`Invalid bbox for ${blockName}:`, bboxArray);
-        continue;
-      }
-
-      const [x1, y1, x2, y2] = bboxArray;
-
-      // Convert pixel coordinates to percentages
-      const x = (x1 / imageWidth) * 100;
-      const y = (y1 / imageHeight) * 100;
-      const width = ((x2 - x1) / imageWidth) * 100;
-      const height = ((y2 - y1) / imageHeight) * 100;
-
-      // Map block name to element type
+    for (const element of data.elements || []) {
+      // Map label to element type
       let type: DetectedElement["type"] = "other";
-      const lowerName = blockName.toLowerCase();
-      if (lowerName.includes("button")) type = "button";
-      else if (lowerName.includes("nav") || lowerName.includes("menu"))
+      const lowerLabel = element.label.toLowerCase();
+      if (lowerLabel.includes("button")) type = "button";
+      else if (
+        lowerLabel.includes("link") ||
+        lowerLabel.includes("nav") ||
+        lowerLabel.includes("menu")
+      )
         type = "link";
-      else if (lowerName.includes("card")) type = "card";
-      else if (lowerName.includes("tab")) type = "tab";
-      else if (lowerName.includes("input") || lowerName.includes("search"))
+      else if (lowerLabel.includes("card")) type = "card";
+      else if (lowerLabel.includes("tab")) type = "tab";
+      else if (lowerLabel.includes("input") || lowerLabel.includes("field"))
         type = "input";
-      else if (lowerName.includes("icon")) type = "icon";
-      else if (lowerName.includes("header") || lowerName.includes("footer"))
-        type = "other";
+      else if (lowerLabel.includes("icon") || lowerLabel.includes("logo"))
+        type = "icon";
 
       elements.push({
         type,
-        label: blockName,
-        description: `${blockName} region detected by ScreenCoder`,
-        boundingBox: { x, y, width, height },
-        confidence: 0.85, // ScreenCoder uses GPT-4 Vision, high confidence
+        label: element.label,
+        description: `${element.label} detected by ScreenCoder Fast (GPT-4o-mini)`,
+        boundingBox: {
+          x: element.x,
+          y: element.y,
+          width: element.width,
+          height: element.height,
+        },
+        confidence: 0.85,
       });
-
-      console.log(
-        `Created element: ${blockName} at (${x.toFixed(1)}%, ${y.toFixed(1)}%)`
-      );
     }
 
-    console.log(`ScreenCoder: Converted ${elements.length} bboxes to elements`);
+    console.log(
+      `✅ ScreenCoder Fast: Detected ${elements.length} components in ~5-10s (GPT-4o-mini)`
+    );
 
     return elements;
   } catch (error) {

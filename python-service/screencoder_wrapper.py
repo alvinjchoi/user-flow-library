@@ -48,6 +48,7 @@ class ScreenCoderGenerator:
         from openai import OpenAI
         self.gpt_client = OpenAI(api_key=self.openai_api_key)
         self.gpt_model = "gpt-4o"
+        self.fast_model = "gpt-4o-mini"  # For fast component detection
     
     def _call_gpt_vision(self, base64_image: str, prompt: str) -> str:
         """Call GPT-4 Vision API (ScreenCoder-compatible wrapper)"""
@@ -410,6 +411,138 @@ Only return the code within the <div> and </div> tags."""
 </html>"""
         
         return html
+    
+    def detect_components_fast(
+        self,
+        image_url: str
+    ) -> Dict[str, Any]:
+        """
+        Fast component detection optimized for hotspots
+        
+        - Single GPT call (no per-block HTML generation)
+        - Uses GPT-4o-mini (10x cheaper, 3x faster)
+        - Returns only bounding boxes (no HTML)
+        
+        Args:
+            image_url: URL of the screenshot
+            
+        Returns:
+            dict with elements, bboxes, metadata
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            
+            # Download image
+            input_path = temp_path / "screenshot.png"
+            self._download_image(image_url, input_path)
+            
+            # Get image dimensions
+            img = Image.open(input_path)
+            width, height = img.size
+            
+            # Encode image
+            base64_image = self.encode_image(str(input_path))
+            
+            # Single GPT call with GPT-4o-mini
+            prompt = f"""You are a UI component analyzer. Analyze this screenshot and identify ALL interactive components and UI elements with TIGHT, PRECISE bounding boxes.
+
+For EACH component you identify, provide:
+1. A specific, descriptive label (e.g., "Sign In button", "Email input", "Logo", "Search icon")
+2. Its TIGHT bounding box coordinates in the format: <bbox>x1 y1 x2 y2</bbox>
+
+Coordinates are in pixels. Image dimensions: {width}x{height} pixels.
+
+Component types to identify:
+- Buttons (with their text/label)
+- Input fields (email, password, search, etc.)
+- Icons and images (logo, profile, menu, etc.)
+- Cards and containers (with descriptive names)
+- Links and navigation items
+- Text headings and labels
+- Tabs and toggles
+
+CRITICAL Rules for ACCURATE bounding boxes:
+- x1,y1 = top-left corner, x2,y2 = bottom-right corner
+- Draw TIGHT boxes - include ONLY the visible element, NO extra padding
+- For buttons: box should cover ONLY the button area (background + text)
+- For inputs: box should cover ONLY the input field border
+- For icons: box should cover ONLY the icon, not surrounding space
+- For text: box should cover ONLY the text itself, not white space
+- Measure pixel positions carefully - accuracy is critical
+- Be SPECIFIC with labels - include text content when visible
+
+Example format (tight boxes):
+Logo image <bbox>20 20 140 75</bbox>
+Search input field <bbox>200 30 490 68</bbox>
+"Sign In" button <bbox>522 32 618 68</bbox>
+Profile icon <bbox>642 32 688 78</bbox>
+
+Now analyze this UI and provide TIGHT, ACCURATE bounding boxes for all components:"""
+            
+            # Call GPT-4o-mini (fast and cheap!)
+            print(f"🚀 Calling GPT-4o-mini for fast detection...")
+            response = self.gpt_client.chat.completions.create(
+                model=self.fast_model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": prompt
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{base64_image}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=2000,
+                temperature=0
+            )
+            
+            gpt_response = response.choices[0].message.content
+            print(f"🤖 GPT-4o-mini Response:")
+            print(gpt_response[:500] + "..." if len(gpt_response) > 500 else gpt_response)
+            
+            # Parse bounding boxes
+            bboxes = self._parse_bbox_response(gpt_response, width, height)
+            
+            print(f"✅ Detected {len(bboxes)} components (fast mode)")
+            
+            # Convert to elements format
+            elements = []
+            for idx, (label, bbox) in enumerate(bboxes.items()):
+                x1, y1, x2, y2 = bbox
+                
+                # Convert to percentages
+                x_pct = (x1 / width) * 100
+                y_pct = (y1 / height) * 100
+                width_pct = ((x2 - x1) / width) * 100
+                height_pct = ((y2 - y1) / height) * 100
+                
+                elements.append({
+                    "label": label,
+                    "x": x_pct,
+                    "y": y_pct,
+                    "width": width_pct,
+                    "height": height_pct
+                })
+            
+            return {
+                "elements": elements,
+                "bboxes": {name: list(bbox) for name, bbox in bboxes.items()},
+                "metadata": {
+                    "imageWidth": width,
+                    "imageHeight": height,
+                    "method": "ScreenCoder-Fast (GPT-4o-mini)",
+                    "components_detected": len(bboxes),
+                    "model": self.fast_model
+                }
+            }
 
 
 _generator_instance = None
@@ -422,3 +555,17 @@ def get_generator(openai_api_key: Optional[str] = None):
         _generator_instance = ScreenCoderGenerator(openai_api_key)
     return _generator_instance
 
+
+class ScreenCoderWrapper:
+    """Convenience wrapper for ScreenCoder"""
+    
+    def __init__(self, openai_api_key: Optional[str] = None):
+        self.generator = get_generator(openai_api_key)
+    
+    def detect_components_fast(self, image_url: str) -> Dict[str, Any]:
+        """Fast component detection"""
+        return self.generator.detect_components_fast(image_url)
+    
+    def generate_layout(self, image_url: str, include_full_page: bool = True) -> Dict[str, Any]:
+        """Full layout generation (slower)"""
+        return self.generator.generate_layout(image_url, include_full_page)
