@@ -38,3 +38,7 @@ python-service/temp/
 python-service/output/
 python-service/UIED/
 python-service/ScreenCoder/
+
+.idea
+.DS_Store
+/app/.DS_Store

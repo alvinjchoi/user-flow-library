@@ -7,8 +7,20 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log("it's his here.... 11111");
     const { id } = await params;
-    const { userId, orgId } = await auth();
+    console.log("it's his here.... 22222", id);
+
+    try {
+      const { userId, orgId } = await auth();
+    } catch (e) { 
+      console.log("some errror errorororr", e);
+    }
+      const { userId, orgId } = await auth();
+    console.log("it's his here.... 3333");
+
+    // const orgId = "org_34r7Ygr6YxQygLscrhRewgWW3oh";
+    // const userId = "user_34wpEvAD4SjrFdNtjJSbz44BEt1";
 
     // Debug logging
     console.log("[API /projects/[id]] Request for project:", id);
