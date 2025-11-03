@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Screen } from "@/lib/database.types";
+import { generateCompressedDataUrl } from "@/lib/image-utils";
 
 // Utility to analyze screenshot with AI
 async function analyzeScreenshot(imageUrl: string) {
@@ -93,7 +94,7 @@ export function AddScreenDialog({
     }
   }, [open, defaultParentId]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
@@ -112,12 +113,13 @@ export function AddScreenDialog({
     setFile(selectedFile);
     setError(null);
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(selectedFile);
+    try {
+      const compressedPreview = await generateCompressedDataUrl(selectedFile);
+      setPreview(compressedPreview);
+    } catch (compressionError) {
+      console.error("Failed to create preview:", compressionError);
+      setError("Failed to generate preview for analysis");
+    }
   };
 
   const analyzeWithAI = async (imageUrl: string) => {
