@@ -5,14 +5,14 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 // GET screens by flow
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ flowId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { flowId } = await params;
+    const { id: flowId } = await params;
     const { userId, orgId } = await auth();
 
-    console.log("[API /screens/[flowId]] Request for flow:", flowId);
-    console.log("[API /screens/[flowId]] Auth:", { userId, orgId });
+    console.log("[API /flows/[id]/screens] Request for flow:", flowId);
+    console.log("[API /flows/[id]/screens] Auth:", { userId, orgId });
 
     if (!userId && !orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,7 +27,7 @@ export async function GET(
       .single();
 
     if (flowError || !flow) {
-      console.log("[API /screens/[flowId]] Flow not found");
+      console.log("[API /flows/[id]/screens] Flow not found");
       return NextResponse.json({ error: "Flow not found" }, { status: 404 });
     }
 
@@ -38,7 +38,7 @@ export async function GET(
       : project.user_id === userId;
 
     if (!hasAccess) {
-      console.log("[API /screens/[flowId]] No access to project");
+      console.log("[API /flows/[id]/screens] No access to project");
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -51,17 +51,17 @@ export async function GET(
       .order("order_index");
 
     if (screensError) {
-      console.error("[API /screens/[flowId]] Error:", screensError);
+      console.error("[API /flows/[id]/screens] Error:", screensError);
       return NextResponse.json(
         { error: screensError.message },
         { status: 500 }
       );
     }
 
-    console.log("[API /screens/[flowId]] Success:", screens.length, "screens");
+    console.log("[API /flows/[id]/screens] Success:", screens.length, "screens");
     return NextResponse.json(screens || [], { status: 200 });
   } catch (error) {
-    console.error("[API /screens/[flowId]] Exception:", error);
+    console.error("[API /flows/[id]/screens] Exception:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

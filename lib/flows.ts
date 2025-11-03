@@ -5,7 +5,7 @@ import type { Flow, Screen } from "./database.types";
 export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
   try {
     console.log("[getFlowsByProject] Fetching flows for project:", projectId);
-    const response = await fetch(`/api/flows/${projectId}`, {
+    const response = await fetch(`/api/projects/${projectId}/flows`, {
       method: "GET",
       credentials: "include",
       headers: {
@@ -34,7 +34,7 @@ export async function getFlowsByProject(projectId: string): Promise<Flow[]> {
 export async function getScreensByFlow(flowId: string): Promise<Screen[]> {
   try {
     console.log("[getScreensByFlow] Fetching screens for flow:", flowId);
-    const response = await fetch(`/api/screens/${flowId}`, {
+    const response = await fetch(`/api/flows/${flowId}/screens`, {
       method: "GET",
       credentials: "include",
       headers: {

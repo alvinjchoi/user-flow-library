@@ -5,14 +5,14 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 // GET flows by project
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { projectId } = await params;
+    const { id: projectId } = await params;
     const { userId, orgId } = await auth();
 
-    console.log("[API /flows/[projectId]] Request for project:", projectId);
-    console.log("[API /flows/[projectId]] Auth:", { userId, orgId });
+    console.log("[API /projects/[id]/flows] Request for project:", projectId);
+    console.log("[API /projects/[id]/flows] Auth:", { userId, orgId });
 
     if (!userId && !orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,7 +34,7 @@ export async function GET(
     const { data: project, error: projectError } = await projectQuery.single();
 
     if (projectError || !project) {
-      console.log("[API /flows/[projectId]] Project not found or no access");
+      console.log("[API /projects/[id]/flows] Project not found or no access");
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
@@ -47,14 +47,14 @@ export async function GET(
       .order("order_index");
 
     if (flowsError) {
-      console.error("[API /flows/[projectId]] Error:", flowsError);
+      console.error("[API /projects/[id]/flows] Error:", flowsError);
       return NextResponse.json({ error: flowsError.message }, { status: 500 });
     }
 
-    console.log("[API /flows/[projectId]] Success:", flows.length, "flows");
+    console.log("[API /projects/[id]/flows] Success:", flows.length, "flows");
     return NextResponse.json(flows || [], { status: 200 });
   } catch (error) {
-    console.error("[API /flows/[projectId]] Exception:", error);
+    console.error("[API /projects/[id]/flows] Exception:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
