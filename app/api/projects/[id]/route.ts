@@ -39,7 +39,7 @@ export async function GET(
     }
 
     const { data, error } = await query.single();
-    
+
     // Detailed logging
     console.log("[API /projects/[id]] Query result:", {
       hasData: !!data,
@@ -53,18 +53,26 @@ export async function GET(
 
     if (error) {
       if (error.code === "PGRST116") {
-        console.log("[API /projects/[id]] PGRST116: No rows returned - project not found or access denied");
-        return NextResponse.json({ 
-          error: "Not found",
-          debug: {
-            projectId: id,
-            orgId,
-            userId,
-            errorCode: error.code,
-          }
-        }, { status: 404 });
+        console.log(
+          "[API /projects/[id]] PGRST116: No rows returned - project not found or access denied"
+        );
+        return NextResponse.json(
+          {
+            error: "Not found",
+            debug: {
+              projectId: id,
+              orgId,
+              userId,
+              errorCode: error.code,
+            },
+          },
+          { status: 404 }
+        );
       }
-      console.error("[API /projects/[id]] Supabase error:", JSON.stringify(error, null, 2));
+      console.error(
+        "[API /projects/[id]] Supabase error:",
+        JSON.stringify(error, null, 2)
+      );
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
