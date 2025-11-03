@@ -8,7 +8,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log("[API /projects/[id]/flows] ⚡ ROUTE HIT - NEW DEPLOYMENT");
     const { id: projectId } = await params;
     const { userId, orgId } = await auth();
 

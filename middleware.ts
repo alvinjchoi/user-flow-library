@@ -5,6 +5,9 @@ const isProtectedRoute = createRouteMatcher([
   "/projects(.*)",
   "/admin(.*)",
   "/organization(.*)", // Organization management
+  "/api/projects(.*)", // Project API routes
+  "/api/flows(.*)", // Flow API routes
+  "/api/screens(.*)", // Screen API routes
 ]);
 const isPublicRoute = createRouteMatcher([
   "/",

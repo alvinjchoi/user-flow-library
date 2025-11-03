@@ -8,12 +8,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log("[API /flows/[id]/screens] ⚡ ROUTE HIT - NEW DEPLOYMENT");
     const { id: flowId } = await params;
     const { userId, orgId } = await auth();
 
     console.log("[API /flows/[id]/screens] Request for flow:", flowId);
-    console.log("[API /flows/[id]/screens] Auth:", { userId, orgId});
+    console.log("[API /flows/[id]/screens] Auth:", { userId, orgId });
 
     if (!userId && !orgId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

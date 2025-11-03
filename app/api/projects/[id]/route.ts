@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(
   request: NextRequest,
@@ -19,7 +19,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let query = supabase
+    // Use admin client (bypasses RLS) since we already verified auth with Clerk
+    let query = supabaseAdmin
       .from("projects")
       .select("*")
       .eq("id", id)
@@ -38,19 +39,36 @@ export async function GET(
     }
 
     const { data, error } = await query.single();
+    
+    // Detailed logging
     console.log("[API /projects/[id]] Query result:", {
-      data: data?.id,
-      error: error?.code,
+      hasData: !!data,
+      dataId: data?.id,
+      dataName: data?.name,
+      errorCode: error?.code,
+      errorMessage: error?.message,
+      errorDetails: error?.details,
+      errorHint: error?.hint,
     });
 
     if (error) {
       if (error.code === "PGRST116") {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
+        console.log("[API /projects/[id]] PGRST116: No rows returned - project not found or access denied");
+        return NextResponse.json({ 
+          error: "Not found",
+          debug: {
+            projectId: id,
+            orgId,
+            userId,
+            errorCode: error.code,
+          }
+        }, { status: 404 });
       }
-      console.error("Error fetching project:", error);
+      console.error("[API /projects/[id]] Supabase error:", JSON.stringify(error, null, 2));
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    console.log("[API /projects/[id]] Success! Returning project:", data.name);
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Error in GET /api/projects/[id]:", error);

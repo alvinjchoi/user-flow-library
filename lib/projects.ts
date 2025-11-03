@@ -5,6 +5,7 @@ import { uploadFile } from "./storage";
 // Get all projects - now calls API route which handles auth server-side
 export async function getProjects(): Promise<Project[]> {
   try {
+    console.log("[getProjects] Fetching from /api/projects...");
     const response = await fetch("/api/projects", {
       method: "GET",
       credentials: "include", // Ensure cookies are sent
@@ -13,14 +14,21 @@ export async function getProjects(): Promise<Project[]> {
       },
     });
 
+    console.log("[getProjects] Response status:", response.status);
+
     if (!response.ok) {
-      throw new Error("Failed to fetch projects");
+      const errorText = await response.text();
+      console.error("[getProjects] Error response:", errorText);
+      throw new Error(
+        `Failed to fetch projects: ${response.status} ${errorText}`
+      );
     }
 
     const data = await response.json();
+    console.log("[getProjects] Success:", data.length, "projects");
     return data;
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    console.error("[getProjects] Exception:", error);
     return [];
   }
 }
@@ -29,6 +37,7 @@ export async function getProjects(): Promise<Project[]> {
 // Retries once if initial request fails (to handle auth timing issues)
 export async function getProject(id: string): Promise<Project | null> {
   try {
+    console.log("[getProject] Fetching project:", id);
     const response = await fetch(`/api/projects/${id}`, {
       method: "GET",
       credentials: "include", // Ensure cookies are sent
@@ -37,12 +46,14 @@ export async function getProject(id: string): Promise<Project | null> {
       },
     });
 
+    console.log("[getProject] Response status:", response.status);
+
     // If we get 401 (Unauthorized), wait briefly and retry once
     // This handles cases where Clerk auth cookies aren't ready yet
     if (response.status === 401) {
       console.log("[getProject] Got 401, retrying after 1s...");
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       const retryResponse = await fetch(`/api/projects/${id}`, {
         method: "GET",
         credentials: "include",
@@ -51,29 +62,42 @@ export async function getProject(id: string): Promise<Project | null> {
         },
       });
 
+      console.log("[getProject] Retry response status:", retryResponse.status);
+
       if (retryResponse.status === 404) {
+        console.log("[getProject] 404 after retry - project not found");
         return null;
       }
 
       if (!retryResponse.ok) {
-        throw new Error("Failed to fetch project after retry");
+        const errorText = await retryResponse.text();
+        console.error("[getProject] Error after retry:", errorText);
+        throw new Error(`Failed to fetch project after retry: ${errorText}`);
       }
 
-      return await retryResponse.json();
+      const data = await retryResponse.json();
+      console.log("[getProject] Success after retry:", data.name);
+      return data;
     }
 
     if (response.status === 404) {
+      console.log("[getProject] 404 - project not found");
       return null;
     }
 
     if (!response.ok) {
-      throw new Error("Failed to fetch project");
+      const errorText = await response.text();
+      console.error("[getProject] Error response:", errorText);
+      throw new Error(
+        `Failed to fetch project: ${response.status} ${errorText}`
+      );
     }
 
     const data = await response.json();
+    console.log("[getProject] Success:", data.name);
     return data;
   } catch (error) {
-    console.error("Error fetching project:", error);
+    console.error("[getProject] Exception:", error);
     return null;
   }
 }
@@ -169,8 +193,8 @@ export async function uploadProjectAvatar(
   const fileExt = file.name.split(".").pop();
   const fileName = `${projectId}-${Date.now()}.${fileExt}`;
 
-      // Upload file to project-avatars bucket
-      const avatarUrl = await uploadFile("project-avatars", fileName, file);
+  // Upload file to project-avatars bucket
+  const avatarUrl = await uploadFile("project-avatars", fileName, file);
 
   // Update project with avatar URL
   const { error } = await supabase
