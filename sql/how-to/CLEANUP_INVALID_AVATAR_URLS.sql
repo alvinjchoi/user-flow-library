@@ -24,3 +24,4 @@ AND deleted_at IS NULL;
 -- After cleaning up, projects will display their color block fallback
 -- Users can re-upload avatars from the dashboard
 
+

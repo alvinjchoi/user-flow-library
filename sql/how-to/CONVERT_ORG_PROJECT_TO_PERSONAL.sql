@@ -43,3 +43,4 @@ WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
 -- Note: After this change, only the specified user will be able to access the project
 -- Organization members will lose access unless you share it publicly
 
+
