@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ArrowLeft, Share2, Copy, Check, X } from "lucide-react";
+import { Search, ArrowLeft, Share2, Copy, Check, X, FileDown } from "lucide-react";
 import { SignedIn, SignedOut, OrganizationSwitcher } from "@clerk/nextjs";
 import { UserNav } from "@/components/auth/user-nav";
 import Image from "next/image";
@@ -44,6 +44,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
   const [isPublic, setIsPublic] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingName, setEditingName] = useState("");
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
   // Show OrganizationSwitcher only on dashboard (not on project pages)
   const showOrgSwitcher = pathname?.startsWith("/dashboard");
@@ -95,6 +96,34 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
     } catch (error) {
       console.error("Error disabling sharing:", error);
       alert("Failed to disable sharing");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!project) return;
+
+    setIsDownloadingPDF(true);
+    try {
+      const response = await fetch(`/api/projects/${project.id}/export-pdf`);
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${project.name.replace(/[^a-zA-Z0-9]/g, "_")}_flow.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert("Failed to generate PDF document");
+      }
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF document");
+    } finally {
+      setIsDownloadingPDF(false);
     }
   };
 
@@ -219,18 +248,33 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
         </div>
         <nav className="flex items-center gap-6">
           <SignedIn>
-            {/* Share button for project pages */}
+            {/* Project action buttons */}
             {project && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateShareLink}
-                disabled={isGenerating}
-                className="gap-2"
-              >
-                <Share2 className="w-4 h-4" />
-                {isGenerating ? "Generating..." : "Share"}
-              </Button>
+              <div className="flex items-center gap-2">
+                {/* Download PDF button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloadingPDF}
+                  className="gap-2"
+                >
+                  <FileDown className="w-4 h-4" />
+                  {isDownloadingPDF ? "Generating..." : "Download PDF"}
+                </Button>
+                
+                {/* Share button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateShareLink}
+                  disabled={isGenerating}
+                  className="gap-2"
+                >
+                  <Share2 className="w-4 h-4" />
+                  {isGenerating ? "Generating..." : "Share"}
+                </Button>
+              </div>
             )}
             {/* Dashboard link - hide when on dashboard or project pages */}
             {!showOrgSwitcher && pathname !== "/" && (
