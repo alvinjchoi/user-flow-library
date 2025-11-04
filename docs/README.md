@@ -27,3 +27,4 @@ The docs folder follows the Diátaxis framework so you can find the right docume
 - `explanation/project-404-race-condition.md` – root cause analysis of project authentication race condition.
 - `explanation/uied-integration-plan.md` – architecture and rationale for UIED integration.
 
+
