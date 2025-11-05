@@ -14,6 +14,7 @@ The SQL folder follows the Diátaxis framework so you can find the right script 
 - `how-to/ADD_ORGANIZATIONS_AND_PERMISSIONS.sql` – create full organizations + membership schema.
 - `how-to/ADD_PARENT_FLOW_ID.sql` – nest flows under other flows.
 - `how-to/ADD_PARENT_SCREEN_ID_TO_FLOWS.sql` – branch flows from a specific screen.
+- `how-to/ADD_PLATFORM_TYPE_TO_PROJECTS.sql` – add platform type (web/iOS/android) to determine screen dimensions.
 - `how-to/ADD_PROJECT_AVATAR_SUPPORT.sql` – store avatar metadata on projects.
 - `how-to/ADD_PROJECT_SHARING.sql` – add public sharing tokens and flags to projects.
 - `how-to/ADD_SCREEN_COMMENTS.sql` – create the `screen_comments` table with RLS policies.
