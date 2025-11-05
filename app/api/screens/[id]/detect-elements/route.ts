@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
+import { requireAuth } from "@/lib/api-auth";
+import { filterValidElements } from "@/lib/validators";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -215,10 +216,9 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Validate authentication
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
 
     const { id: screenId } = await context.params;
 
@@ -307,27 +307,12 @@ export async function POST(
     }
 
     // Validate and normalize the detected elements
-    const validElements = detectedElements
-      .filter((element) => {
-        // Validate bounding box
-        const { x, y, width, height } = element.boundingBox;
-        return (
-          x >= 0 &&
-          x <= 100 &&
-          y >= 0 &&
-          y <= 100 &&
-          width > 0 &&
-          width <= 100 &&
-          height > 0 &&
-          height <= 100 &&
-          x + width <= 100 &&
-          y + height <= 100
-        );
-      })
-      .map((element, index) => ({
+    const validElements = filterValidElements(detectedElements).map(
+      (element, index) => ({
         ...element,
         order_index: index,
-      }));
+      })
+    );
 
     return NextResponse.json({
       elements: validElements,

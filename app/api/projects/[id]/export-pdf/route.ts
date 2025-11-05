@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireAuth, requireProjectAccess } from "@/lib/api-auth";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { writeFile, unlink, readFile } from "fs/promises";
@@ -14,29 +14,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId, orgId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id: projectId } = await params;
 
-    // Fetch project data
-    const { data: project, error: projectError } = await supabaseAdmin
-      .from("projects")
-      .select("*")
-      .eq("id", projectId)
-      .single();
+    // Validate authentication
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
 
-    if (projectError || !project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    // Verify access (user owns project or org owns project)
-    if (project.user_id !== userId && project.clerk_org_id !== orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    // Verify project access
+    const project = await requireProjectAccess(projectId, authResult);
+    if (project instanceof NextResponse) return project;
 
     // Fetch flows
     const { data: flows, error: flowsError } = await supabaseAdmin

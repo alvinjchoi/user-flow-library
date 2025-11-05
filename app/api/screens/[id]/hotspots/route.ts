@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireAuth } from "@/lib/api-auth";
+import { validateBoundingBox, ValidationError } from "@/lib/validators";
 
 // GET /api/screens/[id]/hotspots - Get all hotspots for a screen
 export async function GET(
@@ -52,13 +53,11 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    console.log('[Hotspot API] Auth check:', { userId, hasUser: !!userId });
-    
-    if (!userId) {
-      console.error('[Hotspot API] Unauthorized: No userId found');
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Validate authentication
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
+    console.log('[Hotspot API] Auth check:', { userId: authResult.userId });
 
     // Use service role key to bypass RLS (we already have Clerk auth check)
     const supabase = createClient(
@@ -90,50 +89,39 @@ export async function POST(
       order_index = 0,
     } = body;
 
-    // Validate required fields
-    if (
-      x_position === undefined ||
-      y_position === undefined ||
-      width === undefined ||
-      height === undefined
-    ) {
-      return NextResponse.json(
-        { error: "Missing required bounding box fields" },
-        { status: 400 }
-      );
-    }
-
-    // Validate bounding box values
-    if (
-      x_position < 0 ||
-      x_position > 100 ||
-      y_position < 0 ||
-      y_position > 100 ||
-      width < 0 ||
-      width > 100 ||
-      height < 0 ||
-      height > 100
-    ) {
-      return NextResponse.json(
-        { error: "Bounding box values must be between 0 and 100" },
-        { status: 400 }
-      );
+    // Validate bounding box
+    let boundingBox;
+    try {
+      boundingBox = validateBoundingBox({
+        x: x_position,
+        y: y_position,
+        width,
+        height,
+      });
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return NextResponse.json(
+          { error: error.message, field: error.field },
+          { status: 400 }
+        );
+      }
+      throw error;
     }
 
     console.log('[Hotspot API] Creating hotspot:', {
       screenId,
       element_label,
-      position: { x_position, y_position, width, height }
+      position: boundingBox
     });
 
     const { data: hotspot, error } = await supabase
       .from("screen_hotspots")
       .insert({
         screen_id: screenId,
-        x_position,
-        y_position,
-        width,
-        height,
+        x_position: boundingBox.x,
+        y_position: boundingBox.y,
+        width: boundingBox.width,
+        height: boundingBox.height,
         element_type,
         element_label,
         element_description,
