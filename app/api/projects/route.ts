@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAuth, applyAccessFilter } from "@/lib/api-auth";
+import { handleAPIError } from "@/lib/api-errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,19 +24,12 @@ export async function GET(request: NextRequest) {
       ascending: false,
     });
 
-    if (error) {
-      console.error("[API /projects] Query error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw error;
 
     console.log("[API /projects] Success:", data?.length || 0, "projects");
     return NextResponse.json(data || [], { status: 200 });
   } catch (error) {
-    console.error("[API /projects] Exception:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleAPIError(error, "GET /api/projects");
   }
 }
 // Force redeploy Sun Nov  2 15:12:27 PST 2025

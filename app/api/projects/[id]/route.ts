@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireProjectAccess } from "@/lib/api-auth";
+import { handleAPIError } from "@/lib/api-errors";
 
 export async function GET(
   request: NextRequest,
@@ -20,10 +21,6 @@ export async function GET(
     console.log("[API /projects/[id]] Success! Returning project:", projectResult.name);
     return NextResponse.json(projectResult, { status: 200 });
   } catch (error) {
-    console.error("Error in GET /api/projects/[id]:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleAPIError(error, "GET /api/projects/[id]");
   }
 }

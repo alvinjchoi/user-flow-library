@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { requireAuth } from "@/lib/api-auth";
 import { filterValidElements } from "@/lib/validators";
+import { handleAPIError, APIErrors } from "@/lib/api-errors";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -230,14 +231,11 @@ export async function POST(
       .single();
 
     if (screenError || !screen) {
-      return NextResponse.json({ error: "Screen not found" }, { status: 404 });
+      throw APIErrors.NotFound("Screen");
     }
 
     if (!screen.screenshot_url) {
-      return NextResponse.json(
-        { error: "Screen has no screenshot" },
-        { status: 400 }
-      );
+      throw APIErrors.BadRequest("Screen has no screenshot");
     }
 
     let detectedElements: DetectedElement[];
@@ -295,10 +293,7 @@ export async function POST(
     } else {
       // Use GPT-4 Vision as primary method (when UIED service not configured)
       if (!process.env.OPENAI_API_KEY) {
-        return NextResponse.json(
-          { error: "OpenAI API is not configured" },
-          { status: 503 }
-        );
+        throw APIErrors.ServiceUnavailable("OpenAI API");
       }
 
       console.log("🔍 Using GPT-4 Vision detection...");
@@ -322,28 +317,6 @@ export async function POST(
       ...(detectionError && { warning: detectionError }),
     });
   } catch (error: any) {
-    console.error(
-      "Unexpected error in POST /api/screens/[id]/detect-elements:",
-      error
-    );
-
-    // Handle OpenAI specific errors
-    if (error?.status === 401) {
-      return NextResponse.json(
-        { error: "OpenAI API key is invalid" },
-        { status: 503 }
-      );
-    }
-    if (error?.status === 429) {
-      return NextResponse.json(
-        { error: "OpenAI API rate limit exceeded" },
-        { status: 429 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Internal server error", details: error?.message },
-      { status: 500 }
-    );
+    return handleAPIError(error, "POST /api/screens/[id]/detect-elements");
   }
 }
