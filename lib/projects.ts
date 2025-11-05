@@ -108,7 +108,8 @@ export async function createProject(
   userId: string,
   orgId?: string | null,
   description?: string,
-  color?: string
+  color?: string,
+  platformType?: 'web' | 'ios' | 'android'
 ): Promise<Project> {
   const { data, error } = await supabase
     .from("projects")
@@ -118,6 +119,7 @@ export async function createProject(
       clerk_org_id: orgId || null,
       description,
       color: color || "#3b82f6",
+      platform_type: platformType || "web",
     })
     .select()
     .single();

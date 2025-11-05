@@ -283,6 +283,7 @@ export default function SharePage() {
                 selectedScreenId={selectedScreen?.id}
                 selectedFlowId={selectedFlow?.id}
                 readOnly={true}
+                platformType={project?.platform_type || 'ios'}
               />
             </TabsContent>
 

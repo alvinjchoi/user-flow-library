@@ -760,6 +760,7 @@ export default function ProjectPage() {
                 onArchiveScreen={handleArchiveScreen}
                 selectedScreenId={selectedScreen?.id}
                 selectedFlowId={selectedFlow?.id}
+                platformType={project?.platform_type || 'ios'}
               />
             </TabsContent>
 

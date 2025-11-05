@@ -21,6 +21,7 @@ export interface Database {
           deleted_at: string | null;
           share_token: string | null;
           is_public: boolean;
+          platform_type: 'web' | 'ios' | 'android';
           created_at: string;
           updated_at: string;
         };
@@ -35,6 +36,7 @@ export interface Database {
           deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
+          platform_type?: 'web' | 'ios' | 'android';
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +51,7 @@ export interface Database {
           deleted_at?: string | null;
           share_token?: string | null;
           is_public?: boolean;
+          platform_type?: 'web' | 'ios' | 'android';
           created_at?: string;
           updated_at?: string;
         };
