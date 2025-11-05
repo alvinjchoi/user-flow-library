@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { NewProjectDialog } from "@/components/projects/new-project-dialog";
 
 export default function HomePage() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function HomePage() {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingProjectName, setEditingProjectName] = useState("");
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Set page title
@@ -75,19 +77,25 @@ export default function HomePage() {
     }
   }
 
-  async function handleCreateProject() {
+  function handleOpenNewProjectDialog() {
+    if (!user) {
+      alert("You must be signed in to create a project");
+      return;
+    }
+    setNewProjectDialogOpen(true);
+  }
+
+  async function handleCreateProject(name: string, platformType: 'web' | 'ios' | 'android') {
     if (!user) {
       alert("You must be signed in to create a project");
       return;
     }
 
-    const name = prompt("Project name:");
-    if (!name) return;
-
     try {
       // Create project with organization ID if in an org context
       const orgId = organization?.id || null;
-      const project = await createProject(name, user.id, orgId);
+      const project = await createProject(name, user.id, orgId, undefined, undefined, platformType);
+      setNewProjectDialogOpen(false);
       router.push(`/projects/${project.id}`);
     } catch (error) {
       console.error("Error creating project:", error);
@@ -200,7 +208,7 @@ export default function HomePage() {
                   Create your first project to start organizing user flows and
                   uploading screenshots.
                 </p>
-                <Button onClick={handleCreateProject} size="lg">
+                <Button onClick={handleOpenNewProjectDialog} size="lg">
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Project
                 </Button>
@@ -210,7 +218,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Projects</h2>
-                <Button onClick={handleCreateProject} variant="outline">
+                <Button onClick={handleOpenNewProjectDialog} variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
                   New Project
                 </Button>
@@ -307,6 +315,13 @@ export default function HomePage() {
             </div>
           )}
       </main>
+
+      {/* New Project Dialog */}
+      <NewProjectDialog
+        open={newProjectDialogOpen}
+        onOpenChange={setNewProjectDialogOpen}
+        onCreateProject={handleCreateProject}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

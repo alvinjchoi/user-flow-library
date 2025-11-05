@@ -21,6 +21,7 @@ interface ScreenGalleryByFlowProps {
   selectedScreenId?: string;
   selectedFlowId?: string;
   readOnly?: boolean;
+  platformType?: "web" | "ios" | "android";
 }
 
 // Screen Card Component - Mobbin style
@@ -35,6 +36,7 @@ function ScreenCard({
   onDragOver,
   onDrop,
   readOnly,
+  platformType = "ios",
 }: {
   screen: Screen;
   isSelected: boolean;
@@ -46,8 +48,14 @@ function ScreenCard({
   onDragOver?: (e: React.DragEvent, screen: Screen) => void;
   onDrop?: (screen: Screen) => void;
   readOnly?: boolean;
+  platformType?: "web" | "ios" | "android";
 }) {
   const borderRadius = 27.195;
+
+  // Calculate aspect ratio based on platform type
+  // Web: 16:10 (62.5%), Mobile: 9:16 (216.2%)
+  const paddingBottom =
+    platformType === "web" ? "62.5%" : "216.19584119584127%";
 
   return (
     <div
@@ -73,7 +81,7 @@ function ScreenCard({
         style={{
           position: "relative",
           width: "100%",
-          paddingBottom: "216.19584119584127%",
+          paddingBottom,
         }}
       >
         <div
@@ -225,10 +233,17 @@ export function ScreenGalleryByFlow({
   selectedScreenId,
   selectedFlowId,
   readOnly = false,
+  platformType = "ios",
 }: ScreenGalleryByFlowProps) {
   const [viewerScreen, setViewerScreen] = useState<Screen | null>(null);
   const [draggedScreen, setDraggedScreen] = useState<Screen | null>(null);
   const [dragOverScreen, setDragOverScreen] = useState<Screen | null>(null);
+
+  // Get aspect ratio and width based on platform type
+  // Web: 475px × 295px (16:10 ratio), Mobile: 256px with 9:16 ratio
+  const aspectRatioClass =
+    platformType === "web" ? "aspect-[16/10]" : "aspect-[9/16]";
+  const widthClass = platformType === "web" ? "w-[475px]" : "w-64";
 
   const flowScrollStyle = {
     scrollMarginTop: "5rem",
@@ -492,8 +507,10 @@ export function ScreenGalleryByFlow({
           {screens.length === 0 ? (
             /* Empty flow skeleton */
             <div className="flex gap-4 overflow-x-auto pb-4 pt-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="flex-shrink-0 w-64">
-                <Card className="aspect-[9/16] border-dashed border-muted-foreground/25 bg-muted/20 flex items-center justify-center">
+              <div className={`flex-shrink-0 ${widthClass}`}>
+                <Card
+                  className={`${aspectRatioClass} border-dashed border-muted-foreground/25 bg-muted/20 flex items-center justify-center`}
+                >
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Upload className="h-8 w-8 opacity-50" />
                     <span className="text-sm opacity-50">No screens yet</span>
@@ -503,9 +520,9 @@ export function ScreenGalleryByFlow({
 
               {/* Add screen card */}
               {!readOnly && (
-                <div className="flex-shrink-0 w-64">
+                <div className={`flex-shrink-0 ${widthClass}`}>
                   <Card
-                    className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                    className={`${aspectRatioClass} border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full`}
                     onClick={() => onAddScreen?.(flow.id)}
                   >
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -524,7 +541,7 @@ export function ScreenGalleryByFlow({
                   <div
                     key={screen.id}
                     id={`screen-${screen.id}`}
-                    className="flex-shrink-0 w-64"
+                    className={`flex-shrink-0 ${widthClass}`}
                     style={cardScrollStyle}
                   >
                     <ScreenCard
@@ -538,15 +555,16 @@ export function ScreenGalleryByFlow({
                       onDragOver={handleDragOver}
                       onDrop={handleDrop}
                       readOnly={readOnly}
+                      platformType={platformType}
                     />
                   </div>
                 ))}
 
                 {/* Add screen card */}
                 {!readOnly && (
-                  <div className="flex-shrink-0 w-64">
+                  <div className={`flex-shrink-0 ${widthClass}`}>
                     <Card
-                      className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                      className={`${aspectRatioClass} border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full`}
                       onClick={() => onAddScreen?.(flow.id)}
                     >
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -590,7 +608,7 @@ export function ScreenGalleryByFlow({
                               <div
                                 key={child.id}
                                 id={`screen-${child.id}`}
-                                className="flex-shrink-0 w-64"
+                                className={`flex-shrink-0 ${widthClass}`}
                                 style={cardScrollStyle}
                               >
                                 <ScreenCard
@@ -610,9 +628,9 @@ export function ScreenGalleryByFlow({
 
                             {/* Add child screen card */}
                             {!readOnly && (
-                              <div className="flex-shrink-0 w-64">
+                              <div className={`flex-shrink-0 ${widthClass}`}>
                                 <Card
-                                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                  className={`${aspectRatioClass} border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full`}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onAddScreen?.(flow.id, parent.id);
@@ -659,8 +677,10 @@ export function ScreenGalleryByFlow({
                             {branchedScreens.length === 0 ? (
                               /* Empty branched flow skeleton */
                               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                <div className="flex-shrink-0 w-64">
-                                  <Card className="aspect-[9/16] border-dashed border-muted-foreground/25 bg-muted/20 flex items-center justify-center">
+                                <div className={`flex-shrink-0 ${widthClass}`}>
+                                  <Card
+                                    className={`${aspectRatioClass} border-dashed border-muted-foreground/25 bg-muted/20 flex items-center justify-center`}
+                                  >
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                       <Upload className="h-8 w-8 opacity-50" />
                                       <span className="text-sm opacity-50">
@@ -672,9 +692,11 @@ export function ScreenGalleryByFlow({
 
                                 {/* Add screen card */}
                                 {!readOnly && (
-                                  <div className="flex-shrink-0 w-64">
+                                  <div
+                                    className={`flex-shrink-0 ${widthClass}`}
+                                  >
                                     <Card
-                                      className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                      className={`${aspectRatioClass} border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full`}
                                       onClick={() =>
                                         onAddScreen?.(branchedFlow.id)
                                       }
@@ -697,7 +719,7 @@ export function ScreenGalleryByFlow({
                                     <div
                                       key={screen.id}
                                       id={`screen-${screen.id}`}
-                                      className="flex-shrink-0 w-64"
+                                      className={`flex-shrink-0 ${widthClass}`}
                                       style={cardScrollStyle}
                                     >
                                       <ScreenCard
@@ -721,9 +743,11 @@ export function ScreenGalleryByFlow({
 
                                   {/* Add screen card */}
                                   {!readOnly && (
-                                    <div className="flex-shrink-0 w-64">
+                                    <div
+                                      className={`flex-shrink-0 ${widthClass}`}
+                                    >
                                       <Card
-                                        className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                        className={`${aspectRatioClass} border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full`}
                                         onClick={() =>
                                           onAddScreen?.(branchedFlow.id)
                                         }
@@ -774,7 +798,7 @@ export function ScreenGalleryByFlow({
                                               <div
                                                 key={child.id}
                                                 id={`screen-${child.id}`}
-                                                className="flex-shrink-0 w-64"
+                                                className={`flex-shrink-0 ${widthClass}`}
                                                 style={cardScrollStyle}
                                               >
                                                 <ScreenCard
@@ -804,9 +828,11 @@ export function ScreenGalleryByFlow({
 
                                             {/* Add child screen card */}
                                             {!readOnly && (
-                                              <div className="flex-shrink-0 w-64">
+                                              <div
+                                                className={`flex-shrink-0 ${widthClass}`}
+                                              >
                                                 <Card
-                                                  className="aspect-[9/16] border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full"
+                                                  className={`${aspectRatioClass} border-dashed cursor-pointer hover:border-primary hover:bg-accent transition-colors flex items-center justify-center h-full`}
                                                   onClick={(e) => {
                                                     e.stopPropagation();
                                                     onAddScreen?.(
@@ -855,26 +881,37 @@ export function ScreenGalleryByFlow({
         return (
           <div key={flow.id}>
             {renderFlow(flow)}
-            {/* Render child flows recursively */}
+            {/* Render child flows recursively with indentation */}
             {hasChildren &&
               children.map((childFlow) => {
                 const grandchildren =
                   childFlowsByParent.get(childFlow.id) || [];
                 return (
-                  <div key={childFlow.id}>
+                  <div
+                    key={childFlow.id}
+                    className="ml-8 border-l-2 border-primary/20 pl-6"
+                  >
                     {renderFlow(childFlow)}
-                    {/* Recursively render grandchildren (3rd level) */}
+                    {/* Recursively render grandchildren (3rd level) with additional indentation */}
                     {grandchildren.length > 0 &&
                       grandchildren.map((grandchildFlow) => {
                         const greatgrandchildren =
                           childFlowsByParent.get(grandchildFlow.id) || [];
                         return (
-                          <div key={grandchildFlow.id}>
+                          <div
+                            key={grandchildFlow.id}
+                            className="ml-8 border-l-2 border-primary/20 pl-6"
+                          >
                             {renderFlow(grandchildFlow)}
-                            {/* Support 4th level if needed */}
+                            {/* Support 4th level if needed with additional indentation */}
                             {greatgrandchildren.length > 0 &&
                               greatgrandchildren.map((ggFlow) => (
-                                <div key={ggFlow.id}>{renderFlow(ggFlow)}</div>
+                                <div
+                                  key={ggFlow.id}
+                                  className="ml-8 border-l-2 border-primary/20 pl-6"
+                                >
+                                  {renderFlow(ggFlow)}
+                                </div>
                               ))}
                           </div>
                         );
