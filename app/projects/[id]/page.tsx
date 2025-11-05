@@ -3,21 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { useUser, useOrganization } from "@clerk/nextjs";
-import { getProject } from "@/lib/projects";
-import {
-  getFlowsByProject,
-  getScreensByFlow,
-  createFlow,
-  createScreen,
-  updateScreen,
-  reorderScreens,
-  deleteScreen,
-  deleteFlow,
-  reorderFlows,
-  updateFlow,
-} from "@/lib/flows";
-import type { Project, Flow, Screen } from "@/lib/database.types";
+import type { Flow, Screen } from "@/lib/database.types";
 import { FlowSidebar } from "@/components/flow-tree/flow-sidebar";
 import { ScreenGalleryByFlow } from "@/components/screens/screen-gallery-by-flow";
 import { EditScreenDialog } from "@/components/screens/edit-screen-dialog";
@@ -25,22 +11,31 @@ import { AddScreenDialog } from "@/components/screens/add-screen-dialog";
 import { Header } from "@/components/header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { initializeStorage, uploadScreenshot } from "@/lib/storage";
+import { useProjectData, useFlowSelection, useScreenSelection } from "@/hooks/useProjectData";
+import { useScreenActions, useFlowActions } from "@/hooks/useScreenActions";
+import { reorderScreens, reorderFlows } from "@/lib/flows";
 
 export default function ProjectPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
-  const { user, isLoaded: userLoaded } = useUser();
-  const { organization, isLoaded: orgLoaded } = useOrganization();
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [flows, setFlows] = useState<Flow[]>([]);
-  const [screensByFlow, setScreensByFlow] = useState<Map<string, Screen[]>>(
-    new Map()
-  );
-  const [allScreens, setAllScreens] = useState<Screen[]>([]);
-  const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
-  const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
+  // Use custom hooks for data loading
+  const {
+    project,
+    flows,
+    screensByFlow,
+    allScreens,
+    loading,
+    error,
+    refetch,
+  } = useProjectData(projectId);
+
+  // Use custom hooks for state management
+  const { selectedFlow, setSelectedFlow } = useFlowSelection(flows);
+  const { selectedScreen, setSelectedScreen, clearSelection } = useScreenSelection();
+
+  // Dialog state
   const [editScreenDialogOpen, setEditScreenDialogOpen] = useState(false);
   const [editingScreen, setEditingScreen] = useState<Screen | null>(null);
   const [addScreenDialogOpen, setAddScreenDialogOpen] = useState(false);
@@ -48,7 +43,15 @@ export default function ProjectPage() {
   const [addScreenParentId, setAddScreenParentId] = useState<
     string | undefined
   >(undefined);
-  const [loading, setLoading] = useState(true);
+
+  // Use custom hooks for actions
+  const screenActions = useScreenActions({
+    onSuccess: () => refetch(),
+  });
+
+  const flowActions = useFlowActions({
+    onSuccess: () => refetch(),
+  });
 
   // Set page title based on project name
   useEffect(() => {
@@ -59,59 +62,7 @@ export default function ProjectPage() {
 
   useEffect(() => {
     initializeStorage();
-    // Only load project data when Clerk is ready
-    if (userLoaded && orgLoaded) {
-      loadProjectData();
-    }
-  }, [projectId, userLoaded, orgLoaded]);
-
-  async function loadProjectData() {
-    // Double-check auth is loaded before proceeding
-    if (!userLoaded || !orgLoaded) {
-      console.log("[ProjectPage] Waiting for auth to load...");
-      return;
-    }
-
-    console.log("[ProjectPage] Loading project data with auth:", {
-      userId: user?.id,
-      orgId: organization?.id,
-      orgName: organization?.name,
-    });
-
-    try {
-      setLoading(true);
-
-      // Load project
-      const proj = await getProject(projectId);
-      setProject(proj);
-
-      // Load flows
-      const flowsData = await getFlowsByProject(projectId);
-      setFlows(flowsData);
-
-      // Load screens for each flow
-      const screensMap = new Map<string, Screen[]>();
-      const allScreensList: Screen[] = [];
-
-      for (const flow of flowsData) {
-        const screens = await getScreensByFlow(flow.id);
-        screensMap.set(flow.id, screens);
-        allScreensList.push(...screens);
-      }
-
-      setScreensByFlow(screensMap);
-      setAllScreens(allScreensList);
-
-      // Select first flow by default
-      if (flowsData.length > 0) {
-        setSelectedFlow(flowsData[0]);
-      }
-    } catch (error) {
-      console.error("Error loading project:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, []);
 
   async function handleAddFlow(parentFlowId?: string) {
     if (!project) return;
