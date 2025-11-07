@@ -42,3 +42,5 @@ python-service/ScreenCoder/
 .idea
 .DS_Store
 /app/.DS_Store
+# Test coverage
+coverage/

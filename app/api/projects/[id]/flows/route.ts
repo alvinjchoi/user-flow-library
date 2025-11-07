@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireAuth, requireProjectAccess } from "@/lib/api-auth";
 
 // GET flows by project
 export async function GET(
@@ -9,34 +9,15 @@ export async function GET(
 ) {
   try {
     const { id: projectId } = await params;
-    const { userId, orgId } = await auth();
-
     console.log("[API /projects/[id]/flows] Request for project:", projectId);
-    console.log("[API /projects/[id]/flows] Auth:", { userId, orgId });
 
-    if (!userId && !orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Validate authentication
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
 
-    // First verify user has access to the project
-    let projectQuery = supabaseAdmin
-      .from("projects")
-      .select("id")
-      .eq("id", projectId)
-      .is("deleted_at", null);
-
-    if (orgId) {
-      projectQuery = projectQuery.eq("clerk_org_id", orgId);
-    } else if (userId) {
-      projectQuery = projectQuery.eq("user_id", userId);
-    }
-
-    const { data: project, error: projectError } = await projectQuery.single();
-
-    if (projectError || !project) {
-      console.log("[API /projects/[id]/flows] Project not found or no access");
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    // Verify project access
+    const projectResult = await requireProjectAccess(projectId, authResult);
+    if (projectResult instanceof NextResponse) return projectResult;
 
     // Get flows for the project
     const { data: flows, error: flowsError } = await supabaseAdmin
