@@ -44,16 +44,21 @@ Screens can be nested to represent sub-steps inside a flow.
 app/             Next.js routes and API handlers
 components/      UI building blocks grouped by domain
 lib/             Supabase client utilities and CRUD helpers
+hooks/           Custom React hooks for data and actions
 python-service/  Optional UIED detection microservice
 sql/             Schema and policy scripts for Supabase
+.speckit/        Spec-Driven Development specifications
 ```
 
 ## Development Commands
 
 ```bash
-pnpm run dev      # Start dev server
-pnpm run build    # Build for production
-pnpm run lint     # Run ESLint
+pnpm run dev            # Start dev server
+pnpm run build          # Run tests + build for production
+pnpm run lint           # Run ESLint
+pnpm test               # Run test suite
+pnpm test:watch         # Run tests in watch mode
+pnpm test:coverage      # Generate coverage report
 ```
 
 ## AI Detection (Optional)
@@ -76,6 +81,28 @@ UIED_SERVICE_URL=https://your-railway-app.up.railway.app
 ## Deployment Notes
 
 Deploy to Vercel (or similar) with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Provide `OPENAI_API_KEY` or `UIED_SERVICE_URL` if hotspots are required.
+
+## Spec-Driven Development
+
+This project uses [Spec Kit](https://github.github.com/spec-kit/) for Spec-Driven Development:
+
+- **Specifications:** `.speckit/specs/` - Feature requirements and architecture docs
+- **Plans:** `.speckit/plans/` - Technical implementation plans
+- **Tasks:** `.speckit/tasks/` - Tracked development tasks
+- **Guide:** [.speckit/SPECKIT_GUIDE.md](.speckit/SPECKIT_GUIDE.md)
+
+See [.speckit/INDEX.md](.speckit/INDEX.md) for all specifications.
+
+## Testing
+
+Comprehensive test suite with Jest and React Testing Library:
+
+```bash
+pnpm test              # Run all tests
+pnpm test:coverage     # View coverage report
+```
+
+Tests run automatically before every production build. See [TESTING.md](TESTING.md) for details.
 
 ## Licensing
 
