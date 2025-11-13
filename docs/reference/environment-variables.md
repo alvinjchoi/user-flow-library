@@ -105,15 +105,15 @@ CLERK_WEBHOOK_SECRET=whsec_...
 ## Clerk Setup
 
 ### Development Instance
-- URL: `https://just-bison-76.clerk.accounts.dev`
+- URL: `https://your-dev-instance.clerk.accounts.dev`
 - JWT Template: `supabase` (for RLS)
 - Organizations: Enabled
 
 ### Production Instance  
-- URL: `https://clerk.userflowlibrary.com`
+- URL: `https://clerk.your-domain.com` (or use default Clerk domain)
 - JWT Template: `supabase` (for RLS)
 - Organizations: Enabled
-- Google OAuth: Configured
+- OAuth Providers: Configure as needed (Google, GitHub, etc.)
 
 ---
 

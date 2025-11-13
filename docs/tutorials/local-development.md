@@ -13,13 +13,13 @@ pnpm install
 Populate `.env.local` with the project keys:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://jrhnlbilfozzrdphcvxp.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ## 3. Create database tables
 
-Run `sql/reference/CREATE_FLOW_TABLES.sql` in the Supabase SQL Editor (`https://supabase.com/dashboard/project/jrhnlbilfozzrdphcvxp/sql/new`).
+Run `sql/reference/CREATE_FLOW_TABLES.sql` in the Supabase SQL Editor (`https://supabase.com/dashboard/project/YOUR_PROJECT_ID/sql/new`).
 
 This script creates:
 

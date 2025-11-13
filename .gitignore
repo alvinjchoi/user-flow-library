@@ -42,5 +42,17 @@ python-service/ScreenCoder/
 .idea
 .DS_Store
 /app/.DS_Store
+
 # Test coverage
 coverage/
+
+# Temporary/Local files
+sql/temp/
+*.local
+*.backup
+*~
+.vscode/
+.cursor/
+
+# Logs
+*.log

@@ -1,10 +1,10 @@
-# Issue Resolved: Project c0736d66-6c89-486f-8b4e-fd67a741380e Access Problem
+# Issue Resolved: Project YOUR-PROJECT-ID-HERE Access Problem
 
 ## Problem Summary
 
-When trying to access project `c0736d66-6c89-486f-8b4e-fd67a741380e` (Moiio), users were getting a 404/401 error even though:
+When trying to access project `YOUR-PROJECT-ID-HERE` (Moiio), users were getting a 404/401 error even though:
 - ✅ The project exists in the database
-- ✅ The project belongs to the correct organization (`org_34r7krkuYSEoZHT9xh0l2HAzH9o`)
+- ✅ The project belongs to the correct organization (`org_YOUR_ORG_ID_HERE`)
 - ✅ The user is logged into that organization
 - ✅ The dashboard shows the project correctly
 
@@ -12,10 +12,10 @@ When trying to access project `c0736d66-6c89-486f-8b4e-fd67a741380e` (Moiio), us
 
 From the server logs (lines 630-633):
 ```
-[API /projects/[id]] Request for project: c0736d66-6c89-486f-8b4e-fd67a741380e
+[API /projects/[id]] Request for project: YOUR-PROJECT-ID-HERE
 [API /projects/[id]] Auth context: { userId: null, orgId: null }
 [API /projects/[id]] Unauthorized: No userId or orgId
-GET /api/projects/c0736d66-6c89-486f-8b4e-fd67a741380e 401 in 492ms
+GET /api/projects/YOUR-PROJECT-ID-HERE 401 in 492ms
 ```
 
 The API request was made **before Clerk authentication was fully loaded**, resulting in `{ userId: null, orgId: null }`.
@@ -80,11 +80,11 @@ async function loadProjectData() {
 ## How to Verify the Fix
 
 1. **Clear your browser cache** (important!)
-2. Navigate to: `https://www.userflowlibrary.com/dashboard`
+2. Navigate to: `https://your-domain.com/dashboard`
 3. Make sure you're in the correct organization ("Alvin's Personal Organization")
 4. Click on the "Moiio" project or navigate to:
    ```
-   https://www.userflowlibrary.com/projects/c0736d66-6c89-486f-8b4e-fd67a741380e
+   https://your-domain.com/projects/YOUR-PROJECT-ID-HERE
    ```
 5. Check the browser console - you should now see:
    ```
@@ -92,7 +92,7 @@ async function loadProjectData() {
    ```
 6. Check the server logs - you should see:
    ```
-   [API /projects/[id]] Auth context: { userId: 'user_34qyuKPHRbC48qS2teb7xiFpMDB', orgId: 'org_34r7krkuYSEoZHT9xh0l2HAzH9o' }
+   [API /projects/[id]] Auth context: { userId: 'user_YOUR_USER_ID_HERE', orgId: 'org_YOUR_ORG_ID_HERE' }
    ```
 7. The project should load successfully! 🎉
 

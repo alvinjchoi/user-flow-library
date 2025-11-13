@@ -17,7 +17,7 @@ ORDER BY created_at DESC;
 -- Update specific project to iOS
 UPDATE projects
 SET platform_type = 'ios'
-WHERE id = '33b4926a-02db-407f-934a-4639dc53c22d'
+WHERE id = 'YOUR-PROJECT-ID-HERE'  -- Replace with actual project ID
   AND deleted_at IS NULL;
 
 -- Add more updates here for other projects as needed:

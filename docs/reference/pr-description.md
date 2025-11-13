@@ -108,8 +108,8 @@ ALTER TABLE screen_comments ADD COLUMN resolved_by TEXT;
 
 Tested on:
 
-- ✅ Local development (just-bison-76)
-- ✅ Production (clerk.userflowlibrary.com)
+- ✅ Local development environment
+- ✅ Production environment
 - ✅ Multiple organizations
 - ✅ Cross-org data isolation
 - ✅ Public share links (read-only)

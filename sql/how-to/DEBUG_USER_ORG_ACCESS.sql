@@ -80,11 +80,11 @@ SELECT
   END as access_requirement,
   CASE 
     WHEN is_public THEN 
-      CONCAT('OR access via public link: https://www.userflowlibrary.com/share/', share_token)
+      CONCAT('OR access via public link: https://your-domain.com/share/', share_token)
     ELSE 'Not publicly shared'
   END as alternative_access
 FROM projects
-WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';  -- Replace with your project ID
+WHERE id = 'YOUR-PROJECT-ID-HERE';  -- Replace with your project ID
 
 
 -- ============================================================================
@@ -101,7 +101,7 @@ async function checkAuthState() {
   console.log('Organization Name:', window.Clerk?.organization?.name);
   
   // Try to fetch the project
-  const projectId = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+  const projectId = 'YOUR-PROJECT-ID-HERE';
   console.log('\n=== Attempting to fetch project ===');
   console.log('Project ID:', projectId);
   
