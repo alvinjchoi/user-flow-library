@@ -24,7 +24,7 @@ interface ScreenGalleryByFlowProps {
   platformType?: "web" | "ios" | "android";
 }
 
-// Screen Card Component - Mobbin style
+// Screen Card Component
 function ScreenCard({
   screen,
   isSelected,

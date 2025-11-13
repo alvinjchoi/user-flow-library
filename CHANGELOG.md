@@ -88,7 +88,7 @@
 - fix: add close button to hotspot editor: #d14048e
 
 ### Core Functionality
-- feat: add Mobbin-style UI components: #7b53dfc
+- feat: add core UI components: #7b53dfc
 - feat: transform homepage and add project detail pages: #dfc5c26
 - feat: add ability to create flows branching from screens: #5c23e6b
 - feat: add proper dialog for screen creation with parent selection: #5c994a9
