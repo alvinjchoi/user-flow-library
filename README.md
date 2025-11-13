@@ -1,6 +1,8 @@
 # User Flow Library
 
-A web application for organizing and documenting user flow screenshots. Create projects, manage flows, annotate screens, and export professional PDF documentation—all with AI-assisted hotspot detection for interactive prototypes.
+A Mobbin-style web application for organizing and documenting user flow screenshots. Create projects, manage flows, annotate screens, and export professional PDF documentation—all with AI-assisted hotspot detection for interactive prototypes.
+
+![User Flow Library Screenshot](public/app-screenshot.png)
 
 ## ✨ Features
 
