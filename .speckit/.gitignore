@@ -1,0 +1,21 @@
+# Spec Kit - Git Ignore
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+
+# Editor files
+.vscode/settings.json
+.idea/
+
+# Draft specs (uncomment if you want to keep drafts local)
+# *-draft.md
+# drafts/
+
+# Personal notes
+notes.md
+TODO.md
+scratch.md
+
+

@@ -41,6 +41,6 @@ echo "✅ Successfully pushed to dev!"
 echo ""
 echo "Next steps:"
 echo "1. Wait for Vercel to deploy (1-2 minutes)"
-echo "2. Check: https://vercel.com/alvinjchoi/user-flow-library"
+echo "2. Check your Vercel dashboard for deployment status"
 echo "3. Hard refresh browser (Cmd+Shift+R)"
 

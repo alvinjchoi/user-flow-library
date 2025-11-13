@@ -18,10 +18,10 @@ You'll get this from Clerk Dashboard in the next step.
 
 ### 2️⃣ Configure Webhook in Clerk Dashboard
 
-#### For Development (just-bison-76):
+#### For Development:
 
 1. Go to https://dashboard.clerk.com/
-2. Select your **development instance** (`just-bison-76`)
+2. Select your **development instance**
 3. Navigate to **Webhooks** in the sidebar
 4. Click **Add Endpoint**
 5. Set endpoint URL:
@@ -40,12 +40,12 @@ You'll get this from Clerk Dashboard in the next step.
 7. Copy the **Signing Secret** (starts with `whsec_`)
 8. Add it to your `.env.local` as `CLERK_WEBHOOK_SECRET`
 
-#### For Production (clerk.userflowlibrary.com):
+#### For Production:
 
 1. Switch to **production instance**
 2. Follow same steps, but use production URL:
    ```
-   https://userflowlibrary.com/api/webhooks/clerk
+   https://your-production-domain.com/api/webhooks/clerk
    ```
 
 ### 3️⃣ Test the Webhook

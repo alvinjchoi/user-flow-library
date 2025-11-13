@@ -44,7 +44,7 @@ Use this guide when you need to apply database changes in Supabase. Every script
 
 ## Running Scripts Safely
 
-1. Open the Supabase SQL Editor for project `jrhnlbilfozzrdphcvxp`.
+1. Open the Supabase SQL Editor for your project (`https://supabase.com/dashboard/project/YOUR_PROJECT_ID/sql/new`).
 2. Paste one script at a time and run it. The scripts are idempotent (`IF NOT EXISTS` checks) so they can be re-run safely.
 3. For destructive steps, read the inline comments and uncomment only when you are sure (for example, dropping columns or policies).
 4. After major changes, refresh the Supabase table view or re-run the verification scripts listed above.

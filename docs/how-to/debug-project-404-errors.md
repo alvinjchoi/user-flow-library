@@ -1,9 +1,9 @@
-# Debugging the 404 Error for Project c0736d66-6c89-486f-8b4e-fd67a741380e
+# Debugging 404 Errors for Projects
 
 ## Current Status
 
 ✅ Project exists in database
-✅ You're in the correct organization (`org_34r7krkuYSEoZHT9xh0l2HAzH9o`)
+✅ You're in the correct organization (`org_YOUR_ORG_ID_HERE`)
 ✅ Dashboard shows the project
 ❌ Project page returns 404
 
@@ -22,7 +22,7 @@ Open your browser console (while logged in) and run:
 
 ```javascript
 (async function() {
-  const projectId = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+  const projectId = 'YOUR-PROJECT-ID-HERE';
   console.log('=== Testing Project API ===');
   
   try {
@@ -60,7 +60,7 @@ pnpm dev
 1. Open Developer Tools (F12 or Cmd+Option+I)
 2. Go to the Network tab
 3. Try to access the project page
-4. Look for the request to `/api/projects/c0736d66-6c89-486f-8b4e-fd67a741380e`
+4. Look for the request to `/api/projects/YOUR-PROJECT-ID-HERE`
 5. Click on it to see:
    - Request headers (especially cookies)
    - Response status and body
@@ -75,7 +75,7 @@ console.log('Current Context:', {
   userId: window.Clerk?.user?.id,
   orgId: window.Clerk?.organization?.id,
   orgName: window.Clerk?.organization?.name,
-  isOrgActive: window.Clerk?.organization?.id === 'org_34r7krkuYSEoZHT9xh0l2HAzH9o'
+  isOrgActive: window.Clerk?.organization?.id === 'org_YOUR_ORG_ID_HERE'
 });
 ```
 
@@ -128,13 +128,13 @@ location.reload();
 
 When working correctly, you should see in the server logs:
 ```
-[API /projects/[id]] Request for project: c0736d66-6c89-486f-8b4e-fd67a741380e
+[API /projects/[id]] Request for project: YOUR-PROJECT-ID-HERE
 [API /projects/[id]] Auth context: { 
-  userId: 'user_34qyuKPHRbC48qS2teb7xiFpMDB', 
-  orgId: 'org_34r7krkuYSEoZHT9xh0l2HAzH9o' 
+  userId: 'user_YOUR_USER_ID_HERE', 
+  orgId: 'org_YOUR_ORG_ID_HERE' 
 }
-[API /projects/[id]] Filtering by orgId: org_34r7krkuYSEoZHT9xh0l2HAzH9o
-[API /projects/[id]] Query result: { data: 'c0736d66-6c89-486f-8b4e-fd67a741380e', error: undefined }
+[API /projects/[id]] Filtering by orgId: org_YOUR_ORG_ID_HERE
+[API /projects/[id]] Query result: { data: 'YOUR-PROJECT-ID-HERE', error: undefined }
 ```
 
 ## Next Steps

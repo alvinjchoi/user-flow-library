@@ -1,5 +1,5 @@
 -- Investigation SQL for Project Access Issues
--- Replace 'c0736d66-6c89-486f-8b4e-fd67a741380e' with your project ID if different
+-- Replace 'YOUR-PROJECT-ID-HERE' with your project ID if different
 
 -- ============================================================================
 -- STEP 1: Check if the project exists at all
@@ -16,7 +16,7 @@ SELECT
   avatar_url,
   color
 FROM projects
-WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+WHERE id = 'YOUR-PROJECT-ID-HERE';
 
 -- Expected outcomes:
 -- - If NO ROWS: Project doesn't exist
@@ -40,7 +40,7 @@ SELECT
     ELSE 'INVALID - No Owner!'
   END as project_type
 FROM projects p
-WHERE p.id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+WHERE p.id = 'YOUR-PROJECT-ID-HERE';
 
 
 -- ============================================================================
@@ -51,7 +51,7 @@ SELECT
   p.clerk_org_id as project_org_id,
   p.name as project_name
 FROM projects p
-WHERE p.id = 'c0736d66-6c89-486f-8b4e-fd67a741380e'
+WHERE p.id = 'YOUR-PROJECT-ID-HERE'
   AND p.clerk_org_id IS NOT NULL;
 
 -- Then check your current Clerk session:
@@ -67,7 +67,7 @@ SELECT
   p.user_id as project_owner_user_id,
   p.name as project_name
 FROM projects p
-WHERE p.id = 'c0736d66-6c89-486f-8b4e-fd67a741380e'
+WHERE p.id = 'YOUR-PROJECT-ID-HERE'
   AND p.user_id IS NOT NULL;
 
 -- Compare this user_id with your current Clerk userId
@@ -87,7 +87,7 @@ SELECT
 FROM projects p
 LEFT JOIN flows f ON f.project_id = p.id
 LEFT JOIN screens s ON s.flow_id = f.id
-WHERE p.id = 'c0736d66-6c89-486f-8b4e-fd67a741380e'
+WHERE p.id = 'YOUR-PROJECT-ID-HERE'
 GROUP BY p.id, p.name;
 
 
@@ -131,11 +131,11 @@ SELECT
   is_public,
   share_token,
   CASE 
-    WHEN is_public THEN CONCAT('https://www.userflowlibrary.com/share/', share_token)
+    WHEN is_public THEN CONCAT('https://your-domain.com/share/', share_token)
     ELSE 'Not publicly shared'
   END as share_url
 FROM projects
-WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+WHERE id = 'YOUR-PROJECT-ID-HERE';
 
 
 -- ============================================================================
@@ -167,7 +167,7 @@ WITH project_info AS (
   FROM projects p
   LEFT JOIN flows f ON f.project_id = p.id AND f.deleted_at IS NULL
   LEFT JOIN screens s ON s.flow_id = f.id AND s.deleted_at IS NULL
-  WHERE p.id = 'c0736d66-6c89-486f-8b4e-fd67a741380e'
+  WHERE p.id = 'YOUR-PROJECT-ID-HERE'
   GROUP BY p.id
 )
 SELECT 
@@ -185,7 +185,7 @@ SELECT
   COALESCE(user_id, 'N/A') as user_id,
   COALESCE(clerk_org_id, 'N/A') as clerk_org_id,
   CASE 
-    WHEN is_public THEN CONCAT('✓ Public - ', 'https://www.userflowlibrary.com/share/', share_token)
+    WHEN is_public THEN CONCAT('✓ Public - ', 'https://your-domain.com/share/', share_token)
     ELSE '✗ Not Public'
   END as sharing_status,
   active_flows,
@@ -203,23 +203,23 @@ FROM project_info;
 -- FIX 1: If the project is soft-deleted, restore it
 -- UPDATE projects
 -- SET deleted_at = NULL
--- WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+-- WHERE id = 'YOUR-PROJECT-ID-HERE';
 
 -- FIX 2: If ownership is wrong, reassign to yourself
 -- UPDATE projects
 -- SET user_id = 'YOUR_USER_ID'  -- Replace with your actual user_id
--- WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+-- WHERE id = 'YOUR-PROJECT-ID-HERE';
 
 -- FIX 3: If it should be an org project, set the org
 -- UPDATE projects
 -- SET clerk_org_id = 'YOUR_ORG_ID',  -- Replace with your actual org_id
 --     user_id = NULL
--- WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+-- WHERE id = 'YOUR-PROJECT-ID-HERE';
 
 -- FIX 4: Enable public sharing if you want anyone to access it
 -- UPDATE projects
 -- SET is_public = TRUE,
 --     share_token = gen_random_uuid()::text
--- WHERE id = 'c0736d66-6c89-486f-8b4e-fd67a741380e';
+-- WHERE id = 'YOUR-PROJECT-ID-HERE';
 
 

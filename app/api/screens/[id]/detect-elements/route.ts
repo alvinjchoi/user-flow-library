@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
+import { requireAuth } from "@/lib/api-auth";
+import { filterValidElements } from "@/lib/validators";
+import { handleAPIError, APIErrors } from "@/lib/api-errors";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -215,10 +217,9 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Validate authentication
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
 
     const { id: screenId } = await context.params;
 
@@ -230,14 +231,11 @@ export async function POST(
       .single();
 
     if (screenError || !screen) {
-      return NextResponse.json({ error: "Screen not found" }, { status: 404 });
+      throw APIErrors.NotFound("Screen");
     }
 
     if (!screen.screenshot_url) {
-      return NextResponse.json(
-        { error: "Screen has no screenshot" },
-        { status: 400 }
-      );
+      throw APIErrors.BadRequest("Screen has no screenshot");
     }
 
     let detectedElements: DetectedElement[];
@@ -295,10 +293,7 @@ export async function POST(
     } else {
       // Use GPT-4 Vision as primary method (when UIED service not configured)
       if (!process.env.OPENAI_API_KEY) {
-        return NextResponse.json(
-          { error: "OpenAI API is not configured" },
-          { status: 503 }
-        );
+        throw APIErrors.ServiceUnavailable("OpenAI API");
       }
 
       console.log("🔍 Using GPT-4 Vision detection...");
@@ -307,27 +302,12 @@ export async function POST(
     }
 
     // Validate and normalize the detected elements
-    const validElements = detectedElements
-      .filter((element) => {
-        // Validate bounding box
-        const { x, y, width, height } = element.boundingBox;
-        return (
-          x >= 0 &&
-          x <= 100 &&
-          y >= 0 &&
-          y <= 100 &&
-          width > 0 &&
-          width <= 100 &&
-          height > 0 &&
-          height <= 100 &&
-          x + width <= 100 &&
-          y + height <= 100
-        );
-      })
-      .map((element, index) => ({
+    const validElements = filterValidElements(detectedElements).map(
+      (element, index) => ({
         ...element,
         order_index: index,
-      }));
+      })
+    );
 
     return NextResponse.json({
       elements: validElements,
@@ -337,28 +317,6 @@ export async function POST(
       ...(detectionError && { warning: detectionError }),
     });
   } catch (error: any) {
-    console.error(
-      "Unexpected error in POST /api/screens/[id]/detect-elements:",
-      error
-    );
-
-    // Handle OpenAI specific errors
-    if (error?.status === 401) {
-      return NextResponse.json(
-        { error: "OpenAI API key is invalid" },
-        { status: 503 }
-      );
-    }
-    if (error?.status === 429) {
-      return NextResponse.json(
-        { error: "OpenAI API rate limit exceeded" },
-        { status: 429 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Internal server error", details: error?.message },
-      { status: 500 }
-    );
+    return handleAPIError(error, "POST /api/screens/[id]/detect-elements");
   }
 }

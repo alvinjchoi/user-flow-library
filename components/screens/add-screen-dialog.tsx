@@ -30,21 +30,7 @@ import {
 } from "@/components/ui/select";
 import type { Screen } from "@/lib/database.types";
 import { generateCompressedDataUrl } from "@/lib/image-utils";
-
-// Utility to analyze screenshot with AI
-async function analyzeScreenshot(imageUrl: string) {
-  const response = await fetch("/api/analyze-screenshot", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageUrl }),
-  });
-
-  if (!response.ok) {
-    throw new Error("AI analysis failed");
-  }
-
-  return response.json();
-}
+import { AIService } from "@/lib/ai-services";
 
 interface AddScreenDialogProps {
   open: boolean;
@@ -126,7 +112,7 @@ export function AddScreenDialog({
     setAnalyzing(true);
     setError(null);
     try {
-      const analysis = await analyzeScreenshot(imageUrl);
+      const analysis = await AIService.analyzeScreenshot(imageUrl);
       setAiTitle(analysis.title);
       setAiDescription(analysis.description);
 

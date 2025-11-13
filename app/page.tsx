@@ -139,9 +139,11 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border mt-20 py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 User Flow Library. Built with Next.js, Clerk, and Supabase.</p>
+      <footer className="border-t border-border mt-20 py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} User Flow Library. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>

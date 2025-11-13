@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireAuth, requireFlowAccess } from "@/lib/api-auth";
 
 // GET screens by flow
 export async function GET(
@@ -9,38 +9,15 @@ export async function GET(
 ) {
   try {
     const { id: flowId } = await params;
-    const { userId, orgId } = await auth();
-
     console.log("[API /flows/[id]/screens] Request for flow:", flowId);
-    console.log("[API /flows/[id]/screens] Auth:", { userId, orgId });
 
-    if (!userId && !orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Validate authentication
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
 
-    // First verify user has access to the flow's project
-    const { data: flow, error: flowError } = await supabaseAdmin
-      .from("flows")
-      .select("project_id, projects!inner(id, user_id, clerk_org_id)")
-      .eq("id", flowId)
-      .is("deleted_at", null)
-      .single();
-
-    if (flowError || !flow) {
-      console.log("[API /flows/[id]/screens] Flow not found");
-      return NextResponse.json({ error: "Flow not found" }, { status: 404 });
-    }
-
-    // Check access
-    const project = flow.projects as any;
-    const hasAccess = orgId
-      ? project.clerk_org_id === orgId
-      : project.user_id === userId;
-
-    if (!hasAccess) {
-      console.log("[API /flows/[id]/screens] No access to project");
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // Verify flow access
+    const flowResult = await requireFlowAccess(flowId, authResult);
+    if (flowResult instanceof NextResponse) return flowResult;
 
     // Get screens for the flow
     const { data: screens, error: screensError } = await supabaseAdmin
