@@ -34,7 +34,7 @@ export default function SignUpPage() {
 
   const handleTeamCreated = async (teamName: string) => {
     setShowTeamModal(false);
-    
+
     // Create organization via API
     try {
       const response = await fetch("/api/organizations/create", {
@@ -135,23 +135,26 @@ export default function SignUpPage() {
 
         {/* Sign Up Form */}
         {selectedPlan && (
-          <div>
-            <SignUp
-              fallbackRedirectUrl={getRedirectUrl()}
-              signInFallbackRedirectUrl={getRedirectUrl()}
-              appearance={{
-                elements: {
-                  formButtonPrimary: "bg-primary hover:bg-primary/90",
-                  card: "shadow-lg border border-border",
-                  headerTitle: "hidden",
-                  headerSubtitle: "hidden",
-                  socialButtonsBlockButton:
-                    "border border-border hover:bg-muted",
-                  formFieldInput: "border border-border",
-                  footerActionLink: "text-primary hover:text-primary/80",
-                },
-              }}
-            />
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
+              <SignUp
+                fallbackRedirectUrl={getRedirectUrl()}
+                signInFallbackRedirectUrl={getRedirectUrl()}
+                appearance={{
+                  elements: {
+                    formButtonPrimary: "bg-primary hover:bg-primary/90",
+                    card: "shadow-lg border border-border",
+                    headerTitle: "hidden",
+                    headerSubtitle: "hidden",
+                    socialButtonsBlockButton:
+                      "border border-border hover:bg-muted",
+                    formFieldInput: "border border-border",
+                    footerActionLink: "text-primary hover:text-primary/80",
+                    rootBox: "mx-auto",
+                  },
+                }}
+              />
+            </div>
           </div>
         )}
 
