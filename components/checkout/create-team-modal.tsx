@@ -77,11 +77,7 @@ export function CreateTeamModal({
             >
               Continue
             </Button>
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
           </div>
@@ -90,4 +86,3 @@ export function CreateTeamModal({
     </Dialog>
   );
 }
-

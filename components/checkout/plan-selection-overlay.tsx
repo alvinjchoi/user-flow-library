@@ -146,3 +146,5 @@ export function PlanSelectionOverlay() {
   );
 }
 
+export default PlanSelectionOverlay;
+

@@ -63,3 +63,5 @@ export function TeamCreationFlow() {
   );
 }
 
+export default TeamCreationFlow;
+
