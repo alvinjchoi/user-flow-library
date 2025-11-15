@@ -72,10 +72,7 @@ export default function SignUpPage() {
         {!selectedPlan ? (
           <div className="grid md:grid-cols-2 gap-4 mb-8">
             {/* Free Plan */}
-            <Card
-              className="cursor-pointer hover:border-primary transition-colors"
-              onClick={() => handlePlanSelection("free")}
-            >
+            <Card className="hover:border-primary transition-colors">
               <CardHeader>
                 <CardTitle>Starter</CardTitle>
                 <div className="text-2xl font-bold mt-2">$0</div>
@@ -92,7 +89,10 @@ export default function SignUpPage() {
                 <Button
                   className="w-full"
                   variant="outline"
-                  onClick={() => handlePlanSelection("free")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlanSelection("free");
+                  }}
                 >
                   Choose Starter
                 </Button>
@@ -100,10 +100,7 @@ export default function SignUpPage() {
             </Card>
 
             {/* Basic Plan */}
-            <Card
-              className="cursor-pointer hover:border-primary border-primary border-2 transition-colors relative"
-              onClick={() => handlePlanSelection("basic")}
-            >
+            <Card className="hover:border-primary border-primary border-2 transition-colors relative">
               <div className="absolute top-4 right-4">
                 <Badge>Most Popular</Badge>
               </div>
@@ -124,7 +121,10 @@ export default function SignUpPage() {
                 </ul>
                 <Button
                   className="w-full"
-                  onClick={() => handlePlanSelection("basic")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlanSelection("basic");
+                  }}
                 >
                   Choose Basic
                 </Button>
