@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SignUp } from "@clerk/nextjs";
+import { SignUp, useAuth } from "@clerk/nextjs";
 import { CreateTeamModal } from "@/components/checkout/create-team-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,16 @@ type PlanType = "free" | "basic" | null;
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { isLoaded: authLoaded, userId } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>(null);
   const [showTeamModal, setShowTeamModal] = useState(false);
+
+  // Redirect if user is already signed in
+  useEffect(() => {
+    if (authLoaded && userId) {
+      router.replace("/dashboard");
+    }
+  }, [authLoaded, userId, router]);
 
   const handlePlanSelection = (plan: PlanType) => {
     setSelectedPlan(plan);
@@ -57,6 +65,17 @@ export default function SignUpPage() {
       router.push("/dashboard?showPlanSelection=true&plan=basic");
     }
   };
+
+  // If user is signed in, show redirect message
+  if (authLoaded && userId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-full max-w-md text-center">
+          <p className="text-muted-foreground">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background py-12">
