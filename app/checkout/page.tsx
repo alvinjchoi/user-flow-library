@@ -91,7 +91,13 @@ function CheckoutContent() {
               <BillingSetupMessage />
             ) : (
               <BillingErrorBoundary fallback={<BillingSetupMessage />}>
-                <PricingTable for="organization" />
+                <PricingTable 
+                  for="organization"
+                  onPlanSelect={(plan) => {
+                    // Redirect to team selection page
+                    router.push(`/checkout/select-team?plan=${plan}`);
+                  }}
+                />
               </BillingErrorBoundary>
             )}
           </SignedIn>
