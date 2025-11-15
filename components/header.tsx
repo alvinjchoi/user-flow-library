@@ -191,7 +191,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
             <SignedIn>
               <OrganizationSwitcher
                 hidePersonal={true}
-                afterCreateOrganizationUrl="/dashboard"
+                afterCreateOrganizationUrl="/checkout/select-team"
                 afterSelectOrganizationUrl="/dashboard"
               />
             </SignedIn>
