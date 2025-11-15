@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2, Edit2 } from "lucide-react";
 import { useUser, useOrganization } from "@clerk/nextjs";
 import {
@@ -32,9 +32,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { NewProjectDialog } from "@/components/projects/new-project-dialog";
+import { PlanSelectionOverlay } from "@/components/checkout/plan-selection-overlay";
+import { TeamCreationFlow } from "@/components/checkout/team-creation-flow";
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const { organization } = useOrganization();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -49,7 +52,27 @@ export default function HomePage() {
   // Set page title
   useEffect(() => {
     document.title = "User Flow Library | Dashboard";
-  }, []);
+    
+    // Check if user just signed up with Basic plan
+    if (typeof window !== "undefined") {
+      const selectedPlan = sessionStorage.getItem("selectedPlan");
+      if (selectedPlan === "basic") {
+        sessionStorage.removeItem("selectedPlan");
+        // Show team creation modal
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.get("showPlanSelection")) {
+          // Check if user has an organization
+          if (!organization) {
+            // Show team creation flow
+            router.push("/dashboard?showTeamCreation=true&plan=basic");
+          } else {
+            // Show plan selection overlay
+            router.push("/dashboard?showPlanSelection=true&plan=basic");
+          }
+        }
+      }
+    }
+  }, [organization, router]);
 
   useEffect(() => {
     loadProjects();
@@ -197,6 +220,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <PlanSelectionOverlay />
+      <TeamCreationFlow />
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">

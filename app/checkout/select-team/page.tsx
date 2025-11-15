@@ -64,17 +64,22 @@ export default function SelectTeamPage() {
 
           {/* Title */}
           <h1 className="text-3xl font-bold mb-8">
-            Choose a team to upgrade to {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan
+            Choose a team to upgrade to{" "}
+            {plan.charAt(0).toUpperCase() + plan.slice(1)} Plan
           </h1>
 
           {/* Team list */}
           <div className="space-y-4 mb-6">
             {organizationList?.map(({ organization }) => {
               const memberCount = organization.membersCount || 0;
-              const planType = (organization as any).publicMetadata?.plan || "free";
-              
+              const planType =
+                (organization as any).publicMetadata?.plan || "free";
+
               return (
-                <Card key={organization.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={organization.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -84,16 +89,25 @@ export default function SelectTeamPage() {
                             {organization.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        
+
                         {/* Team info */}
                         <div>
-                          <h3 className="font-semibold text-lg">{organization.name}</h3>
+                          <h3 className="font-semibold text-lg">
+                            {organization.name}
+                          </h3>
                           <p className="text-sm text-muted-foreground">
-                            {planType === "free" ? "Free team" : `${planType.charAt(0).toUpperCase() + planType.slice(1)} team`} · {memberCount} {memberCount === 1 ? "member" : "members"}
+                            {planType === "free"
+                              ? "Free team"
+                              : `${
+                                  planType.charAt(0).toUpperCase() +
+                                  planType.slice(1)
+                                } team`}{" "}
+                            · {memberCount}{" "}
+                            {memberCount === 1 ? "member" : "members"}
                           </p>
                         </div>
                       </div>
-                      
+
                       {/* Upgrade button */}
                       <Button
                         onClick={() => handleUpgrade(organization.id)}
@@ -122,4 +136,3 @@ export default function SelectTeamPage() {
     </div>
   );
 }
-
