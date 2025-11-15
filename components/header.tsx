@@ -56,6 +56,8 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
 
   // Show OrganizationSwitcher only on dashboard (not on project pages)
   const showOrgSwitcher = pathname?.startsWith("/dashboard");
+  // Hide navigation links on project pages
+  const isProjectPage = pathname?.startsWith("/projects/");
 
   const handleGenerateShareLink = async () => {
     if (!project) return;
@@ -288,7 +290,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               </div>
             )}
             {/* Dashboard link - hide when on dashboard or project pages */}
-            {!showOrgSwitcher && pathname !== "/" && (
+            {!showOrgSwitcher && !isProjectPage && pathname !== "/" && (
               <Link
                 href="/dashboard"
                 className="text-sm hover:text-primary transition-colors"
@@ -296,8 +298,8 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                 Dashboard
               </Link>
             )}
-            {/* Pricing link - hide when on dashboard */}
-            {!showOrgSwitcher && (
+            {/* Pricing link - hide when on dashboard or project pages */}
+            {!showOrgSwitcher && !isProjectPage && (
               <Link
                 href="/pricing"
                 className="text-sm hover:text-primary transition-colors"
