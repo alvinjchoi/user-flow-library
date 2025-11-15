@@ -17,7 +17,7 @@ import Link from "next/link";
 import { PLANS } from "@/lib/billing-constants";
 
 // Prevent static generation - this page requires client-side auth checks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Example: Premium content page protected by plan check
@@ -31,7 +31,7 @@ export default function PremiumPage() {
 
   useEffect(() => {
     document.title = "User Flow Library | Premium Features";
-    
+
     // Check if organization has premium plan after mount
     // Plan ID: cplan_35Ux9G4lzWRWWBTmh2rxJwCVi9V
     // Note: Use the plan name/slug from Clerk Dashboard, not the plan ID

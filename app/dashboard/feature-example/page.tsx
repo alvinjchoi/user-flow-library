@@ -17,7 +17,7 @@ import Link from "next/link";
 import { FEATURES } from "@/lib/billing-constants";
 
 // Prevent static generation - this page requires client-side auth checks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Example: Feature-gated content page
@@ -26,12 +26,14 @@ export const dynamic = 'force-dynamic';
 export default function FeatureExamplePage() {
   const { has } = useAuth();
   const router = useRouter();
-  const [hasAdvancedAnalytics, setHasAdvancedAnalytics] = useState<boolean | null>(null);
+  const [hasAdvancedAnalytics, setHasAdvancedAnalytics] = useState<
+    boolean | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     document.title = "User Flow Library | Advanced Features";
-    
+
     // Check if organization has a specific feature after mount
     if (has) {
       try {
