@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
@@ -16,6 +16,9 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import { PLANS } from "@/lib/billing-constants";
 
+// Prevent static generation - this page requires client-side auth checks
+export const dynamic = 'force-dynamic';
+
 /**
  * Example: Premium content page protected by plan check
  * This page demonstrates using the has() method to check if an organization has a specific plan
@@ -23,15 +26,41 @@ import { PLANS } from "@/lib/billing-constants";
 export default function PremiumPage() {
   const { has } = useAuth();
   const router = useRouter();
+  const [hasPremiumPlan, setHasPremiumPlan] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     document.title = "User Flow Library | Premium Features";
-  }, []);
+    
+    // Check if organization has premium plan after mount
+    // Plan ID: cplan_35Ux9G4lzWRWWBTmh2rxJwCVi9V
+    // Note: Use the plan name/slug from Clerk Dashboard, not the plan ID
+    if (has) {
+      try {
+        const hasPlan = has({ plan: PLANS.PREMIUM });
+        setHasPremiumPlan(hasPlan);
+      } catch (error) {
+        console.error("Error checking premium plan:", error);
+        setHasPremiumPlan(false);
+      }
+    } else {
+      setHasPremiumPlan(false);
+    }
+    setIsLoading(false);
+  }, [has]);
 
-  // Check if organization has premium plan
-  // Plan ID: cplan_35Ux9G4lzWRWWBTmh2rxJwCVi9V
-  // Note: Use the plan name/slug from Clerk Dashboard, not the plan ID
-  const hasPremiumPlan = has({ plan: PLANS.PREMIUM });
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!hasPremiumPlan) {
     return (

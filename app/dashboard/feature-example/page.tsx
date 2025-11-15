@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
@@ -16,6 +16,9 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import { FEATURES } from "@/lib/billing-constants";
 
+// Prevent static generation - this page requires client-side auth checks
+export const dynamic = 'force-dynamic';
+
 /**
  * Example: Feature-gated content page
  * This page demonstrates using the has() method to check if an organization has a specific feature
@@ -23,13 +26,39 @@ import { FEATURES } from "@/lib/billing-constants";
 export default function FeatureExamplePage() {
   const { has } = useAuth();
   const router = useRouter();
+  const [hasAdvancedAnalytics, setHasAdvancedAnalytics] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     document.title = "User Flow Library | Advanced Features";
-  }, []);
+    
+    // Check if organization has a specific feature after mount
+    if (has) {
+      try {
+        const hasFeature = has({ feature: FEATURES.ADVANCED_ANALYTICS });
+        setHasAdvancedAnalytics(hasFeature);
+      } catch (error) {
+        console.error("Error checking feature:", error);
+        setHasAdvancedAnalytics(false);
+      }
+    } else {
+      setHasAdvancedAnalytics(false);
+    }
+    setIsLoading(false);
+  }, [has]);
 
-  // Check if organization has a specific feature
-  const hasAdvancedAnalytics = has({ feature: FEATURES.ADVANCED_ANALYTICS });
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!hasAdvancedAnalytics) {
     return (
