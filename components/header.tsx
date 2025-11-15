@@ -296,13 +296,15 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                 Dashboard
               </Link>
             )}
-            {/* Pricing link */}
-            <Link
-              href="/pricing"
-              className="text-sm hover:text-primary transition-colors"
-            >
-              Pricing
-            </Link>
+            {/* Pricing link - hide when on dashboard */}
+            {!showOrgSwitcher && (
+              <Link
+                href="/pricing"
+                className="text-sm hover:text-primary transition-colors"
+              >
+                Pricing
+              </Link>
+            )}
           </SignedIn>
           <UserNav />
         </nav>
