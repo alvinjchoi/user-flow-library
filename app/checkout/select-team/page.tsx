@@ -30,7 +30,8 @@ export default function SelectTeamPage() {
   };
 
   const handleCreateNewTeam = () => {
-    router.push(`/organization/new?redirect=/checkout/payment?plan=${plan}`);
+    // Redirect to organization creation, which will then redirect back to select-team
+    router.push(`/organization/new`);
   };
 
   if (!isLoaded) {
