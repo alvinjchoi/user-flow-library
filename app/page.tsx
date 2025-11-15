@@ -242,7 +242,7 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button className="w-full" asChild>
-                <Link href="/checkout?plan=basic">Get Started</Link>
+                <Link href="/sign-up">Get Started</Link>
               </Button>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
