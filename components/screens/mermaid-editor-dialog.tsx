@@ -43,9 +43,16 @@ export function MermaidEditorDialog({
       theme: "default",
       securityLevel: "loose",
       flowchart: {
-        useMaxWidth: true,
+        useMaxWidth: false,
         htmlLabels: true,
         curve: "basis",
+        padding: 8,
+        nodeSpacing: 50,
+        rankSpacing: 50,
+      },
+      themeVariables: {
+        fontSize: '14px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
       },
     });
   }, []);
@@ -311,7 +318,7 @@ export function MermaidEditorDialog({
             </div>
             <div
               ref={mermaidRef}
-              className="flex-1 overflow-hidden bg-muted/30 rounded-md relative cursor-move"
+              className="flex-1 overflow-auto bg-muted/30 rounded-md relative cursor-move"
               onWheel={handleWheel}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -323,10 +330,10 @@ export function MermaidEditorDialog({
               style={{ touchAction: 'none' }}
             >
               <div
-                className="absolute inset-0 flex items-center justify-start"
+                className="absolute inset-0 p-4"
                 style={{
                   transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                  transformOrigin: 'left center',
+                  transformOrigin: 'top left',
                   transition: isTransitioning ? 'transform 0.1s ease-out' : 'none',
                   willChange: 'transform'
                 }}
@@ -337,14 +344,10 @@ export function MermaidEditorDialog({
                   </div>
                 ) : renderedSvg ? (
                   <div
-                    className="[&_svg]:block"
+                    className="[&_svg]:block [&_svg]:w-fit [&_svg]:h-auto"
                     style={{
-                      shapeRendering: 'crispEdges',
-                      textRendering: 'optimizeLegibility',
-                      transform: 'scale(20) translateY(-100%)',
-                      transformOrigin: 'left top',
-                      position: 'relative',
-                      top: '100%'
+                      shapeRendering: 'geometricPrecision',
+                      textRendering: 'geometricPrecision',
                     }}
                     dangerouslySetInnerHTML={{ __html: renderedSvg }}
                   />
