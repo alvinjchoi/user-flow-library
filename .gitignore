@@ -56,3 +56,4 @@ sql/temp/
 
 # Logs
 *.log
+/supabase/.temp
