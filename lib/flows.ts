@@ -314,6 +314,11 @@ export async function updateFlowMermaidScript(
 ): Promise<Flow> {
   console.log("[updateFlowMermaidScript] Updating mermaid script for flow:", flowId);
 
+  if (!supabase) {
+    console.error("[updateFlowMermaidScript] Supabase client not initialized");
+    throw new Error("Database connection not available");
+  }
+
   const { data, error } = await supabase
     .from("flows")
     .update({ mermaid_script: mermaidScript })
@@ -342,19 +347,28 @@ export async function getFlowMermaidScript(
 ): Promise<string | null> {
   console.log("[getFlowMermaidScript] Fetching mermaid script for flow:", flowId);
 
-  const { data, error } = await supabase
-    .from("flows")
-    .select("mermaid_script")
-    .eq("id", flowId)
-    .single();
-
-  if (error) {
-    console.error("[getFlowMermaidScript] Error:", error);
-    throw new Error(
-      `Failed to fetch mermaid script: ${error.message || JSON.stringify(error)}`
-    );
+  if (!supabase) {
+    console.error("[getFlowMermaidScript] Supabase client not initialized");
+    return null;
   }
 
-  console.log("[getFlowMermaidScript] Success");
-  return data?.mermaid_script || null;
+  try {
+    const { data, error } = await supabase
+      .from("flows")
+      .select("mermaid_script")
+      .eq("id", flowId)
+      .single();
+
+    if (error) {
+      console.error("[getFlowMermaidScript] Error:", error);
+      // Don't throw, just return null to gracefully handle missing scripts
+      return null;
+    }
+
+    console.log("[getFlowMermaidScript] Success");
+    return data?.mermaid_script || null;
+  } catch (err) {
+    console.error("[getFlowMermaidScript] Exception:", err);
+    return null;
+  }
 }
