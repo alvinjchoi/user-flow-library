@@ -304,7 +304,7 @@ export function MermaidEditorDialog({
           </div>
 
           {/* Right side: Preview */}
-          <div className="flex-1 flex flex-col gap-3 min-w-0 border-l pl-6">
+          <div className="flex-1 flex flex-col gap-3 min-w-0 border-l pl-6 relative">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">Preview</label>
               <Button
@@ -361,30 +361,30 @@ export function MermaidEditorDialog({
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Zoom controls in bottom right */}
-              <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleZoomIn}
-                  className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleZoomOut}
-                  className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                <div className="text-xs text-center text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded">
-                  {Math.round(scale * 100)}%
-                </div>
+            {/* Zoom controls in bottom right - positioned relative to parent container */}
+            <div className="absolute bottom-7 right-6 flex flex-col gap-2 z-10 pointer-events-none">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleZoomIn}
+                className="h-8 w-8 bg-background/80 backdrop-blur-sm pointer-events-auto"
+                title="Zoom In"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleZoomOut}
+                className="h-8 w-8 bg-background/80 backdrop-blur-sm pointer-events-auto"
+                title="Zoom Out"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <div className="text-xs text-center text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded pointer-events-auto">
+                {Math.round(scale * 100)}%
               </div>
             </div>
           </div>
