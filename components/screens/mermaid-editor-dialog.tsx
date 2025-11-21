@@ -368,7 +368,7 @@ export function MermaidEditorDialog({
             </div>
 
             {/* Zoom controls in bottom right - positioned relative to parent container */}
-            <div className="absolute bottom-7 right-6 flex flex-col gap-2 z-10 pointer-events-none">
+            <div className="absolute bottom-16 right-6 flex flex-col gap-2 z-10 pointer-events-none">
               <Button
                 variant="outline"
                 size="icon"
