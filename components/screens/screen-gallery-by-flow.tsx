@@ -242,6 +242,7 @@ export function ScreenGalleryByFlow({
   const [mermaidDialogOpen, setMermaidDialogOpen] = useState(false);
   const [selectedFlowForMermaid, setSelectedFlowForMermaid] =
     useState<Flow | null>(null);
+  const [initialMermaidScript, setInitialMermaidScript] = useState<string>("");
 
   // Get aspect ratio and width based on platform type
   // Web: 475px × 295px (16:10 ratio), Mobile: 256px with 9:16 ratio
@@ -513,8 +514,17 @@ export function ScreenGalleryByFlow({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
-                onClick={() => {
+                onClick={async () => {
                   setSelectedFlowForMermaid(flow);
+                  // Load existing Mermaid script from database
+                  try {
+                    const { getFlowMermaidScript } = await import("@/lib/flows");
+                    const script = await getFlowMermaidScript(flow.id);
+                    setInitialMermaidScript(script || "");
+                  } catch (error) {
+                    console.error("Failed to load Mermaid script:", error);
+                    setInitialMermaidScript("");
+                  }
                   setMermaidDialogOpen(true);
                 }}
                 title="Edit Mermaid flowchart"
@@ -966,15 +976,24 @@ export function ScreenGalleryByFlow({
             setMermaidDialogOpen(open);
             if (!open) {
               setSelectedFlowForMermaid(null);
+              setInitialMermaidScript("");
             }
           }}
           flowId={selectedFlowForMermaid.id}
-          onSave={(script) => {
-            // Script is saved to localStorage in the dialog component
-            console.log(
-              "Mermaid script saved for flow:",
-              selectedFlowForMermaid.id
-            );
+          initialScript={initialMermaidScript}
+          onSave={async (script) => {
+            // Save to database
+            try {
+              const { updateFlowMermaidScript } = await import("@/lib/flows");
+              await updateFlowMermaidScript(selectedFlowForMermaid.id, script);
+              console.log(
+                "Mermaid script saved to database for flow:",
+                selectedFlowForMermaid.id
+              );
+            } catch (error) {
+              console.error("Failed to save Mermaid script:", error);
+              alert("Failed to save Mermaid script to database");
+            }
           }}
         />
       )}
