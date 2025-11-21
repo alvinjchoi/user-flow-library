@@ -306,3 +306,55 @@ export async function updateFlow(
   console.log("updateFlow success:", data);
   return data;
 }
+
+// Update flow mermaid script
+export async function updateFlowMermaidScript(
+  flowId: string,
+  mermaidScript: string
+): Promise<Flow> {
+  console.log("[updateFlowMermaidScript] Updating mermaid script for flow:", flowId);
+
+  const { data, error } = await supabase
+    .from("flows")
+    .update({ mermaid_script: mermaidScript })
+    .eq("id", flowId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[updateFlowMermaidScript] Error:", error);
+    throw new Error(
+      `Failed to update mermaid script: ${error.message || JSON.stringify(error)}`
+    );
+  }
+
+  if (!data) {
+    throw new Error("No data returned from update");
+  }
+
+  console.log("[updateFlowMermaidScript] Success");
+  return data;
+}
+
+// Get flow mermaid script
+export async function getFlowMermaidScript(
+  flowId: string
+): Promise<string | null> {
+  console.log("[getFlowMermaidScript] Fetching mermaid script for flow:", flowId);
+
+  const { data, error } = await supabase
+    .from("flows")
+    .select("mermaid_script")
+    .eq("id", flowId)
+    .single();
+
+  if (error) {
+    console.error("[getFlowMermaidScript] Error:", error);
+    throw new Error(
+      `Failed to fetch mermaid script: ${error.message || JSON.stringify(error)}`
+    );
+  }
+
+  console.log("[getFlowMermaidScript] Success");
+  return data?.mermaid_script || null;
+}

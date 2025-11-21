@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, Upload, CornerDownRight } from "lucide-react";
+import { Plus, Upload, CornerDownRight, GitBranch } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import type { Screen, Flow } from "@/lib/database.types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScreenViewerModal } from "./screen-viewer-modal";
+import { MermaidEditorDialog } from "./mermaid-editor-dialog";
 
 interface ScreenGalleryByFlowProps {
   flows: Flow[];
@@ -238,6 +239,9 @@ export function ScreenGalleryByFlow({
   const [viewerScreen, setViewerScreen] = useState<Screen | null>(null);
   const [draggedScreen, setDraggedScreen] = useState<Screen | null>(null);
   const [dragOverScreen, setDragOverScreen] = useState<Screen | null>(null);
+  const [mermaidDialogOpen, setMermaidDialogOpen] = useState(false);
+  const [selectedFlowForMermaid, setSelectedFlowForMermaid] =
+    useState<Flow | null>(null);
 
   // Get aspect ratio and width based on platform type
   // Web: 475px × 295px (16:10 ratio), Mobile: 256px with 9:16 ratio
@@ -489,19 +493,35 @@ export function ScreenGalleryByFlow({
           style={flowScrollStyle}
         >
           {/* Flow Header */}
-          <div className="flex items-center gap-3 border-b pb-3">
-            <h3 className="text-lg text-primary">
-              <span className="font-semibold">{flow.name}</span>
-              {parentFlow && (
-                <>
-                  <span className="font-normal"> from </span>
-                  <span className="font-semibold">{parentFlow.name}</span>
-                </>
-              )}
-            </h3>
-            <span className="text-sm text-muted-foreground">
-              {screens.length} screen{screens.length !== 1 ? "s" : ""}
-            </span>
+          <div className="flex items-center justify-between gap-3 border-b pb-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <h3 className="text-lg text-primary">
+                <span className="font-semibold">{flow.name}</span>
+                {parentFlow && (
+                  <>
+                    <span className="font-normal"> from </span>
+                    <span className="font-semibold">{parentFlow.name}</span>
+                  </>
+                )}
+              </h3>
+              <span className="text-sm text-muted-foreground">
+                {screens.length} screen{screens.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            {!readOnly && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 flex-shrink-0"
+                onClick={() => {
+                  setSelectedFlowForMermaid(flow);
+                  setMermaidDialogOpen(true);
+                }}
+                title="Edit Mermaid flowchart"
+              >
+                <GitBranch className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           {screens.length === 0 ? (
@@ -935,6 +955,27 @@ export function ScreenGalleryByFlow({
           onDeleteScreenshot={onDeleteScreenshot}
           onArchiveScreen={onArchiveScreen}
           readOnly={readOnly}
+        />
+      )}
+
+      {/* Mermaid Editor Dialog */}
+      {selectedFlowForMermaid && (
+        <MermaidEditorDialog
+          open={mermaidDialogOpen}
+          onOpenChange={(open) => {
+            setMermaidDialogOpen(open);
+            if (!open) {
+              setSelectedFlowForMermaid(null);
+            }
+          }}
+          flowId={selectedFlowForMermaid.id}
+          onSave={(script) => {
+            // Script is saved to localStorage in the dialog component
+            console.log(
+              "Mermaid script saved for flow:",
+              selectedFlowForMermaid.id
+            );
+          }}
         />
       )}
     </div>
