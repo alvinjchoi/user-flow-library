@@ -1,3 +1,45 @@
+# v1.1.0 - Pricing & Mermaid Editor
+
+## Release Date
+November 21, 2024
+
+## Major Features
+
+### Pricing & Billing System
+- feat: add complete pricing page with Starter (free) and Basic ($29/month) plans: #4c1fb2a
+- feat: integrate Clerk billing with Stripe for payment processing: #4c1fb2a
+- feat: implement sign-up flow with plan selection: #4c1fb2a
+- feat: add team creation flow during sign-up: #4c1fb2a
+- feat: dynamic landing page CTAs based on authentication state: #4c1fb2a
+- fix: improve authentication redirects and error handling: #4c1fb2a
+
+### Mermaid Flowchart Editor
+- feat: add Mermaid flowchart editor with nearly fullscreen layout (98vw x 98vh): #4de6c77
+- feat: implement real-time Mermaid script validation and rendering: #4de6c77
+- feat: add advanced zoom controls (mouse wheel, pinch-to-zoom, zoom buttons): #4de6c77
+- feat: add pan functionality with click-and-drag navigation: #4de6c77
+- feat: render SVG at 20x scale for crisp readability: #4de6c77
+- feat: add database support with mermaid_script column in flows table: #4de6c77
+- feat: add API functions for saving/retrieving Mermaid scripts: #4de6c77
+
+### Documentation & Maintenance
+- docs: add app screenshot to README for better visibility: #ad72b18
+- docs: update project description in README: #39b9c5a
+- chore: remove Mobbin references except from README: #69e973d
+- chore: add gitignore for Supabase temporary files: #e122a41
+- chore: skip remote schema migration to prevent re-application: #e122a41
+
+### Database Changes
+- migration: add mermaid_script TEXT column to flows table
+- migration: add index for faster lookups of flows with mermaid scripts
+
+## Pull Requests
+- #17 feat: Add Mermaid flowchart editor with zoom and pan controls
+- #16 feat: Add pricing page and improve sign-up flow
+- #13 docs: add app screenshot to README
+
+---
+
 # v1.0.0 - Public Release
 
 ## Core Changes
