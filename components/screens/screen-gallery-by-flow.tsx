@@ -509,29 +509,27 @@ export function ScreenGalleryByFlow({
                 {screens.length} screen{screens.length !== 1 ? "s" : ""}
               </span>
             </div>
-            {!readOnly && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 flex-shrink-0"
-                onClick={async () => {
-                  setSelectedFlowForMermaid(flow);
-                  // Load existing Mermaid script from database
-                  try {
-                    const { getFlowMermaidScript } = await import("@/lib/flows");
-                    const script = await getFlowMermaidScript(flow.id);
-                    setInitialMermaidScript(script || "");
-                  } catch (error) {
-                    console.error("Failed to load Mermaid script:", error);
-                    setInitialMermaidScript("");
-                  }
-                  setMermaidDialogOpen(true);
-                }}
-                title="Edit Mermaid flowchart"
-              >
-                <GitBranch className="h-4 w-4" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0"
+              onClick={async () => {
+                setSelectedFlowForMermaid(flow);
+                // Load existing Mermaid script from database
+                try {
+                  const { getFlowMermaidScript } = await import("@/lib/flows");
+                  const script = await getFlowMermaidScript(flow.id);
+                  setInitialMermaidScript(script || "");
+                } catch (error) {
+                  console.error("Failed to load Mermaid script:", error);
+                  setInitialMermaidScript("");
+                }
+                setMermaidDialogOpen(true);
+              }}
+              title={readOnly ? "View Mermaid flowchart" : "Edit Mermaid flowchart"}
+            >
+              <GitBranch className="h-4 w-4" />
+            </Button>
           </div>
 
           {screens.length === 0 ? (
@@ -981,6 +979,7 @@ export function ScreenGalleryByFlow({
           }}
           flowId={selectedFlowForMermaid.id}
           initialScript={initialMermaidScript}
+          readOnly={readOnly}
           onSave={async (script) => {
             // Save to database
             try {

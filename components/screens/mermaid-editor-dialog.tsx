@@ -14,6 +14,7 @@ interface MermaidEditorDialogProps {
   flowId: string;
   initialScript?: string;
   onSave?: (script: string) => void;
+  readOnly?: boolean;
 }
 
 export function MermaidEditorDialog({
@@ -22,6 +23,7 @@ export function MermaidEditorDialog({
   flowId,
   initialScript = "",
   onSave,
+  readOnly = false,
 }: MermaidEditorDialogProps) {
   const [script, setScript] = useState(initialScript);
   const [error, setError] = useState<string | null>(null);
@@ -266,11 +268,12 @@ export function MermaidEditorDialog({
         style={{ maxWidth: '98vw', width: '98vw', height: '98vh', maxHeight: '98vh', display: 'flex', flexDirection: 'column', gap: 0 }}
       >
         <DialogTitle className="pb-2 flex-shrink-0 text-lg font-semibold !leading-none" style={{ minHeight: 0, height: 'auto', flexShrink: 0 }}>
-          Mermaid Flowchart Editor
+          {readOnly ? "Mermaid Flowchart Viewer" : "Mermaid Flowchart Editor"}
         </DialogTitle>
 
         <div className="flex gap-6 overflow-hidden" style={{ flex: '1 1 0', minHeight: 0, display: 'flex' }}>
-          {/* Left side: Editor */}
+          {/* Left side: Editor (hide in read-only mode) */}
+          {!readOnly && (
           <div className="w-[35%] flex flex-col gap-3 min-w-0">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">Mermaid Script</label>
@@ -302,9 +305,10 @@ export function MermaidEditorDialog({
               </Alert>
             )}
           </div>
+          )}
 
           {/* Right side: Preview */}
-          <div className="flex-1 flex flex-col gap-3 min-w-0 border-l pl-6 relative">
+          <div className={`flex-1 flex flex-col gap-3 min-w-0 relative ${!readOnly ? 'border-l pl-6' : ''}`}>
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">Preview</label>
               <Button
@@ -390,6 +394,7 @@ export function MermaidEditorDialog({
           </div>
         </div>
 
+        {!readOnly && (
         <div className="flex justify-end gap-2 pt-3 border-t" style={{ flexShrink: 0, minHeight: 0 }}>
           <Button variant="outline" onClick={handleClose}>
             Cancel
@@ -401,6 +406,14 @@ export function MermaidEditorDialog({
             Save
           </Button>
         </div>
+        )}
+        {readOnly && (
+        <div className="flex justify-end gap-2 pt-3 border-t" style={{ flexShrink: 0, minHeight: 0 }}>
+          <Button variant="outline" onClick={handleClose}>
+            Close
+          </Button>
+        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
