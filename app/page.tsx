@@ -64,12 +64,22 @@ export default function LandingPage() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8 lg:mb-0">
-              <Button size="lg" asChild>
-                <Link href="/sign-up">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <SignedOut>
+                <Button size="lg" asChild>
+                  <Link href="/sign-up">
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </SignedOut>
+              <SignedIn>
+                <Button size="lg" asChild>
+                  <Link href="/dashboard">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </SignedIn>
               {/* <Button size="lg" variant="outline" asChild>
                 <Link href="#how-it-works">
                   <Play className="mr-2 h-5 w-5" />
@@ -395,12 +405,22 @@ export default function LandingPage() {
             <p className="text-xl mb-8 opacity-90">
               Join thousands of teams already using User Flow Library
             </p>
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/sign-up">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            <SignedOut>
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/sign-up">
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </SignedOut>
+            <SignedIn>
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </SignedIn>
           </CardContent>
         </Card>
       </section>
