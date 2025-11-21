@@ -257,10 +257,10 @@ export function useFlowActions(options: UseScreenActionsOptions = {}) {
   );
 
   return {
-    handleAddFlow,
-    handleUpdateFlow,
-    handleDeleteFlow,
-    handleReorderFlows,
+    addFlow: handleAddFlow,
+    updateFlow: handleUpdateFlow,
+    deleteFlow: handleDeleteFlow,
+    reorderFlows: handleReorderFlows,
     loading,
     error,
   };
