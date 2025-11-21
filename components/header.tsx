@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, ArrowLeft, Share2, Copy, Check, X, FileDown } from "lucide-react";
+import {
+  Search,
+  ArrowLeft,
+  Share2,
+  Copy,
+  Check,
+  X,
+  FileDown,
+} from "lucide-react";
 import { SignedIn, SignedOut, OrganizationSwitcher } from "@clerk/nextjs";
 import { UserNav } from "@/components/auth/user-nav";
 import Image from "next/image";
@@ -48,6 +56,8 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
 
   // Show OrganizationSwitcher only on dashboard (not on project pages)
   const showOrgSwitcher = pathname?.startsWith("/dashboard");
+  // Hide navigation links on project pages
+  const isProjectPage = pathname?.startsWith("/projects/");
 
   const handleGenerateShareLink = async () => {
     if (!project) return;
@@ -105,7 +115,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
     setIsDownloadingPDF(true);
     try {
       const response = await fetch(`/api/projects/${project.id}/export-pdf`);
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -181,32 +191,35 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
             <SignedIn>
               <OrganizationSwitcher
                 hidePersonal={true}
-                afterCreateOrganizationUrl="/dashboard"
+                afterCreateOrganizationUrl="/checkout/select-team"
                 afterSelectOrganizationUrl="/dashboard"
               />
             </SignedIn>
           ) : (
-          <Link
-            href="/"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
-              {project?.avatar_url ? (
-                <Image
-                  src={project.avatar_url}
-                  alt={`${project.name} avatar`}
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Hide broken image and show icon instead
-                    e.currentTarget.style.display = 'none';
-                  }}
+            <Link
+              href="/"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
+                {project?.avatar_url ? (
+                  <Image
+                    src={project.avatar_url}
+                    alt={`${project.name} avatar`}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Hide broken image and show icon instead
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : null}
+                <Search
+                  className="w-5 h-5 text-primary-foreground"
+                  style={{ display: project?.avatar_url ? "none" : "block" }}
                 />
-              ) : null}
-              <Search className="w-5 h-5 text-primary-foreground" style={{ display: project?.avatar_url ? 'none' : 'block' }} />
-            </div>
-            <div className="flex flex-col">
+              </div>
+              <div className="flex flex-col">
                 {project && isEditingName ? (
                   <input
                     type="text"
@@ -228,22 +241,22 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                     onClick={project ? handleProjectNameClick : undefined}
                   >
                     {project ? project.name : "User Flow Library"}
-              </span>
+                  </span>
                 )}
-              {stats && (
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>
-                    {stats.totalScreens} screen
-                    {stats.totalScreens !== 1 ? "s" : ""}
-                  </span>
-                  <span className="text-muted-foreground/40">•</span>
-                  <span>
-                    {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              )}
-            </div>
-          </Link>
+                {stats && (
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>
+                      {stats.totalScreens} screen
+                      {stats.totalScreens !== 1 ? "s" : ""}
+                    </span>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span>
+                      {stats.totalFlows} flow{stats.totalFlows !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Link>
           )}
         </div>
         <nav className="flex items-center gap-6">
@@ -262,7 +275,7 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
                   <FileDown className="w-4 h-4" />
                   {isDownloadingPDF ? "Generating..." : "Download PDF"}
                 </Button>
-                
+
                 {/* Share button */}
                 <Button
                   variant="outline"
@@ -277,13 +290,22 @@ export function Header({ project, stats, onProjectUpdate }: HeaderProps) {
               </div>
             )}
             {/* Dashboard link - hide when on dashboard or project pages */}
-            {!showOrgSwitcher && pathname !== "/" && (
-            <Link
+            {!showOrgSwitcher && !isProjectPage && pathname !== "/" && (
+              <Link
                 href="/dashboard"
-              className="text-sm hover:text-primary transition-colors"
-            >
+                className="text-sm hover:text-primary transition-colors"
+              >
                 Dashboard
-            </Link>
+              </Link>
+            )}
+            {/* Pricing link - hide when on dashboard or project pages */}
+            {!showOrgSwitcher && !isProjectPage && (
+              <Link
+                href="/pricing"
+                className="text-sm hover:text-primary transition-colors"
+              >
+                Pricing
+              </Link>
             )}
           </SignedIn>
           <UserNav />
